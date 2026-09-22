@@ -73,8 +73,6 @@ PROMPTS = [
     # --- 宗教
     P('chr_max', 'religion', 'キリスト教徒の割合が高い国は？', 'rel_chr', 'max', 1),
     P('mus_max', 'religion', 'イスラム教徒の割合が高い国は？', 'rel_mus', 'max', 1),
-    P('bud_max', 'religion', '仏教徒の割合が高い国は？', 'rel_bud', 'max', 2),
-    P('hin_max', 'religion', 'ヒンドゥー教徒の割合が高い国は？', 'rel_hin', 'max', 2),
     P('non_max', 'religion', '無宗教の割合が高い国は？', 'rel_non', 'max', 2),
     # --- 社会・暮らし
     P('life_max', 'society', '平均寿命が長い国は？', 'life_exp', 'max', 1),
