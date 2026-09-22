@@ -1,4 +1,44 @@
 /* GeoKing client */
+
+// ---------- 効果音（Web Audio で合成、音声ファイル不要）と振動
+const sfx = (() => {
+  let ctx = null;
+  const prefs = { sound: localStorage.getItem('geoking_sound') !== 'off', vibe: localStorage.getItem('geoking_vibe') !== 'off' };
+  const ensure = () => { if (!prefs.sound) return null; try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; } catch { return null; } };
+  // 1音: type=波形, f=周波数(Hz), t=開始遅延, d=長さ, v=音量, slide=終了周波数
+  const tone = (type, f, t, d, v = .18, slide = null) => {
+    const c = ensure(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, c.currentTime + t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, c.currentTime + t + d);
+    g.gain.setValueAtTime(0.0001, c.currentTime + t); g.gain.exponentialRampToValueAtTime(v, c.currentTime + t + .01); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + t + d);
+    o.connect(g).connect(c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + d + .02);
+  };
+  const noise = (t, d, v = .12) => {   // めくり音用のノイズ
+    const c = ensure(); if (!c) return;
+    const buf = c.createBuffer(1, c.sampleRate * d, c.sampleRate); const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = v;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = .8;
+    src.connect(bp).connect(g).connect(c.destination); src.start(c.currentTime + t);
+  };
+  const vibrate = (pattern) => { if (prefs.vibe && navigator.vibrate) { try { navigator.vibrate(pattern); } catch {} } };
+  return {
+    prefs,
+    unlock() { ensure(); },
+    toggle(k) { prefs[k] = !prefs[k]; localStorage.setItem('geoking_' + k, prefs[k] ? 'on' : 'off'); if (k === 'sound' && prefs.sound) this.select(); if (k === 'vibe' && prefs.vibe) vibrate(30); },
+    select()  { tone('square', 880, 0, .05, .08); vibrate(10); },                                   // カードを選ぶ（カチッ）
+    confirm() { tone('triangle', 520, 0, .08, .2); tone('triangle', 780, .07, .12, .2); vibrate(25); }, // 決定（ポン）
+    round()   { tone('sine', 660, 0, .1, .15); tone('sine', 990, .1, .16, .15); vibrate(15); },        // 新しいお題
+    reveal()  { noise(0, .18); tone('triangle', 300, .05, .12, .12, 600); vibrate(20); },              // めくる
+    win()     { [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, i * .09, .22, .2)); vibrate([30, 40, 30, 40, 80]); }, // 勝ち
+    lose()    { tone('sine', 220, 0, .25, .12, 160); vibrate(40); },                                    // 負け
+    tick()    { tone('square', 1200, 0, .04, .06); },                                                    // 残り秒
+    chat()    { tone('sine', 1400, 0, .05, .05); },                                                      // チャット受信
+    champion(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone('triangle', f, i * .12, .3, .2)); vibrate([60, 60, 60, 60, 200]); },
+  };
+})();
+document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });   // 最初のタップで音を許可
+
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
@@ -130,9 +170,16 @@ function pushSettings() {
 }
 ['#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
+function renderPrefs() {
+  $('#soundBtn').innerHTML = ico(sfx.prefs.sound ? 'sound' : 'mute'); $('#soundBtn').classList.toggle('off', !sfx.prefs.sound);
+  $('#vibeBtn').innerHTML = ico(sfx.prefs.vibe ? 'vibrate' : 'vibrate-off'); $('#vibeBtn').classList.toggle('off', !sfx.prefs.vibe);
+  $('#vibeBtn').style.display = navigator.vibrate ? '' : 'none';   // iPhone の Safari は振動APIが無いので隠す
+}
+$('#soundBtn').onclick = () => { sfx.toggle('sound'); renderPrefs(); toast(sfx.prefs.sound ? '効果音: オン' : '効果音: オフ'); };
+$('#vibeBtn').onclick = () => { sfx.toggle('vibe'); renderPrefs(); toast(sfx.prefs.vibe ? '振動: オン' : '振動: オフ'); };
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
-  stopTimer();
+  stopTimer(); prevKey = ''; prevChatLen = 0;
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
   state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
   if (message) toast(message);
@@ -147,8 +194,35 @@ $('#copyLink').onclick = async () => {
 };
 
 // ---------- 描画
+let prevKey = '', prevChatLen = 0, lastTickSec = null;
+function playTransitions() {
+  const key = `${state.room}:${state.phase}:${state.round}`;
+  if (key !== prevKey) {
+    if (state.phase === 'pick') { sfx.round(); lastTickSec = null; }
+    else if (state.phase === 'reveal' && state.reveal) {
+      sfx.reveal();
+      const me = state.reveal.rows.find(r => r.pid === pid);
+      const isSpectator = !!state.players.find(p => p.pid === pid && p.spectator);
+      if (me && !isSpectator) setTimeout(() => (me.winner ? sfx.win() : sfx.lose()), 350);
+    } else if (state.phase === 'end') {
+      const mine = state.players.find(p => p.pid === pid);
+      const scores = state.players.filter(p => !p.spectator).map(p => p.score);
+      const top = scores.length ? Math.max(...scores) : 0;
+      setTimeout(() => (mine && !mine.spectator && mine.score === top ? sfx.champion() : sfx.reveal()), 200);
+    }
+    prevKey = key;
+  }
+  const chat = state.chat || [];
+  if (chat.length > prevChatLen && prevChatLen > 0) {
+    const last = chat[chat.length - 1]; const me = state.players.find(p => p.pid === pid);
+    if (last && me && last.name !== me.name && last.name !== 'システム') sfx.chat();
+  }
+  prevChatLen = chat.length;
+}
+
 function render() {
   if (!state) return;
+  playTransitions();
   const isHost = state.host === pid;
   document.body.classList.toggle('host', isHost); document.body.classList.toggle('guest', !isHost);
   $('#roomInfo').classList.remove('hidden'); $('#roomCode').textContent = state.room; $('#roomTitle').textContent = state.title || '';
@@ -234,8 +308,9 @@ function renderHand() {
     c.innerHTML = `<img src="${flagUrl(id)}" alt="国旗" loading="lazy"><div class="nm">${state.settings.show_names ? countryName(id) : (id === picked ? '出したカード' : '&nbsp;')}</div>`;
     c.onclick = () => {
       if (id === picked) return;                       // すでに出しているカード
-      if (selectedCard === id) { send({ type: 'pick', card: id }); selectedCard = null; return; }   // 2回目で決定・変更
+      if (selectedCard === id) { send({ type: 'pick', card: id }); selectedCard = null; sfx.confirm(); return; }   // 2回目で決定・変更
       selectedCard = id;
+      sfx.select();
       send({ type: 'selecting', card: id });
       document.querySelectorAll('.flagcard').forEach(x => x.classList.remove('selected'));
       c.classList.add('selected');
@@ -355,6 +430,7 @@ function renderTimer() {
     if (!state || !state.deadline) { stopTimer(); return; }
     const left = Math.max(0, Math.ceil(state.deadline - Date.now() / 1000));
     $('#timer').textContent = left + '秒'; $('#timer').classList.toggle('urgent', left <= 10);
+    if (left <= 5 && left > 0 && left !== lastTickSec && state.my_pick == null) { sfx.tick(); lastTickSec = left; }   // 残り5秒のカウント音
   };
   tick(); timerInterval = setInterval(tick, 250);
 }
@@ -392,5 +468,5 @@ function stopRoomsPoll() { clearInterval(roomsPoll); roomsPoll = null; }
     // リロード時の自動再接続
     connect(() => send({ type: 'join', room, name: $('#nameInput').value.trim() || localStorage.getItem('geoking_name') || '', ...rejoinInfo() }));
   }
-  show('home'); startRoomsPoll();
+  show('home'); startRoomsPoll(); renderPrefs();
 })();

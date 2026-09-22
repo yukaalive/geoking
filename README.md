@@ -80,3 +80,7 @@ python3 server.py            # PORT環境変数で変更可
 - アイコンは `static/icons/icon.svg` が元データ。PNG は macOS の `qlmanage -t -s 1024` と `sips -z` で書き出し
 
 ストア配信（Google Play / App Store）が必要になった場合は Capacitor で WebView アプリ化する想定（Node.js、各ストアの開発者アカウントが必要）。
+
+## 効果音と振動
+音声ファイルは使わず Web Audio API で合成しています（`static/app.js` の `sfx`）。カード選択・決定・新しいお題・公開・勝ち負け・残り5秒のカウント・チャット受信・優勝で鳴ります。
+振動は Android の Chrome などで動作します（iPhone の Safari は振動 API 非対応のためボタンを隠します）。ヘッダー右上のボタンでそれぞれオン・オフでき、設定は端末に保存されます。

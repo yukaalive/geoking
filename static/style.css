@@ -223,3 +223,8 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .bubble.go{background:var(--primary);color:var(--primary-ink);animation:popin .3s ease}
 @keyframes blinkdots{50%{opacity:.5}}
 @keyframes popin{from{transform:scale(.6)}to{transform:none}}
+
+.prefs{display:flex;gap:4px;margin-left:auto}
+.top .roominfo + .prefs{margin-left:0}
+button.pref{padding:4px 8px;margin:0}button.pref .ico{width:1.3em;height:1.3em;vertical-align:-.3em}
+button.pref.off{opacity:.55}
