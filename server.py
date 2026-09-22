@@ -2,9 +2,12 @@
 """GeoKing（地理王） オンライン対戦サーバー。aiohttp + WebSocket。
     python3 server.py  →  http://localhost:8080
 """
-import asyncio, json, os, random, secrets, string, time, uuid
+import asyncio, json, logging, os, random, secrets, string, time, uuid
 from aiohttp import web, WSMsgType
 from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+log = logging.getLogger('geoking')   # Render の Logs タブ / ローカルの標準出力に出る
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE, 'data', 'countries.json'), encoding='utf-8') as f:
@@ -48,6 +51,7 @@ def cleanup_rooms():
                 if task:
                     task.cancel()
             rooms.pop(code, None)
+            log.info('room %s removed (%s), rooms=%d', code, 'ttl' if now - r.created > ROOM_TTL else 'empty', len(rooms))
 
 
 def new_code():
@@ -113,6 +117,8 @@ class Room:
         self.deck = deck   # 途中参加者に配る残り山札
         self.history = []
         self.round = 0
+        log.info('room %s start: players=%s rounds=%d cats=%s', self.code,
+                 [self.players[x].name + ('(bot)' if self.players[x].is_bot else '') for x in self.order], s['rounds'], ','.join(s['categories']))
         self.begin_round()
 
     def begin_round(self):
@@ -161,6 +167,8 @@ class Room:
                 p.hand.remove(p.pick)
         self.reveal = {'prompt': pr, 'rows': sorted(rows, key=lambda r: (r['rank'] is None, r['rank'] or 0))}
         self.history.append({'round': self.round, **self.reveal})
+        log.info('room %s R%d %s -> %s', self.code, self.round, pr['text'],
+                 ' | '.join(f"{r['name']}:{r['card']}={r['value']}{'*' if r['winner'] else ''}" for r in rows))
         self.phase = 'reveal'
         self.deadline = None
         self.next_at = time.time() + REVEAL_SECONDS
@@ -168,6 +176,7 @@ class Room:
     def next_round(self):
         if self.round >= len(self.prompts):
             self.phase = 'end'
+            log.info('room %s end: %s', self.code, {self.players[x].name: self.players[x].score for x in self.order})
         else:
             self.begin_round()
 
@@ -356,6 +365,7 @@ async def ws_handler(request):
             room.players[pid] = p
             room.order.append(pid)
             ctx['room'], ctx['pid'] = room, pid
+            log.info('room %s created by %s, rooms=%d', room.code, name, len(rooms))
             return await broadcast(room)
 
         if t == 'join':
@@ -374,6 +384,7 @@ async def ws_handler(request):
                 p.ws, p.connected = ws, True
                 pid = want_pid
                 r.empty_since = None
+                log.info('room %s reconnect %s', r.code, p.name)
             else:
                 if len(r.players) >= MAX_PLAYERS:
                     return await error('満員です（最大8人）')
@@ -386,6 +397,7 @@ async def ws_handler(request):
                 r.players[pid] = p
                 r.order.append(pid)
                 r.empty_since = None
+                log.info('room %s join %s%s players=%d', r.code, name, ' (spectator)' if r.phase != 'lobby' else '', len(r.players))
                 if r.phase != 'lobby':   # 途中参加はまず観戦。次のゲームから自動で参加、または「途中から参加」
                     p.spectator = True
                     r.chat.append({'name': 'システム', 'text': f'{p.name}さんが観戦しました', 'ts': time.time()})
@@ -442,6 +454,7 @@ async def ws_handler(request):
             if target in room.players and target != room.host:
                 tp = room.players[target]
                 room.remove_player(target)
+                log.info('room %s kick %s by %s', room.code, tp.name, room.players[pid].name)
                 if tp.ws is not None and not tp.ws.closed:
                     await send(tp.ws, {'type': 'left', 'message': 'ホストによって退出させられました'})
                     await tp.ws.close()
@@ -462,6 +475,7 @@ async def ws_handler(request):
             p = room.players[pid]
             room.remove_player(pid)
             ctx['room'], ctx['pid'] = None, None
+            log.info('room %s leave %s', room.code, p.name)
             await send(ws, {'type': 'left', 'message': '部屋から退出しました'})
             return await after_player_gone(room, p.name)
 
@@ -519,6 +533,7 @@ async def ws_handler(request):
         try:
             await handle(data)
         except Exception:   # 1人の不正入力で接続や部屋を落とさない
+            log.exception('handle failed: type=%s room=%s', data.get('type'), ctx['room'].code if ctx['room'] else None)
             await error('処理に失敗しました')
 
     # ---------- 切断処理
@@ -526,6 +541,7 @@ async def ws_handler(request):
     if room and pid in room.players and room.players[pid].ws is ws:
         p = room.players[pid]
         p.connected, p.ws = False, None
+        log.info('room %s disconnect %s (phase=%s)', room.code, p.name, room.phase)
         if room.phase == 'lobby':
             room.remove_player(pid)
         await after_player_gone(room, None)
@@ -597,5 +613,5 @@ def make_app():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', '8080'))
-    print(f'GeoKing server: http://localhost:{port}')
-    web.run_app(make_app(), port=port, print=None)
+    log.info('GeoKing server: http://localhost:%d', port)
+    web.run_app(make_app(), port=port, print=None, access_log=None)   # HTTPアクセスログは出さず、ゲームの出来事だけ記録
