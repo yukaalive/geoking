@@ -24,7 +24,7 @@ DEFAULT_SETTINGS = {
     'rounds': 7,
     'hand_size': 8,
     'show_names': False,   # 国旗の下に国名を表示（初心者向け）
-    'timer': 0,            # 秒。0で無制限
+    'timer': 30,           # 回答の制限時間（秒）。0で無制限。時間切れは手札からランダムに出る
     'max_star': 3,         # 出題する難易度の上限
     'public': False,       # 公開部屋一覧に載せる（世界の誰かと遊ぶ）
 }

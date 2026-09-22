@@ -190,7 +190,7 @@ function renderGame() {
     $('#pickArea').classList.remove('hidden'); $('#revealArea').classList.add('hidden');
     renderHand(); renderTimer();
   } else {
-    $('#pickArea').classList.add('hidden'); $('#revealArea').classList.remove('hidden');
+    $('#pickArea').classList.add('hidden'); $('#revealArea').classList.remove('hidden'); $('#timer').classList.add('hidden');
     stopTimer(); renderReveal();
   }
   if (state.phase === 'pick') {
