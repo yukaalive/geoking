@@ -34,6 +34,13 @@ OVERRIDES = {
     'KP': {'gdp': 16_000_000_000, 'gdp_pc': 620},
 }
 
+NAME_OFFICIAL_OVERRIDES = {
+    'ES': 'スペイン王国', 'KP': '朝鮮民主主義人民共和国', 'AE': 'アラブ首長国連邦',
+}
+NAME_COMMON_OVERRIDES = {
+    'AE': 'アラブ首長国連邦',
+}
+
 def load(name):
     with open(os.path.join(RAW, name), encoding='utf-8') as f:
         return json.load(f)
@@ -57,7 +64,10 @@ def main():
             continue
         cca3 = c['cca3']
         wbkey = 'XKX' if c['cca2'] == 'XK' else cca3
-        jp = c['translations'].get('jpn', {})
+        jp = dict(c['translations'].get('jpn', {}))
+        # 日本語名の補正（外務省表記に合わせる）
+        jp['official'] = NAME_OFFICIAL_OVERRIDES.get(c['cca2'], jp.get('official'))
+        jp['common'] = NAME_COMMON_OVERRIDES.get(c['cca2'], jp.get('common'))
         rec = {
             'id': c['cca2'].lower(),
             'cca3': cca3,

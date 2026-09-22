@@ -26,8 +26,9 @@ async def main():
         # 参加者は設定変更できない（無視される）
         await b.send_json({'type': 'settings', 'settings': {'rounds': 3}})
         await a.send_json({'type': 'settings', 'settings': {'rounds': 'abc', 'timer': None}})  # 不正値は無視され接続は維持される
-        await a.send_json({'type': 'settings', 'settings': {'rounds': 4, 'hand_size': 5, 'categories': ['religion', 'climate'], 'timer': 0}})
+        await a.send_json({'type': 'settings', 'settings': {'rounds': 4, 'hand_size': 5, 'categories': ['religion', 'climate'], 'timer': 0, 'title': 'テスト部屋<b>'}})
         st = await recv_state(a, lambda d: d['settings']['rounds'] == 4)
+        assert st['title'] == 'テスト部屋<b>', st['title']
         assert st['settings']['hand_size'] == 5 and st['settings']['categories'] == ['religion', 'climate'], st['settings']
         await b.send_json({'type': 'start'})  # 非ホストは開始不可
         try:
@@ -37,6 +38,21 @@ async def main():
         sa = await recv_state(a, lambda d: d['phase'] == 'pick'); sb = await recv_state(b, lambda d: d['phase'] == 'pick')
         assert len(sa['hand']) == 5 and not set(sa['hand']) & set(sb['hand']), 'hands overlap'
         assert sa['prompt']['cat'] in ('religion', 'climate')
+        # 途中参加: Carol がラウンド1のpick中に入る → 残り4ラウンド+1 = 5枚
+        c = await s.ws_connect(URL)
+        await c.send_json({'type': 'join', 'room': room, 'name': 'Carol'})
+        sc = await recv_state(c, lambda d: d['phase'] == 'pick')
+        assert len(sc['hand']) == 5 and sc['round'] == 1, (len(sc['hand']), sc['round'])
+        assert not set(sc['hand']) & (set(sa['hand']) | set(sb['hand'])), 'late hand overlaps'
+        assert any('途中参加' in m['text'] for m in sc['chat'])
+        await recv_state(a, lambda d: len(d['players']) == 3)
+        # 退出: Carol が抜ける → left を受け取り、部屋は2人で続行
+        await c.send_json({'type': 'leave'})
+        msg = json.loads((await asyncio.wait_for(c.receive(), 5)).data)
+        assert msg['type'] == 'left', msg
+        await c.close()
+        sa = await recv_state(a, lambda d: len(d['players']) == 2 and any('退出' in m['text'] for m in d['chat']))
+        sb = await recv_state(b, lambda d: len(d['players']) == 2)
         scores = {}
         for rnd in range(1, 5):
             if rnd > 1:
@@ -77,6 +93,6 @@ async def main():
         await a.send_json({'type': 'start'})
         st = await recv_state(a, lambda d: d['phase'] == 'pick' and d['round'] == 1)
         assert all(p['score'] == 0 for p in st['players'])
-        print('OK: full flow, token auth, impersonation blocked, reconnect, rematch')
+        print('OK: full flow, title, late join, leave, token auth, impersonation blocked, reconnect, rematch')
 
 asyncio.run(main())

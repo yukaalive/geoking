@@ -73,6 +73,8 @@ class Room:
         self.prompts = []
         self.reveal = None
         self.chat = []
+        self.title = ''
+        self.deck = []
         self.timer_task = None
         self.deadline = None
         self.created = time.time()
@@ -92,6 +94,7 @@ class Room:
             p = self.players[pid]
             p.hand = [deck.pop() for _ in range(s['hand_size'])]
             p.score, p.won, p.pick = 0, [], None
+        self.deck = deck   # 途中参加者に配る残り山札
         self.round = 0
         self.begin_round()
 
@@ -148,6 +151,23 @@ class Room:
         else:
             self.begin_round()
 
+    def deal_late(self, p):
+        """途中参加者に、残りラウンド数＋1枚を配る（元の「1枚余る」感覚を維持）。"""
+        remaining = len(self.prompts) - self.round + (1 if self.phase == 'pick' else 0)
+        need = max(1, remaining + 1)
+        if len(self.deck) < need:   # 山札不足なら誰も持っていないカードを補充
+            held = {c for pl in self.players.values() for c in pl.hand}
+            extra = [c['id'] for c in COUNTRIES if c['id'] not in held and c['id'] not in self.deck]
+            random.shuffle(extra); self.deck += extra
+        p.hand = [self.deck.pop() for _ in range(min(need, len(self.deck)))]
+        p.score, p.won, p.pick = 0, [], None
+
+    def display_title(self):
+        if self.title:
+            return self.title
+        host = self.players.get(self.host)
+        return f"{host.name}の部屋" if host else '部屋'
+
     def reset_to_lobby(self):
         self.phase, self.round, self.reveal = 'lobby', 0, None
         for p in self.players.values():
@@ -175,7 +195,7 @@ class Room:
     def state_for(self, pid):
         me = self.players.get(pid)
         return {
-            'type': 'state', 'room': self.code, 'host': self.host, 'you': pid,
+            'type': 'state', 'room': self.code, 'title': self.display_title(), 'title_raw': self.title, 'host': self.host, 'you': pid,
             'token': me.token if me else None,   # 本人の再接続用トークン（他人には送られない）
             'phase': self.phase, 'round': self.round, 'total_rounds': len(self.prompts) or self.settings['rounds'],
             'settings': self.settings, 'players': self.public_players(),
@@ -249,6 +269,21 @@ def to_int(v, lo, hi, default):
         return default
 
 
+async def after_player_gone(room, name):
+    """退出・キック・切断後の後始末。"""
+    if not room.has_humans():
+        if room.timer_task:
+            room.timer_task.cancel()
+        rooms.pop(room.code, None)
+        return
+    if room.phase in ('pick', 'reveal', 'end') and name:
+        room.chat.append({'name': 'システム', 'text': f'{name} さんが退出しました', 'ts': time.time()})
+        room.chat = room.chat[-60:]
+    if room.phase == 'pick' and room.all_picked():
+        room.do_reveal()
+    await broadcast(room)
+
+
 # ---------- websocket handler
 async def ws_handler(request):
     ws = web.WebSocketResponse(heartbeat=25)
@@ -292,15 +327,18 @@ async def ws_handler(request):
                 p.ws, p.connected = ws, True
                 pid = want_pid
             else:
-                if r.phase != 'lobby':
-                    return await error('このゲームはすでに開始しています')
                 if len(r.players) >= MAX_PLAYERS:
                     return await error('満員です（最大8人）')
+                if r.phase == 'end':
+                    return await error('このゲームは終了しています。ホストが再戦を始めるまでお待ちください')
                 pid = uuid.uuid4().hex[:12]
                 p = Player(pid, clean_name(data.get('name')))
                 p.ws, p.connected = ws, True
                 r.players[pid] = p
                 r.order.append(pid)
+                if r.phase in ('pick', 'reveal'):   # 途中参加
+                    r.deal_late(p)
+                    r.chat.append({'name': 'システム', 'text': f'{p.name} さんが途中参加しました', 'ts': time.time()})
             ctx['room'], ctx['pid'] = r, pid
             return await broadcast(r)
 
@@ -326,6 +364,8 @@ async def ws_handler(request):
                 'max_star': to_int(s.get('max_star', cur['max_star']), 1, 3, cur['max_star']),
                 'public': bool(s.get('public', cur['public'])),
             })
+            if 'title' in s:
+                room.title = ''.join(ch for ch in str(s.get('title') or '') if ch.isprintable()).strip()[:20]
             if room.settings['hand_size'] < room.settings['rounds']:
                 room.settings['hand_size'] = room.settings['rounds'] + 1
             return await broadcast(room)
@@ -343,16 +383,24 @@ async def ws_handler(request):
             return await broadcast(room)
 
         if t == 'kick':
-            if not (is_host and room.phase == 'lobby'):
+            if not is_host:
                 return
             target = str(data.get('pid') or '')
             if target in room.players and target != room.host:
                 tp = room.players[target]
                 room.remove_player(target)
                 if tp.ws is not None and not tp.ws.closed:
-                    await send(tp.ws, {'type': 'error', 'message': 'ホストによって退出させられました'})
+                    await send(tp.ws, {'type': 'left', 'message': 'ホストによって退出させられました'})
                     await tp.ws.close()
-            return await broadcast(room)
+                await after_player_gone(room, tp.name)
+            return
+
+        if t == 'leave':
+            p = room.players[pid]
+            room.remove_player(pid)
+            ctx['room'], ctx['pid'] = None, None
+            await send(ws, {'type': 'left', 'message': '部屋から退出しました'})
+            return await after_player_gone(room, p.name)
 
         if t == 'start':
             if not (is_host and room.phase in ('lobby', 'end')):
@@ -423,14 +471,7 @@ async def ws_handler(request):
         p.connected, p.ws = False, None
         if room.phase == 'lobby':
             room.remove_player(pid)
-        elif room.phase == 'pick' and room.all_picked():
-            room.do_reveal()
-        if not room.has_humans():
-            if room.timer_task:
-                room.timer_task.cancel()
-            rooms.pop(room.code, None)
-        else:
-            await broadcast(room)
+        await after_player_gone(room, None)
     return ws
 
 
@@ -449,9 +490,10 @@ async def api_rooms(request):
     now = time.time()
     out = []
     for r in rooms.values():
-        if r.settings['public'] and r.phase == 'lobby' and 0 < len(r.players) < MAX_PLAYERS:
+        if r.settings['public'] and r.phase != 'end' and 0 < len(r.players) < MAX_PLAYERS and r.has_humans():
             host = r.players.get(r.host)
-            out.append({'room': r.code, 'host': host.name if host else '', 'players': len(r.players),
+            out.append({'room': r.code, 'title': r.display_title(), 'phase': r.phase, 'round': r.round,
+                        'host': host.name if host else '', 'players': len(r.players),
                         'categories': r.settings['categories'], 'rounds': r.settings['rounds'], 'age': int(now - r.created)})
     out.sort(key=lambda x: x['age'])
     return web.json_response({'rooms': out[:20]})

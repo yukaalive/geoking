@@ -68,6 +68,7 @@ function connect(onOpen) {
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
     if (msg.type === 'state') { reconnectTries = 0; state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } render(); }
+    else if (msg.type === 'left') { leaveToHome(msg.message); if (ws) { ws.onclose = null; ws.close(); } }
     else if (msg.type === 'error') {
       if (msg.message.includes('見つかりません') || msg.message.includes('認証に失敗')) {
         sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token');
@@ -106,12 +107,18 @@ function pushSettings() {
   send({ type: 'settings', settings: {
     categories: [...document.querySelectorAll('input[name=cat]:checked')].map(i => i.value),
     rounds: +$('#setRounds').value, hand_size: +$('#setHand').value, timer: +$('#setTimer').value,
-    max_star: +$('#setStar').value, show_names: $('#setNames').checked, public: $('#setPublic').checked,
+    max_star: +$('#setStar').value, show_names: $('#setNames').checked, public: $('#setPublic').checked, title: $('#setTitle').value.trim(),
   } });
 }
-['#setRounds', '#setHand', '#setTimer', '#setStar', '#setNames', '#setPublic'].forEach(s => $(s).addEventListener('change', pushSettings));
+['#setRounds', '#setHand', '#setTimer', '#setStar', '#setNames', '#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
 document.querySelectorAll('input[name=cat]').forEach(i => i.addEventListener('change', pushSettings));
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
+$('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
+function leaveToHome(message) {
+  sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
+  state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
+  if (message) toast(message);
+}
 $('#startBtn').onclick = () => send({ type: 'start' });
 $('#nextBtn').onclick = () => send({ type: 'next' });
 $('#rematchBtn').onclick = () => send({ type: 'start' });
@@ -127,7 +134,7 @@ function render() {
   if (!state) return;
   const isHost = state.host === pid;
   document.body.classList.toggle('host', isHost); document.body.classList.toggle('guest', !isHost);
-  $('#roomInfo').classList.remove('hidden'); $('#roomCode').textContent = state.room;
+  $('#roomInfo').classList.remove('hidden'); $('#roomCode').textContent = state.room; $('#roomTitle').textContent = state.title || '';
 
   if (state.phase === 'lobby') { renderLobby(); show('lobby'); }
   else if (state.phase === 'pick' || state.phase === 'reveal') { renderGame(); show('game'); }
@@ -155,7 +162,7 @@ function renderLobby() {
   const s = state.settings;
   if (document.activeElement?.closest('.settings, #catFields') == null) {
     document.querySelectorAll('input[name=cat]').forEach(i => i.checked = s.categories.includes(i.value));
-    $('#setRounds').value = s.rounds; $('#setHand').value = s.hand_size; $('#setTimer').value = s.timer; $('#setStar').value = s.max_star; $('#setNames').checked = s.show_names; $('#setPublic').checked = s.public;
+    $('#setRounds').value = s.rounds; $('#setHand').value = s.hand_size; $('#setTimer').value = s.timer; $('#setStar').value = s.max_star; $('#setNames').checked = s.show_names; $('#setPublic').checked = s.public; $('#setTitle').value = state.title_raw || ''; $('#setTitle').placeholder = state.title || '例：ゆかの部屋';
   }
   $('#startBtn').disabled = state.players.length < 2;
   $('#startBtn').textContent = state.players.length < 2 ? 'ゲーム開始（2人以上必要・ボット可）' : `ゲーム開始（${state.settings.rounds}ラウンド）`;
@@ -195,7 +202,7 @@ function renderGame() {
 function renderHand() {
   const hand = $('#hand'); hand.innerHTML = '';
   const locked = state.my_pick != null;
-  $('#pickTitle').textContent = locked ? `「${countryName(state.my_pick)}」を出しました。他のプレイヤーを待っています…` : 'お題に一番合うと思う国旗を1枚選ぼう（クリックで決定）';
+  $('#pickTitle').textContent = locked ? `「${countryName(state.my_pick)}」を出しました。他のプレイヤーを待っています…` : (state.hand.length ? 'お題に一番合うと思う国旗を1枚選ぼう（クリックで決定）' : '手札がありません。次のゲームから参加できます');
   for (const id of state.hand) {
     const c = el('div', 'flagcard' + (id === state.my_pick ? ' selected' : '') + (locked ? ' locked' : ''));
     c.innerHTML = `<img src="${flagUrl(id)}" alt="国旗" loading="lazy"><div class="nm">${state.settings.show_names ? countryName(id) : '&nbsp;'}</div>`;
@@ -216,7 +223,7 @@ function renderReveal() {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
     d.style.animationDelay = (i * 0.25) + 's';
-    d.innerHTML = `<div class="crown">${row.winner ? '👑' : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.value == null ? '（データなし＝敗北）' : ''}</div>`;
+    d.innerHTML = `<div class="crown">${row.winner ? '👑' : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${c.name_official !== c.name ? `<small>${c.name}</small>` : ''}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.value == null ? '（データなし＝敗北）' : ''}</div>`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
   });
@@ -260,7 +267,8 @@ async function loadRooms() {
     if (!rooms.length) { ul.innerHTML = '<li class="muted">いま募集中の部屋はありません。部屋を作って「公開部屋にする」をオンにすると、ここに表示されます。</li>'; return; }
     for (const r of rooms) {
       const cats = r.categories.map(c => META.categories[c]?.icon || '').join('');
-      const li = el('li', '', `<span><b>${escapeHtml(r.host)}</b> の部屋 <span class="tag">${r.players}/8人</span> <span class="tag">${r.rounds}R ${cats}</span></span>`);
+      const status = r.phase === 'lobby' ? '<span class="tag">募集中</span>' : `<span class="tag live">ラウンド${r.round}進行中・途中参加OK</span>`;
+      const li = el('li', '', `<span><b>${escapeHtml(r.title || r.host + 'の部屋')}</b> <span class="muted small">by ${escapeHtml(r.host)}</span> ${status} <span class="tag">${r.players}/8人</span> <span class="tag">${r.rounds}R ${cats}</span></span>`);
       const b = el('button', 'mini primary', '参加'); b.onclick = () => { $('#codeInput').value = r.room; $('#joinBtn').click(); };
       li.appendChild(b); ul.appendChild(li);
     }

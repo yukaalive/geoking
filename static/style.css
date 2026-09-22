@@ -19,6 +19,10 @@ button:hover{border-color:var(--primary)}
 button.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary);font-weight:700}
 button.big{width:100%;padding:12px;font-size:16px;margin-top:12px}
 button.mini{padding:3px 8px;font-size:12px;margin-left:8px}
+button.danger{color:#dc2626;border-color:#dc2626}
+.roomtitle{font-weight:700;font-size:15px;margin-right:6px}
+.rev .country small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.tag.live{background:#16a34a;color:#fff}
 button:disabled{opacity:.5;cursor:not-allowed}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .join{display:flex;gap:6px}.join input{width:110px;text-transform:uppercase;font-family:ui-monospace,monospace;letter-spacing:2px}

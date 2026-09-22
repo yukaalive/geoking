@@ -9,7 +9,7 @@
 <body>
 <header class="top">
   <div class="brand">🌍 GeoKing <span>地理王</span></div>
-  <div id="roomInfo" class="roominfo hidden">部屋 <b id="roomCode"></b> <button id="copyLink" class="mini">招待リンクをコピー</button></div>
+  <div id="roomInfo" class="roominfo hidden"><span id="roomTitle" class="roomtitle"></span> <span class="muted small">コード</span> <b id="roomCode"></b> <button id="copyLink" class="mini">招待リンクをコピー</button> <button id="leaveBtn" class="mini danger">退出</button></div>
 </header>
 
 <main id="app">
@@ -44,7 +44,7 @@
         <div class="row hostonly">
           <button id="addBotBtn">ボットを追加</button>
         </div>
-        <p class="muted small">部屋コード <b id="lobbyCode"></b> を友だちに伝えるか、招待リンクを共有してください。</p>
+        <p class="muted small">部屋コード <b id="lobbyCode"></b> を友だちに伝えるか、招待リンクを共有してください。ゲームが始まったあとでも途中参加できます。</p>
       </div>
       <div class="card">
         <h2>ルール設定 <span class="muted small guestonly">（ホストのみ変更できます）</span></h2>
@@ -56,6 +56,7 @@
           <label><input type="checkbox" name="cat" value="society" checked> 🏙️ 社会・暮らし（寿命・高齢化・出生率・都市化）</label>
         </fieldset>
         <div class="settings hostonly-disable">
+          <label>部屋の名前 <input id="setTitle" maxlength="20" placeholder="例：ゆかの部屋" style="width:180px"></label>
           <label>ラウンド数 <input type="number" id="setRounds" min="3" max="12" value="7"></label>
           <label>手札枚数 <input type="number" id="setHand" min="4" max="12" value="8"></label>
           <label>制限時間（秒、0=なし） <input type="number" id="setTimer" min="0" max="180" step="5" value="0"></label>
