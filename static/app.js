@@ -58,6 +58,17 @@ function showCountry(id) {
   $('#modalBody').innerHTML = html; $('#modal').classList.remove('hidden');
 }
 $('#modalClose').onclick = () => $('#modal').classList.add('hidden');
+$('#creditsLink').onclick = (e) => {
+  e.preventDefault();
+  $('#modalBody').innerHTML = `<h2 style="margin-top:0">データ出典</h2><ul class="small" style="padding-left:18px;line-height:1.8">
+    <li>国の基本情報・面積・位置: <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a>（ODbL）</li>
+    <li>人口・GDP・平均寿命・降水量・都市人口率など: <a href="https://data.worldbank.org/" target="_blank" rel="noopener">World Bank Open Data</a>（CC BY 4.0）</li>
+    <li>宗教構成: Pew Research Center の公表値を参考にした概算</li>
+    <li>年平均気温: 公開資料を参考にした概算</li>
+    <li>国旗画像: <a href="https://flagcdn.com/" target="_blank" rel="noopener">flagcdn.com</a></li>
+    <li>ゲームデザインの着想: ウナム日月『国旗王（こっきんぐ）』</li></ul>`;
+  $('#modal').classList.remove('hidden');
+};
 $('#modal').onclick = (e) => { if (e.target.id === 'modal') $('#modal').classList.add('hidden'); };
 
 // ---------- WebSocket
@@ -172,9 +183,6 @@ function renderGame() {
   const m = pr.text.match(/^(.*?)(大きい|小さい|多い|少ない|高い|低い|長い|短い|北|南|東|西|近い)(国は？)$/);
   $('#promptText').innerHTML = m ? `${escapeHtml(m[1])}<span class="kw">${m[2]}</span>${m[3]}` : escapeHtml(pr.text);
   $('#promptHint').textContent = pr.hint || '';
-  const F = META.fields[pr.key];
-  $('#promptDir').textContent = m ? `${m[1]}最も${m[2]}国を出した人の勝ち` : (pr.dir === 'max' ? `${F.label}が最も大きい国を出した人の勝ち` : `${F.label}が最も小さい国を出した人の勝ち`);
-  $('#promptDir').className = 'dir ' + pr.dir;
 
   // スコア
   const sl = $('#scoreList'); sl.innerHTML = '';
