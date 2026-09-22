@@ -6,6 +6,7 @@ let META = null;          // countries, fields, categories, prompts
 let ws = null, state = null, pendingAction = null;
 let selectedCard = null, manualJoin = false;
 let timerInterval = null;
+let reconnectTries = 0;
 let pid = null;  // サーバーが発行する。再接続用トークンと共に sessionStorage に保持
 const rejoinInfo = () => ({ pid: sessionStorage.getItem('geoking_pid'), token: sessionStorage.getItem('geoking_token') });
 
@@ -66,16 +67,25 @@ function connect(onOpen) {
   ws.onopen = () => { onOpen && onOpen(); };
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
-    if (msg.type === 'state') { state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } render(); }
+    if (msg.type === 'state') { reconnectTries = 0; state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } render(); }
     else if (msg.type === 'error') {
-      if (!state) { sessionStorage.removeItem('geoking_room'); if (msg.message.includes('見つかりません') && !manualJoin) return; }
+      if (msg.message.includes('見つかりません') || msg.message.includes('認証に失敗')) {
+        sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token');
+        if (state) { state = null; show('home'); startRoomsPoll(); }   // 部屋が消えた → ホームへ
+        else if (!manualJoin) return;
+      }
       toast(msg.message);
     }
   };
   ws.onclose = () => {
     if (!state) return;
+    reconnectTries++;
+    if (reconnectTries > 8) {   // 約1分あきらめたら停止（無限再接続ループを防ぐ）
+      toast('サーバーに接続できません。ページを再読み込みしてください'); state = null; return;
+    }
     toast('接続が切れました。再接続します…');
-    setTimeout(() => { if (state) connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value, ...rejoinInfo() })); }, 1500);
+    const delay = Math.min(15000, 1000 * 2 ** (reconnectTries - 1));
+    setTimeout(() => { if (state) connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value, ...rejoinInfo() })); }, delay);
   };
 }
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
