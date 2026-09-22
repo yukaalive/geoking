@@ -43,9 +43,16 @@ async def main():
         c = await s.ws_connect(URL)
         await c.send_json({'type': 'join', 'room': room, 'name': 'Carol'})
         sc = await recv_state(c, lambda d: d['phase'] == 'pick')
+        me_c = next(p for p in sc['players'] if p['pid'] == sc['you'])
+        assert me_c['spectator'] and sc['hand'] == [], '途中参加はまず観戦のはず'
+        assert any('観戦' in m['text'] for m in sc['chat'])
+        await c.send_json({'type': 'pick', 'card': 'jp'})   # 観戦中は出せない（無視）
+        await c.send_json({'type': 'join_game'})
+        sc = await recv_state(c, lambda d: len(d['hand']) > 0)
         assert len(sc['hand']) == 5 and sc['round'] == 1, (len(sc['hand']), sc['round'])
+        assert not next(p for p in sc['players'] if p['pid'] == sc['you'])['spectator']
         assert not set(sc['hand']) & (set(sa['hand']) | set(sb['hand'])), 'late hand overlaps'
-        assert any('途中参加' in m['text'] for m in sc['chat'])
+        assert any('途中から参加' in m['text'] for m in sc['chat'])
         await recv_state(a, lambda d: len(d['players']) == 3)
         # 退出: Carol が抜ける → left を受け取り、部屋は2人で続行
         await c.send_json({'type': 'leave'})

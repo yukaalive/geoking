@@ -207,3 +207,5 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .tag .ico{width:.95em;height:.95em;vertical-align:-.15em;margin-right:2px}
 .rev .crown .ico{width:1.6em;height:1.6em}
 .status-ico{margin-left:4px}
+.tag.spec{background:var(--sky)}
+.spectate{margin-bottom:14px}

@@ -75,6 +75,7 @@ class Player:
         self.pick = None    # 今ラウンドに出したカード
         self.connected = is_bot
         self.token = None if is_bot else secrets.token_hex(16)  # 再接続用の秘密。本人にだけ送る
+        self.spectator = False   # 観戦中（途中参加者は既定で観戦。次のゲームから、または「途中から参加」で参加）
         self.last_chat = 0.0
 
 
@@ -112,6 +113,7 @@ class Room:
         random.shuffle(deck)
         for pid in self.order:
             p = self.players[pid]
+            p.spectator = False
             p.hand = [deck.pop() for _ in range(s['hand_size'])]
             p.score, p.won, p.pick = 0, [], None
         self.deck = deck   # 途中参加者に配る残り山札
@@ -131,7 +133,7 @@ class Room:
         return self.prompts[self.round - 1] if 0 < self.round <= len(self.prompts) else None
 
     def all_picked(self):
-        return all(p.pick is not None for p in self.players.values() if p.connected or p.is_bot)
+        return all(p.pick is not None for p in self.players.values() if (p.connected or p.is_bot) and not p.spectator)
 
     def do_reveal(self):
         pr = self.current_prompt()
@@ -214,7 +216,7 @@ class Room:
     def public_players(self):
         return [{
             'pid': pid, 'name': p.name, 'score': p.score, 'is_bot': p.is_bot,
-            'connected': p.connected, 'picked': p.pick is not None, 'won': p.won,
+            'connected': p.connected, 'picked': p.pick is not None, 'won': p.won, 'spectator': p.spectator,
             'hand_count': len(p.hand),
         } for pid, p in ((pid, self.players[pid]) for pid in self.order)]
 
@@ -374,17 +376,15 @@ async def ws_handler(request):
             else:
                 if len(r.players) >= MAX_PLAYERS:
                     return await error('満員です（最大8人）')
-                if r.phase == 'end':
-                    return await error('このゲームは終了しています。ホストが再戦を始めるまでお待ちください')
                 pid = uuid.uuid4().hex[:12]
                 p = Player(pid, clean_name(data.get('name'), r))
                 p.ws, p.connected = ws, True
                 r.players[pid] = p
                 r.order.append(pid)
                 r.empty_since = None
-                if r.phase in ('pick', 'reveal'):   # 途中参加
-                    r.deal_late(p)
-                    r.chat.append({'name': 'システム', 'text': f'{p.name} さんが途中参加しました', 'ts': time.time()})
+                if r.phase != 'lobby':   # 途中参加はまず観戦。次のゲームから自動で参加、または「途中から参加」
+                    p.spectator = True
+                    r.chat.append({'name': 'システム', 'text': f'{p.name} さんが観戦で入りました', 'ts': time.time()})
             ctx['room'], ctx['pid'] = r, pid
             return await broadcast(r)
 
@@ -441,6 +441,15 @@ async def ws_handler(request):
                 await after_player_gone(room, tp.name)
             return
 
+        if t == 'join_game':   # 観戦 → 今のゲームに途中から参加
+            p = room.players[pid]
+            if p.spectator and room.phase in ('pick', 'reveal'):
+                p.spectator = False
+                room.deal_late(p)
+                room.chat.append({'name': 'システム', 'text': f'{p.name} さんが途中から参加しました', 'ts': time.time()})
+                await broadcast(room)
+            return
+
         if t == 'leave':
             p = room.players[pid]
             room.remove_player(pid)
@@ -460,6 +469,8 @@ async def ws_handler(request):
             if room.phase != 'pick':
                 return
             p = room.players[pid]
+            if p.spectator:
+                return
             card = data.get('card')
             if isinstance(card, str) and card in p.hand:
                 p.pick = card

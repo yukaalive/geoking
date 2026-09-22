@@ -129,6 +129,7 @@ function pushSettings() {
 }
 ['#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
+$('#joinGameBtn').onclick = () => send({ type: 'join_game' });
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
   stopTimer();
@@ -162,6 +163,7 @@ function playerTag(p) {
   if (p.pid === state.host) t += `<span class="tag host">${ico('crown')}ホスト</span>`;
   if (p.is_bot) t += `<span class="tag">${ico('bot')}BOT</span>`;
   if (!p.connected && !p.is_bot) t += '<span class="tag off">切断</span>';
+  if (p.spectator) t += '<span class="tag spec">観戦</span>';
   if (p.pid === state.you) t += '<span class="tag">あなた</span>';
   return t;
 }
@@ -195,7 +197,7 @@ function renderGame() {
   // スコア
   const sl = $('#scoreList'); sl.innerHTML = '';
   for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
-    sl.appendChild(el('li', '', `<span>${escapeHtml(p.name)}${playerTag(p)}</span><b>${p.score} 点${state.phase === 'pick' ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
+    sl.appendChild(el('li', '', `<span>${escapeHtml(p.name)}${playerTag(p)}</span><b>${p.spectator ? '—' : p.score + ' 点'}${state.phase === 'pick' && !p.spectator ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
   }
   // チャット
   const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
@@ -216,6 +218,11 @@ function renderGame() {
 
 function renderHand() {
   const hand = $('#hand'); hand.innerHTML = '';
+  const me = state.players.find(p => p.pid === pid);
+  const spectating = !!(me && me.spectator);
+  $('#spectate').classList.toggle('hidden', !spectating);
+  $('#pickTitle').classList.toggle('hidden', spectating);
+  if (spectating) { renderOthersHands(); return; }
   const picked = state.my_pick;
   if (selectedCard && !state.hand.includes(selectedCard)) selectedCard = null;
   $('#pickTitle').textContent = picked
@@ -236,14 +243,14 @@ function renderHand() {
     hand.appendChild(c);
   }
   const w = el('div', 'waiting');
-  for (const p of state.players) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ' + ico('check', 'sm') : ''}`));
+  for (const p of state.players.filter(x => !x.spectator)) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ' + ico('check', 'sm') : ''}`));
   hand.appendChild(w); w.style.gridColumn = '1 / -1';
   renderOthersHands();
 }
 
 function renderOthersHands() {
   const box = $('#othersHands'); box.innerHTML = '';
-  const others = state.players.filter(p => p.pid !== pid);
+  const others = state.players.filter(p => p.pid !== pid && !p.spectator);
   if (!others.length || !state.hands) return;
   box.appendChild(el('h4', '', 'みんなの手札（何を出したかは公開まで分かりません）'));
   for (const p of others) {
@@ -282,7 +289,7 @@ function renderReveal() {
 
 function renderEnd() {
   const ol = $('#finalList'); ol.innerHTML = '';
-  const sorted = [...state.players].sort((a, b) => b.score - a.score);
+  const sorted = state.players.filter(p => !p.spectator).sort((a, b) => b.score - a.score);
   const top = sorted[0]?.score;
   sorted.forEach((p, i) => {
     const won = p.won.map(id => META.prompts.find(x => x.id === id)?.text.replace('は？', '')).filter(Boolean);
