@@ -109,8 +109,11 @@ function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj))
 // ---------- ホーム
 const JP_NAMES = ['さくら', 'ゆうき', 'はると', 'みお', 'そうた', 'ひなた', 'りく', 'あおい', 'ゆい', 'こうき', 'はな', 'だいき', 'めい', 'たくみ', 'りん', 'けんた', 'ももか', 'しょうた', 'あかり', 'ゆうと', 'なな', 'かいと', 'ひかり', 'れん', 'みさき', 'たいち', 'ことね', 'ゆうま', 'まお', 'しゅん'];
 const randomName = () => JP_NAMES[Math.floor(Math.random() * JP_NAMES.length)];
-function myName() { const n = $('#nameInput').value.trim() || randomName(); localStorage.setItem('geoking_name', n); return n; }
-$('#nameInput').value = localStorage.getItem('geoking_name') || randomName();
+// 空欄のときはプレースホルダーに出ているおすすめ名をそのまま使う（消さずに入力できる）
+function myName() { const n = $('#nameInput').value.trim() || $('#nameInput').placeholder || randomName(); localStorage.setItem('geoking_name', n); return n; }
+$('#nameInput').placeholder = randomName();
+$('#nameInput').value = localStorage.getItem('geoking_name') || '';
+$('#nameInput').addEventListener('focus', function () { this.select(); });   // 前回の名前が入っていても、そのまま打てば置き換わる
 $('#createBtn').onclick = () => { manualJoin = true; const name = myName(); connect(() => send({ type: 'create', name })); };
 $('#joinBtn').onclick = () => {
   const code = $('#codeInput').value.trim().toUpperCase(); if (code.length !== 4) return toast('4文字の部屋コードを入力してください');
