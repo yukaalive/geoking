@@ -39,9 +39,27 @@ const sfx = (() => {
     tick()    { tone('square', 1200, 0, .04, .06); },                                                    // 残り秒
     chat()    { tone('sine', 1400, 0, .05, .05); },                                                      // チャット受信
     champion(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone('triangle', f, i * .12, .3, .2)); vibrate([60, 60, 60, 60, 200]); },
+    // ---- 画面操作の音
+    tap()     { tone('square', 660, 0, .04, .05); },                                                     // ボタン全般（軽いカチ）
+    enter()   { tone('triangle', 523, 0, .1, .14); tone('triangle', 784, .1, .18, .14); vibrate(15); },   // 部屋に入った
+    leave()   { tone('triangle', 784, 0, .1, .12); tone('triangle', 523, .1, .18, .12); },               // 部屋を出た
+    joined()  { tone('sine', 880, 0, .06, .1); tone('sine', 1320, .06, .1, .1); },                        // 誰かが入室
+    left()    { tone('sine', 660, 0, .08, .08, 440); },                                                    // 誰かが退室
+    start()   { [392, 523, 659, 784].forEach((f, i) => tone('square', f, i * .07, .1, .1)); tone('triangle', 1047, .3, .3, .18); vibrate([20, 30, 40]); }, // ゲーム開始
+    send()    { tone('sine', 1100, 0, .05, .06); },                                                        // 自分がチャット送信
+    error()   { tone('square', 200, 0, .12, .08); tone('square', 160, .12, .16, .08); vibrate([30, 30, 30]); }, // エラー・拒否
+    open()    { tone('sine', 700, 0, .06, .07, 900); },                                                    // 小窓を開く
+    close()   { tone('sine', 900, 0, .06, .06, 600); },                                                    // 小窓を閉じる
+    toggle()  { tone('square', 990, 0, .05, .07); },                                                       // 設定の切り替え
   };
 })();
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });   // 最初のタップで音を許可
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button, .who, a.muted');
+  if (!b || b.closest('.flagcard') || b.id === 'soundBtn' || b.id === 'vibeBtn') return;
+  sfx.tap();
+});
+document.addEventListener('change', (e) => { if (e.target.matches('input[type=checkbox], select')) sfx.toggle(); });
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -106,7 +124,8 @@ function showCountry(id) {
   $('#modalBody').classList.add('wide');
   loadWorld().then(() => { const box = $('#modalBody .mmap'); if (box) box.innerHTML = `<div class="muted small" style="margin-bottom:4px">世界の中の位置</div>` + worldMapSvg(id) + `<div class="muted small" style="margin:10px 0 4px">周辺を拡大</div>` + worldMapSvg(id, true) + `<div class="muted small" style="margin-top:6px">${c.lat >= 0 ? '北緯' : '南緯'} ${Math.abs(c.lat).toFixed(1)}°　${c.lng >= 0 ? '東経' : '西経'} ${Math.abs(c.lng).toFixed(1)}°</div>`; });
 }
-$('#modalClose').onclick = () => $('#modal').classList.add('hidden');
+$('#modalClose').onclick = () => { $('#modal').classList.add('hidden'); sfx.close(); };
+new MutationObserver(() => { const m = $('#modal'); if (!m.classList.contains('hidden')) sfx.open(); }).observe($('#modal'), { attributes: true, attributeFilter: ['class'] });
 $('#creditsLink').onclick = (e) => {
   e.preventDefault();
   $('#modalBody').innerHTML = `<h2 style="margin-top:0">データ出典</h2><ul class="small" style="padding-left:18px;line-height:1.8">
@@ -132,6 +151,7 @@ function connect(onOpen) {
     else if (msg.type === 'toast') toast(msg.message);
     else if (msg.type === 'left') { leaveToHome(msg.message); if (ws) { ws.onclose = null; ws.close(); } }
     else if (msg.type === 'error') {
+      sfx.error();
       if (msg.message.includes('見つかりません') || msg.message.includes('認証に失敗')) {
         sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token');
         if (state) { stopTimer(); state = null; $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll(); }   // 部屋が消えた → ホームへ
@@ -185,15 +205,16 @@ $('#soundBtn').onclick = () => { sfx.toggle('sound'); renderPrefs(); toast(sfx.p
 $('#vibeBtn').onclick = () => { sfx.toggle('vibe'); renderPrefs(); toast(sfx.prefs.vibe ? '振動: オン' : '振動: オフ'); };
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
-  stopTimer(); prevKey = ''; prevChatLen = 0;
+  stopTimer(); prevKey = ''; prevChatLen = 0; prevRoom = null; prevPlayers = null;
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
   state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
+  sfx.leave();
   if (message) toast(message);
 }
 $('#startBtn').onclick = () => send({ type: 'start' });
 $('#rematchBtn').onclick = () => send({ type: 'start' });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
-$('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) send({ type: 'chat', text: t }); $('#chatInput').value = ''; };
+$('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) { send({ type: 'chat', text: t }); sfx.send(); } $('#chatInput').value = ''; };
 
 $('#copyLink').onclick = async () => {
   const url = `${API || location.origin}/static/index.html?room=${state.room}`;
@@ -201,11 +222,15 @@ $('#copyLink').onclick = async () => {
 };
 
 // ---------- 描画
-let prevKey = '', prevChatLen = 0, lastTickSec = null;
+let prevKey = '', prevChatLen = 0, lastTickSec = null, prevPlayers = null, prevRoom = null;
 function playTransitions() {
   const key = `${state.room}:${state.phase}:${state.round}`;
+  // 部屋に入った／人が増えた・減った
+  if (state.room !== prevRoom) { sfx.enter(); prevRoom = state.room; prevPlayers = state.players.length; }
+  else if (prevPlayers != null && state.players.length !== prevPlayers) { (state.players.length > prevPlayers ? sfx.joined : sfx.left)(); prevPlayers = state.players.length; }
   if (key !== prevKey) {
-    if (state.phase === 'pick') { sfx.round(); lastTickSec = null; }
+    if (state.phase === 'pick' && state.round === 1 && !prevKey.endsWith(':pick:1')) { sfx.start(); lastTickSec = null; }
+    else if (state.phase === 'pick') { sfx.round(); lastTickSec = null; }
     else if (state.phase === 'reveal' && state.reveal) {
       sfx.reveal();
       const me = state.reveal.rows.find(r => r.pid === pid);
