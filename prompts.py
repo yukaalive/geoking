@@ -79,6 +79,5 @@ PROMPTS = [
     P('life_min', 'society', '平均寿命が短い国は？', 'life_exp', 'min', 2),
     P('age65_max', 'society', '高齢化率（65歳以上）が高い国は？', 'age65_pct', 'max', 2),
     P('fert_max', 'society', '出生率が高い国は？', 'fertility', 'max', 2),
-    P('urban_max', 'society', '都市人口率が高い国は？', 'urban_pct', 'max', 3),
 ]
 PROMPT_BY_ID = {p['id']: p for p in PROMPTS}

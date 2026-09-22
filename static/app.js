@@ -50,13 +50,16 @@ function showCountry(id) {
     ['宗教', ['rel_chr', 'rel_mus', 'rel_bud', 'rel_hin', 'rel_non', 'rel_folk', 'rel_jew', 'rel_div']],
     ['社会・暮らし', ['life_exp', 'age65_pct', 'fertility', 'urban_pct', 'internet_pct', 'tourists', 'physicians', 'elec_pct']],
   ];
-  let html = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${c.name}</h2><div class="muted">${c.name_official}<br>${c.name_en} ／ ${c.subregion}<br>首都: ${c.capital || '—'}${c.landlocked ? '（内陸国）' : ''}</div></div></div><div class="dl">`;
+  let info = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${c.name_official}</h2><div class="muted">${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}<br>首都: ${c.capital || '—'}${c.landlocked ? '（内陸国）' : ''}</div></div></div><div class="dl">`;
   for (const [title, keys] of groups) {
-    html += `<div class="sec">${title}</div>`;
-    for (const k of keys) html += `<div class="k">${F[k].label}</div><div class="v">${fmtValue(c[k], F[k].fmt)}</div>`;
+    info += `<div class="sec">${title}</div>`;
+    for (const k of keys) info += `<div class="k">${F[k].label}</div><div class="v">${fmtValue(c[k], F[k].fmt)}</div>`;
   }
-  html += '</div>';
-  $('#modalBody').innerHTML = html; $('#modal').classList.remove('hidden');
+  info += '</div>';
+  $('#modalBody').innerHTML = `<div class="modalgrid"><div class="minfo">${info}</div><div class="mmap worldmap"><div class="muted small">地図を読み込み中…</div></div></div>`;
+  $('#modal').classList.remove('hidden');
+  $('#modalBody').classList.add('wide');
+  loadWorld().then(() => { const box = $('#modalBody .mmap'); if (box) box.innerHTML = `<div class="muted small" style="margin-bottom:4px">世界の中の位置</div>` + worldMapSvg(id) + `<div class="muted small" style="margin:10px 0 4px">周辺を拡大</div>` + worldMapSvg(id, true) + `<div class="muted small" style="margin-top:6px">${c.lat >= 0 ? '北緯' : '南緯'} ${Math.abs(c.lat).toFixed(1)}°　${c.lng >= 0 ? '東経' : '西経'} ${Math.abs(c.lng).toFixed(1)}°</div>`; });
 }
 $('#modalClose').onclick = () => $('#modal').classList.add('hidden');
 $('#creditsLink').onclick = (e) => {
@@ -68,7 +71,7 @@ $('#creditsLink').onclick = (e) => {
     <li>年平均気温: 公開資料を参考にした概算</li>
     <li>国旗画像: <a href="https://flagcdn.com/" target="_blank" rel="noopener">flagcdn.com</a></li>
     <li>ゲームデザインの着想: ウナム日月『国旗王（こっきんぐ）』</li></ul>`;
-  $('#modal').classList.remove('hidden');
+  $('#modal').classList.remove('hidden'); $('#modalBody').classList.remove('wide');
 };
 $('#modal').onclick = (e) => { if (e.target.id === 'modal') $('#modal').classList.add('hidden'); };
 
@@ -273,7 +276,7 @@ function renderEnd() {
   });
   const champs = sorted.filter(p => p.score === top).map(p => p.name);
   $('#endTitle').textContent = `🏆 ${champs.join('・')} が地理王！`;
-  renderHistory(); renderWorldMap();
+  renderHistory();
 }
 
 function renderHistory() {
@@ -295,25 +298,22 @@ function renderHistory() {
 }
 
 let WORLD = null;
-async function renderWorldMap() {
-  const box = $('#worldMap'); box.innerHTML = '<div class="muted small">地図を読み込み中…</div>';
-  try { if (!WORLD) WORLD = await (await fetch('/static/worldmap.json')).json(); } catch { box.textContent = '地図を読み込めませんでした'; return; }
-  const played = new Map();   // card id -> [round numbers]
-  for (const h of (state.history || [])) for (const r of h.rows) played.set(r.card, [...(played.get(r.card) || []), h.round]);
-  const proj = (lat, lng) => [((lng + 180) / 360 * 1000), ((90 - lat) / 180 * 500)];
-  const playedIso = new Set([...played.keys()].map(id => META.countries[id].cca3));
-  let svg = `<svg viewBox="0 40 1000 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="出された国の位置">`;
-  for (const [iso, d] of Object.entries(WORLD)) svg += `<path class="land${playedIso.has(iso) ? ' played' : ''}" d="${d}"/>`;
-  for (const [id, rounds] of played) {
-    const c = META.countries[id]; const [x, y] = proj(c.lat, c.lng);
-    svg += `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"><title>${c.name_official}（第${rounds.join('・')}ラウンド）</title></circle>`;
-    svg += `<text class="lbl" x="${(x + 6).toFixed(1)}" y="${(y + 3).toFixed(1)}">${c.name}</text>`;
-  }
-  svg += '</svg>';
-  box.innerHTML = svg;
-  const legend = el('div', 'maplegend');
-  for (const [id, rounds] of played) legend.appendChild(el('span', '', `<img src="${flagUrl(id, 40)}" alt="" style="width:18px;vertical-align:middle;border:1px solid var(--line)"> ${META.countries[id].name_official}（第${rounds.join('・')}R）`));
-  box.appendChild(legend);
+async function loadWorld() {
+  if (!WORLD) { try { WORLD = await (await fetch('/static/worldmap.json')).json(); } catch { WORLD = {}; } }
+  return WORLD;
+}
+// 指定した国を強調した世界地図SVGを返す
+function worldMapSvg(id, zoom = false) {
+  const c = META.countries[id];
+  const x = (c.lng + 180) / 360 * 1000, y = (90 - c.lat) / 180 * 500;
+  // zoom: その国を中心に 300x200（経度約108°×緯度72°）を切り出す
+  const vb = zoom ? `${Math.max(0, Math.min(700, x - 150)).toFixed(0)} ${Math.max(0, Math.min(300, y - 100)).toFixed(0)} 300 200` : '0 40 1000 420';
+  let svg = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}の位置">`;
+  for (const [iso, d] of Object.entries(WORLD || {})) svg += `<path class="land${iso === c.cca3 ? ' played' : ''}" d="${d}"/>`;
+  const r = zoom ? 3 : 5, lbl = zoom ? 'lbl' : 'lbl';
+  svg += `<circle class="pulse${zoom ? ' small' : ''}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r * 3}"/><circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>`;
+  svg += `<text class="${lbl}" x="${(x + r + 4).toFixed(1)}" y="${(y + 4).toFixed(1)}" ${zoom ? 'font-size="8"' : ''}>${c.name}</text></svg>`;
+  return svg;
 }
 
 // ---------- タイマー

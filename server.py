@@ -32,6 +32,7 @@ DEFAULT_SETTINGS = {
 MAX_ROOMS = 300
 MAX_PLAYERS = 8
 ROOM_TTL = 6 * 3600
+EMPTY_GRACE = 90       # 秒。人間が全員切断しても、この間は部屋を残す（リロード・再接続用）
 CHAT_INTERVAL = 0.7    # 秒。連投制限
 REVEAL_SECONDS = 5     # 結果表示の秒数。経過後は自動で次のラウンドへ
 
@@ -48,8 +49,12 @@ def clean_name(v, room=None):
 
 def cleanup_rooms():
     now = time.time()
-    for code in [c for c, r in rooms.items() if now - r.created > ROOM_TTL]:
-        rooms.pop(code, None)
+    for code, r in list(rooms.items()):
+        if now - r.created > ROOM_TTL or (r.empty_since and now - r.empty_since > EMPTY_GRACE):
+            for task in (r.timer_task, r.reveal_task):
+                if task:
+                    task.cancel()
+            rooms.pop(code, None)
 
 
 def new_code():
@@ -91,6 +96,7 @@ class Room:
         self.reveal_task = None
         self.deadline = None
         self.next_at = None     # 結果表示が終わり次のラウンドに進む時刻
+        self.empty_since = None # 人間が全員いなくなった時刻
         self.created = time.time()
 
     # ---------- game flow
@@ -312,10 +318,7 @@ def to_int(v, lo, hi, default):
 async def after_player_gone(room, name):
     """退出・キック・切断後の後始末。"""
     if not room.has_humans():
-        for task in (room.timer_task, room.reveal_task):
-            if task:
-                task.cancel()
-        rooms.pop(room.code, None)
+        room.empty_since = room.empty_since or time.time()   # 猶予後に cleanup_rooms が削除
         return
     if room.phase in ('pick', 'reveal', 'end') and name:
         room.chat.append({'name': 'システム', 'text': f'{name} さんが退出しました', 'ts': time.time()})
@@ -367,6 +370,7 @@ async def ws_handler(request):
                     await p.ws.close()
                 p.ws, p.connected = ws, True
                 pid = want_pid
+                r.empty_since = None
             else:
                 if len(r.players) >= MAX_PLAYERS:
                     return await error('満員です（最大8人）')
@@ -377,6 +381,7 @@ async def ws_handler(request):
                 p.ws, p.connected = ws, True
                 r.players[pid] = p
                 r.order.append(pid)
+                r.empty_since = None
                 if r.phase in ('pick', 'reveal'):   # 途中参加
                     r.deal_late(p)
                     r.chat.append({'name': 'システム', 'text': f'{p.name} さんが途中参加しました', 'ts': time.time()})
@@ -549,8 +554,19 @@ async def security_headers(request, handler):
     return resp
 
 
+async def periodic_cleanup(app):
+    async def _run():
+        while True:
+            await asyncio.sleep(30)
+            cleanup_rooms()
+    task = asyncio.create_task(_run())
+    yield
+    task.cancel()
+
+
 def make_app():
     app = web.Application(middlewares=[security_headers], client_max_size=64 * 1024)
+    app.cleanup_ctx.append(periodic_cleanup)
     app.router.add_get('/', index)
     app.router.add_get('/healthz', healthz)
     app.router.add_get('/api/meta', api_meta)

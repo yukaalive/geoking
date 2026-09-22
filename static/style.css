@@ -111,3 +111,12 @@ fieldset{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin
 .worldmap .dot{fill:#dc2626;stroke:#fff;stroke-width:1.2}
 .worldmap .lbl{font-size:11px;font-weight:700;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:2.5px;stroke-linejoin:round}
 .maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px}
+
+.modalbox:has(#modalBody.wide){max-width:1040px}
+.modalgrid{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:20px;align-items:start}
+@media(max-width:820px){.modalgrid{grid-template-columns:1fr}}
+.mmap svg{position:sticky;top:0}
+.worldmap .pulse{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:1;animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{r:6;opacity:1}100%{r:22;opacity:0}}
+.worldmap .pulse.small{animation-name:pulseSmall}
+@keyframes pulseSmall{0%{r:3;opacity:1}100%{r:12;opacity:0}}
