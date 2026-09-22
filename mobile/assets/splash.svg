@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2732 2732">
+  <rect width="2732" height="2732" fill="#f7f1df"/>
+  <g transform="translate(1078 940) scale(24)">
+    <path d="M3.5 17.5 5 8.5l4.6 3.6L12 5l2.4 7.1L19 8.5l1.5 9z" fill="#f4c542" stroke="#1c2b22" stroke-width="1.6" stroke-linejoin="round"/>
+    <rect x="3.5" y="17.5" width="17" height="3" rx="1" fill="#f4c542" stroke="#1c2b22" stroke-width="1.6"/>
+    <circle cx="12" cy="13.5" r="1.4" fill="#1c2b22"/>
+  </g>
+  <text x="1366" y="1720" text-anchor="middle" font-family="Hiragino Sans, sans-serif" font-weight="900" font-size="200" fill="#1f6f4a">地理王</text>
+</svg>
