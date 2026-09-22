@@ -192,10 +192,7 @@ $('#startBtn').onclick = () => send({ type: 'start' });
 $('#rematchBtn').onclick = () => send({ type: 'start' });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
 $('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) send({ type: 'chat', text: t }); $('#chatInput').value = ''; };
-function renderReactions() {
-  const box = $('#reactions'); if (box.childElementCount) return;
-  for (const r of (META.reactions || [])) { const b = el('button', 'react', escapeHtml(r)); b.onclick = () => send({ type: 'chat', text: r }); box.appendChild(b); }
-}
+
 $('#copyLink').onclick = async () => {
   const url = `${API || location.origin}/static/index.html?room=${state.room}`;
   try { await navigator.clipboard.writeText(url); toast('招待リンクをコピーしました'); } catch { prompt('このリンクを共有してください', url); }
@@ -283,7 +280,6 @@ function renderGame() {
   }
   // チャット
   sl.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
-  renderReactions();
   const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
   log.innerHTML = state.chat.map(c => `<div>${c.pid && c.pid !== pid ? `<b class="who" data-pid="${c.pid}" title="通報・ミュート">${escapeHtml(c.name)}</b>` : `<b>${escapeHtml(c.name)}</b>`} ${escapeHtml(c.text)}</div>`).join('');
   log.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));

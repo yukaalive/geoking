@@ -34,8 +34,7 @@ MAX_PLAYERS = 8
 ROOM_TTL = 6 * 3600
 EMPTY_GRACE = 90       # 秒。人間が全員切断しても、この間は部屋を残す（リロード・再接続用）
 CHAT_INTERVAL = 0.7    # 秒。連投制限
-# 定型リアクション（ボタン）。自由入力もできるが moderation.check_chat（NGワード・連絡先・URL）を通過したものだけ流れる
-REACTIONS = ['よろしく！', 'いいね！', 'まさか！', '勝負！', 'ナイス！', 'おめでとう！', 'むずかしい…', 'ドンマイ！']
+# チャットは moderation.check_chat（NGワード・連絡先・URL・連打）を通過したものだけ流れる
 REPORTS_TO_MUTE = 2   # 異なる2人から通報されたら、その部屋ではチャット禁止
 REVEAL_SECONDS = 5     # 結果表示の秒数。経過後は自動で次のラウンドへ
 
@@ -544,11 +543,10 @@ async def ws_handler(request):
             p = room.players[pid]
             if p.chat_banned:
                 return await error('通報が複数あったため、この部屋ではチャットできません')
-            if text not in REACTIONS:
-                ok, why = check_chat(text)   # NGワード・URL・連絡先・連打
-                if not ok:
-                    log.info('room %s chat blocked from %s: %r', room.code, p.name, text)
-                    return await error(why)
+            ok, why = check_chat(text)   # NGワード・URL・連絡先・連打
+            if not ok:
+                log.info('room %s chat blocked from %s: %r', room.code, p.name, text)
+                return await error(why)
             now = time.time()
             if text and now - p.last_chat >= CHAT_INTERVAL:
                 p.last_chat = now
@@ -600,7 +598,6 @@ async def api_meta(request):
         'countries': {c['id']: c for c in COUNTRIES},
         'fields': FIELDS, 'categories': CATEGORIES,
         'prompts': PROMPTS,
-        'reactions': REACTIONS,
     })
 
 
