@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: geoking
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 server.py
+    healthCheckPath: /healthz

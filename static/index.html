@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeoKing 地理王</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">🌍 GeoKing <span>地理王</span></div>
+  <div id="roomInfo" class="roominfo hidden">部屋 <b id="roomCode"></b> <button id="copyLink" class="mini">招待リンクをコピー</button></div>
+</header>
+
+<main id="app">
+  <!-- ホーム -->
+  <section id="home" class="screen">
+    <div class="card hero">
+      <h1>国旗だけを見て、データで勝負。</h1>
+      <p>国旗カードを8枚配られ、「面積が大きい国は？」「年平均気温が高い国は？」「イスラム教徒の割合が高い国は？」といったお題に、<b>裏面のデータを見ずに</b>一番合いそうな国を出します。裏返して、最もお題に合った人が1点。</p>
+      <label>あなたの名前<input id="nameInput" maxlength="16" placeholder="例：ゆか"></label>
+      <div class="row">
+        <button id="createBtn" class="primary">部屋を作る</button>
+        <div class="join">
+          <input id="codeInput" maxlength="4" placeholder="部屋コード" autocapitalize="characters">
+          <button id="joinBtn">参加する</button>
+        </div>
+      </div>
+      <p class="muted small">ひとりで遊ぶ場合は部屋を作ってボットを追加してください。</p>
+    </div>
+    <div class="card hero" id="publicRooms">
+      <h2>🌐 募集中の公開部屋 <button id="refreshRooms" class="mini">更新</button></h2>
+      <ul id="publicRoomList" class="players"><li class="muted">読み込み中…</li></ul>
+      <p class="muted small">世界のどこかの誰かが作った部屋に飛び入りできます。自分の部屋を載せるにはロビーで「公開部屋にする」をオンに。</p>
+    </div>
+  </section>
+
+  <!-- ロビー -->
+  <section id="lobby" class="screen hidden">
+    <div class="grid2">
+      <div class="card">
+        <h2>プレイヤー <span id="playerCount" class="muted"></span></h2>
+        <ul id="lobbyPlayers" class="players"></ul>
+        <div class="row hostonly">
+          <button id="addBotBtn">ボットを追加</button>
+        </div>
+        <p class="muted small">部屋コード <b id="lobbyCode"></b> を友だちに伝えるか、招待リンクを共有してください。</p>
+      </div>
+      <div class="card">
+        <h2>ルール設定 <span class="muted small guestonly">（ホストのみ変更できます）</span></h2>
+        <fieldset id="catFields" class="hostonly-disable">
+          <legend>お題のカテゴリ</legend>
+          <label><input type="checkbox" name="cat" value="basic" checked> 🏳️ 基本（国旗王スタイル：面積・人口・GDP・南北…）</label>
+          <label><input type="checkbox" name="cat" value="climate" checked> 🌦️ 気候・自然（気温・降水量・森林率…）</label>
+          <label><input type="checkbox" name="cat" value="religion" checked> 🛐 宗教（キリスト教・イスラム教・仏教・無宗教の割合…）</label>
+          <label><input type="checkbox" name="cat" value="society" checked> 🏙️ 社会・暮らし（寿命・高齢化・観光客…）</label>
+        </fieldset>
+        <div class="settings hostonly-disable">
+          <label>ラウンド数 <input type="number" id="setRounds" min="3" max="12" value="7"></label>
+          <label>手札枚数 <input type="number" id="setHand" min="4" max="12" value="8"></label>
+          <label>制限時間（秒、0=なし） <input type="number" id="setTimer" min="0" max="180" step="5" value="0"></label>
+          <label>難易度上限
+            <select id="setStar"><option value="1">★のみ（かんたん）</option><option value="2">★★まで</option><option value="3" selected>★★★まで（全部）</option></select>
+          </label>
+          <label class="chk"><input type="checkbox" id="setNames"> 国旗の下に国名を表示（初心者向け）</label>
+          <label class="chk"><input type="checkbox" id="setPublic"> 🌐 公開部屋にする（トップページの一覧に載せて誰でも参加可）</label>
+        </div>
+        <button id="startBtn" class="primary big hostonly">ゲーム開始</button>
+        <p class="guestonly muted">ホストが開始するのを待っています…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ゲーム -->
+  <section id="game" class="screen hidden">
+    <div class="gamehead">
+      <div class="roundlabel">ラウンド <b id="roundNum"></b> / <span id="roundTotal"></span></div>
+      <div id="promptCard" class="promptcard">
+        <div class="cat" id="promptCat"></div>
+        <div class="text" id="promptText"></div>
+        <div class="hint" id="promptHint"></div>
+      </div>
+      <div id="timer" class="timer hidden"></div>
+    </div>
+
+    <div class="board">
+      <div class="left">
+        <div id="pickArea">
+          <h3 id="pickTitle">お題に一番合うと思う国旗を1枚選ぼう</h3>
+          <div id="hand" class="hand"></div>
+        </div>
+        <div id="revealArea" class="hidden">
+          <h3>結果</h3>
+          <div id="revealRows" class="reveal"></div>
+          <div class="row">
+            <button id="nextBtn" class="primary hostonly">次のラウンドへ</button>
+            <span class="guestonly muted">ホストが進めるのを待っています…</span>
+          </div>
+        </div>
+      </div>
+      <aside class="right">
+        <div class="card">
+          <h3>スコア</h3>
+          <ul id="scoreList" class="scores"></ul>
+        </div>
+        <div class="card chat">
+          <h3>ブラフ・チャット</h3>
+          <div id="chatLog" class="chatlog"></div>
+          <form id="chatForm"><input id="chatInput" maxlength="80" placeholder="「これ絶対南半球」など"><button>送信</button></form>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="end" class="screen hidden">
+    <div class="card">
+      <h1 id="endTitle">🏆 結果発表</h1>
+      <ol id="finalList" class="final"></ol>
+      <div class="row">
+        <button id="rematchBtn" class="primary hostonly">同じメンバーでもう一戦</button>
+        <button id="toLobbyBtn" class="hostonly">ロビーに戻って設定を変える</button>
+        <span class="guestonly muted">ホストの操作を待っています…</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- カード詳細モーダル -->
+<div id="modal" class="modal hidden"><div class="modalbox"><button id="modalClose" class="close">×</button><div id="modalBody"></div></div></div>
+
+<footer class="foot muted small">
+  データ: mledoze/countries・World Bank Open Data・Pew Research（宗教、概算）・年平均気温は概算値 ／ 国旗画像: flagcdn.com ／ ゲームデザインの着想: ウナム日月『国旗王』
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
