@@ -86,6 +86,7 @@ class Room:
         self.chat = []
         self.title = ''
         self.deck = []
+        self.history = []   # 各ラウンドの公開結果（最終結果の一覧用）
         self.timer_task = None
         self.reveal_task = None
         self.deadline = None
@@ -108,6 +109,7 @@ class Room:
             p.hand = [deck.pop() for _ in range(s['hand_size'])]
             p.score, p.won, p.pick = 0, [], None
         self.deck = deck   # 途中参加者に配る残り山札
+        self.history = []
         self.round = 0
         self.begin_round()
 
@@ -155,6 +157,7 @@ class Room:
             if p.pick in p.hand:
                 p.hand.remove(p.pick)
         self.reveal = {'prompt': pr, 'rows': sorted(rows, key=lambda r: (r['rank'] is None, r['rank'] or 0))}
+        self.history.append({'round': self.round, **self.reveal})
         self.phase = 'reveal'
         self.deadline = None
         self.next_at = time.time() + REVEAL_SECONDS
@@ -188,6 +191,7 @@ class Room:
         self.phase, self.round, self.reveal, self.next_at = 'lobby', 0, None, None
         for p in self.players.values():
             p.hand, p.pick, p.score, p.won = [], None, 0, []
+        self.history = []
 
     def remove_player(self, pid):
         self.players.pop(pid, None)
@@ -217,6 +221,8 @@ class Room:
             'settings': self.settings, 'players': self.public_players(),
             'prompt': self.current_prompt() if self.phase in ('pick', 'reveal') else None,
             'hand': me.hand if me else [],
+            'hands': {x: pl.hand for x, pl in self.players.items()},   # 全員の手札（出したカードは公開まで手札に残るので選択は漏れない）
+            'history': self.history if self.phase == 'end' else None,
             'my_pick': me.pick if me else None,
             'reveal': self.reveal,
             'deadline': self.deadline,

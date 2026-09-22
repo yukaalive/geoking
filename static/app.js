@@ -24,7 +24,8 @@ function fmtValue(v, fmt) {
     case 'lat': return (n >= 0 ? '北緯 ' : '南緯 ') + Math.abs(n).toFixed(1) + '°';
     case 'lng': return (n >= 0 ? '東経 ' : '西経 ') + Math.abs(n).toFixed(1) + '°';
     case 'deg': return n.toFixed(1) + '°';
-    case 'count': return n + ' か国・言語';
+    case 'countries': return n + ' か国';
+    case 'langs': return n + ' 言語';
     case 'temp': return n.toFixed(1) + ' ℃';
     case 'mm': return n.toLocaleString('ja-JP') + ' mm';
     case 'pct': return n.toFixed(1) + ' %';
@@ -221,6 +222,24 @@ function renderHand() {
   const w = el('div', 'waiting');
   for (const p of state.players) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ✓' : ''}`));
   hand.appendChild(w); w.style.gridColumn = '1 / -1';
+  renderOthersHands();
+}
+
+function renderOthersHands() {
+  const box = $('#othersHands'); box.innerHTML = '';
+  const others = state.players.filter(p => p.pid !== pid);
+  if (!others.length || !state.hands) return;
+  box.appendChild(el('h4', '', 'みんなの手札（何を出したかは公開まで分かりません）'));
+  for (const p of others) {
+    const row = el('div', 'orow');
+    row.appendChild(el('span', 'oname', `${escapeHtml(p.name)}${p.picked ? ' ✓' : ''}`));
+    for (const id of (state.hands[p.pid] || [])) {
+      const img = el('img'); img.src = flagUrl(id, 80); img.alt = ''; img.title = state.settings.show_names ? countryName(id) : '';
+      img.style.cursor = 'pointer'; img.onclick = () => showCountry(id);
+      row.appendChild(img);
+    }
+    box.appendChild(row);
+  }
 }
 
 function renderReveal() {
@@ -254,6 +273,47 @@ function renderEnd() {
   });
   const champs = sorted.filter(p => p.score === top).map(p => p.name);
   $('#endTitle').textContent = `🏆 ${champs.join('・')} が地理王！`;
+  renderHistory(); renderWorldMap();
+}
+
+function renderHistory() {
+  const box = $('#historyList'); box.innerHTML = '';
+  for (const h of (state.history || [])) {
+    const F = META.fields[h.prompt.key];
+    const d = el('div', 'hround');
+    d.appendChild(el('div', 'hprompt', `第${h.round}ラウンド：${escapeHtml(h.prompt.text)}`));
+    const cards = el('div', 'hcards');
+    for (const r of h.rows) {
+      const c = META.countries[r.card];
+      const card = el('div', 'hcard' + (r.winner ? ' win' : ''));
+      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? '👑 ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div><div class="who">${escapeHtml(r.name)}</div>`;
+      card.style.cursor = 'pointer'; card.onclick = () => showCountry(r.card);
+      cards.appendChild(card);
+    }
+    d.appendChild(cards); box.appendChild(d);
+  }
+}
+
+let WORLD = null;
+async function renderWorldMap() {
+  const box = $('#worldMap'); box.innerHTML = '<div class="muted small">地図を読み込み中…</div>';
+  try { if (!WORLD) WORLD = await (await fetch('/static/worldmap.json')).json(); } catch { box.textContent = '地図を読み込めませんでした'; return; }
+  const played = new Map();   // card id -> [round numbers]
+  for (const h of (state.history || [])) for (const r of h.rows) played.set(r.card, [...(played.get(r.card) || []), h.round]);
+  const proj = (lat, lng) => [((lng + 180) / 360 * 1000), ((90 - lat) / 180 * 500)];
+  const playedIso = new Set([...played.keys()].map(id => META.countries[id].cca3));
+  let svg = `<svg viewBox="0 40 1000 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="出された国の位置">`;
+  for (const [iso, d] of Object.entries(WORLD)) svg += `<path class="land${playedIso.has(iso) ? ' played' : ''}" d="${d}"/>`;
+  for (const [id, rounds] of played) {
+    const c = META.countries[id]; const [x, y] = proj(c.lat, c.lng);
+    svg += `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"><title>${c.name_official}（第${rounds.join('・')}ラウンド）</title></circle>`;
+    svg += `<text class="lbl" x="${(x + 6).toFixed(1)}" y="${(y + 3).toFixed(1)}">${c.name}</text>`;
+  }
+  svg += '</svg>';
+  box.innerHTML = svg;
+  const legend = el('div', 'maplegend');
+  for (const [id, rounds] of played) legend.appendChild(el('span', '', `<img src="${flagUrl(id, 40)}" alt="" style="width:18px;vertical-align:middle;border:1px solid var(--line)"> ${META.countries[id].name_official}（第${rounds.join('・')}R）`));
+  box.appendChild(legend);
 }
 
 // ---------- タイマー

@@ -37,6 +37,7 @@ async def main():
         await a.send_json({'type': 'start'})
         sa = await recv_state(a, lambda d: d['phase'] == 'pick'); sb = await recv_state(b, lambda d: d['phase'] == 'pick')
         assert len(sa['hand']) == 5 and not set(sa['hand']) & set(sb['hand']), 'hands overlap'
+        assert sa['hands'][sb['you']] == sb['hand'] and sb['hands'][sa['you']] == sa['hand'], 'others hands not visible'
         assert sa['prompt']['cat'] in ('religion', 'climate')
         # 途中参加: Carol がラウンド1のpick中に入る → 残り4ラウンド+1 = 5枚
         c = await s.ws_connect(URL)
@@ -76,6 +77,8 @@ async def main():
         assert ra['next_at'] and ra['next_at'] - time.time() <= 5.5, ra.get('next_at')
         ea = await recv_state(a, lambda d: d['phase'] == 'end')
         total = sum(p['score'] for p in ea['players'])
+        assert ea['history'] and [h['round'] for h in ea['history']] == [1, 2, 3, 4], 'history missing'
+        assert all(len(h['rows']) == 2 for h in ea['history'])
         print('END scores', {p['name']: p['score'] for p in ea['players']}, 'total', total)
         assert total >= 4, 'each round should award at least one point'
         # 再接続: Bobが切断→同じpidで戻る
