@@ -5,6 +5,7 @@
 import asyncio, json, logging, os, random, secrets, string, time, uuid
 from aiohttp import web, WSMsgType
 from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS
+from moderation import check_name
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 log = logging.getLogger('geoking')   # Render の Logs タブ / ローカルの標準出力に出る
@@ -33,6 +34,8 @@ MAX_PLAYERS = 8
 ROOM_TTL = 6 * 3600
 EMPTY_GRACE = 90       # 秒。人間が全員切断しても、この間は部屋を残す（リロード・再接続用）
 CHAT_INTERVAL = 0.7    # 秒。連投制限
+# 自由入力のチャットは無し。送れるのはこの定型リアクションだけ（不適切な発言・個人情報のやりとりを構造的に防ぐ）
+REACTIONS = ['よろしく！', 'いいね！', 'まさか！', '勝負！', 'ナイス！', 'おめでとう！', 'むずかしい…', 'ドンマイ！']
 REVEAL_SECONDS = 5     # 結果表示の秒数。経過後は自動で次のラウンドへ
 
 rooms = {}  # code -> Room
@@ -355,8 +358,9 @@ async def ws_handler(request):
             if len(rooms) >= MAX_ROOMS:
                 return await error('現在満室です。しばらくしてからお試しください')
             name = clean_name(data.get('name'))
-            if not name:
-                return await error('名前を入力してください')
+            ok, why = check_name(name)
+            if not ok:
+                return await error(why)
             pid = uuid.uuid4().hex[:12]
             room = Room(new_code(), pid)
             rooms[room.code] = room
@@ -389,8 +393,9 @@ async def ws_handler(request):
                 if len(r.players) >= MAX_PLAYERS:
                     return await error('満員です（最大8人）')
                 name = clean_name(data.get('name'))
-                if not name:
-                    return await error('名前を入力してください')
+                ok, why = check_name(name)
+                if not ok:
+                    return await error(why)
                 pid = uuid.uuid4().hex[:12]
                 p = Player(pid, name)
                 p.ws, p.connected = ws, True
@@ -430,7 +435,10 @@ async def ws_handler(request):
                 'public': bool(s.get('public', cur['public'])),
             })
             if 'title' in s:
-                room.title = ''.join(ch for ch in str(s.get('title') or '') if ch.isprintable()).strip()[:20]
+                title = ''.join(ch for ch in str(s.get('title') or '') if ch.isprintable()).strip()[:20]
+                if title and not check_name(title)[0]:
+                    return await error('その部屋名は使えません（不適切な表現や連絡先を含みます）')
+                room.title = title
             if room.settings['hand_size'] < room.settings['rounds']:
                 room.settings['hand_size'] = room.settings['rounds'] + 1
             return await broadcast(room)
@@ -501,7 +509,9 @@ async def ws_handler(request):
             return
 
         if t == 'chat':
-            text = ''.join(ch for ch in str(data.get('text') or '') if ch.isprintable()).strip()[:80]
+            text = str(data.get('text') or '').strip()
+            if text not in REACTIONS:   # 自由入力は受け付けない
+                return await error('送れるのは定型のリアクションだけです')
             p = room.players[pid]
             now = time.time()
             if text and now - p.last_chat >= CHAT_INTERVAL:
@@ -554,6 +564,7 @@ async def api_meta(request):
         'countries': {c['id']: c for c in COUNTRIES},
         'fields': FIELDS, 'categories': CATEGORIES,
         'prompts': PROMPTS,
+        'reactions': REACTIONS,
     })
 
 

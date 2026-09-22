@@ -19,12 +19,18 @@ async def main():
         await a.send_json({'type': 'create', 'name': 'Alice'})
         st = await recv_state(a); room = st['room']; pidA, tokA = st['you'], st['token']; print('room', room)
         assert tokA and len(tokA) == 32
-        await b.send_json({'type': 'join', 'room': room, 'name': '   '})   # 空の名前は拒否
+        for bad in ['   ', 'ばか太郎', 'yuka@example.com', 'LINE交換しよ']:   # 空・NGワード・連絡先・勧誘は拒否
+            await b.send_json({'type': 'join', 'room': room, 'name': bad})
+            try:
+                await recv_state(b, timeout=1); raise SystemExit(f'bad name accepted: {bad}')
+            except RuntimeError:
+                pass
+        await b.send_json({'type': 'join', 'room': room, 'name': '   '})   # （既存の流れ用）
         try:
             await recv_state(b, timeout=1); raise SystemExit('empty name accepted!')
         except RuntimeError as e:
             assert '名前' in str(e), e
-        await b.send_json({'type': 'join', 'room': room, 'name': 'Bob<img src=x onerror=alert(1)>'})
+        await b.send_json({'type': 'join', 'room': room, 'name': 'Bob<img src=x onerror=1>'})
         st = await recv_state(b, lambda d: len(d['players']) == 2); pidB, tokB = st['you'], st['token']
         assert st['token'] != tokA and all(('token' not in pl) for pl in st['players']), 'token leaked in players list'
         await recv_state(a, lambda d: len(d['players']) == 2)
@@ -87,9 +93,15 @@ async def main():
             assert next(r for r in rows if r['pid'] == pidA)['card'] == sa['hand'][0], 'pick change not applied'
             print(f"R{rnd} {pr['text']:<22} " + ' | '.join(f"{r['name']}:{r['card']}={r['value']}{'👑' if r['winner'] else ''}" for r in rows))
             assert len(ra['hand']) == 5 - rnd, 'card not removed from hand'
-            await asyncio.sleep(0.8)  # チャット連投制限（0.7秒）を待つ
-            await b.send_json({'type': 'chat', 'text': f'ブラフ！{rnd}'})
-            await recv_state(a, lambda d: any(c['text'] == f'ブラフ！{rnd}' for c in d['chat']))
+            await asyncio.sleep(0.8)  # 連投制限（0.7秒）を待つ
+            await b.send_json({'type': 'chat', 'text': f'自由入力 {rnd}'})   # 自由入力は拒否される
+            try:
+                await recv_state(b, lambda d: any('自由入力' in c['text'] for c in d['chat']), timeout=1); raise SystemExit('free text accepted!')
+            except RuntimeError as e:
+                assert '定型' in str(e), e
+            reaction = ['いいね！', 'まさか！', '勝負！', 'ナイス！'][rnd - 1]
+            await b.send_json({'type': 'chat', 'text': reaction})
+            await recv_state(a, lambda d: sum(1 for c in d['chat'] if c['text'] == reaction) >= 1)
             # 5秒後に自動で次へ進む（'next' は廃止）
         assert ra['next_at'] and ra['next_at'] - time.time() <= 5.5, ra.get('next_at')
         ea = await recv_state(a, lambda d: d['phase'] == 'end')
