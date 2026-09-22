@@ -576,6 +576,14 @@ async def index(request):
     raise web.HTTPFound('/static/index.html')
 
 
+async def manifest(request):
+    return web.FileResponse(os.path.join(HERE, 'static', 'manifest.json'), headers={'Content-Type': 'application/manifest+json'})
+
+
+async def service_worker(request):
+    return web.FileResponse(os.path.join(HERE, 'static', 'sw.js'), headers={'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache'})
+
+
 async def healthz(request):
     return web.json_response({'ok': True, 'rooms': len(rooms)})
 
@@ -604,6 +612,8 @@ def make_app():
     app.cleanup_ctx.append(periodic_cleanup)
     app.router.add_get('/', index)
     app.router.add_get('/healthz', healthz)
+    app.router.add_get('/manifest.json', manifest)
+    app.router.add_get('/sw.js', service_worker)
     app.router.add_get('/api/meta', api_meta)
     app.router.add_get('/api/rooms', api_rooms)
     app.router.add_get('/ws', ws_handler)

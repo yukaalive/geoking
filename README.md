@@ -72,3 +72,11 @@ python3 server.py            # PORT環境変数で変更可
 - Render: Dashboard → geoking サービス → **Logs** タブ（無料プランは直近数日分）
 - ローカル: `python3 server.py` を実行したターミナルに表示
 - 記録するのはニックネーム・部屋コード・出したカードと値のみ。IPアドレスや個人情報は記録しません
+
+## スマホアプリとして使う（PWA）
+`manifest.json` と Service Worker（`static/sw.js`）を備えているので、ブラウザから「ホーム画面に追加」するとアプリのように全画面で起動します。
+- Android（Chrome）: 右上メニュー →「ホーム画面に追加」または「アプリをインストール」
+- iPhone（Safari）: 共有ボタン →「ホーム画面に追加」
+- アイコンは `static/icons/icon.svg` が元データ。PNG は macOS の `qlmanage -t -s 1024` と `sips -z` で書き出し
+
+ストア配信（Google Play / App Store）が必要になった場合は Capacitor で WebView アプリ化する想定（Node.js、各ストアの開発者アカウントが必要）。
