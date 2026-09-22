@@ -228,3 +228,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .top .roominfo + .prefs{margin-left:0}
 button.pref{padding:4px 8px;margin:0}button.pref .ico{width:1.3em;height:1.3em;vertical-align:-.3em}
 button.pref.off{opacity:.55}
+
+.invitebox{border:2px solid var(--ink);border-radius:12px;padding:10px 12px;background:var(--bg);margin:6px 0 4px}
+.invitebox .invtitle{font-family:var(--font-head);font-size:20px}
+.invitebox .tag{margin-left:0;margin-right:4px}

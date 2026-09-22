@@ -572,6 +572,18 @@ async def api_rooms(request):
     return web.json_response({'rooms': out[:20]})
 
 
+async def api_room(request):
+    """招待リンク用: 部屋の概要（存在するか、名前、人数、進行状況）。"""
+    code = request.match_info['code'].upper()[:4]
+    r = rooms.get(code)
+    if not r or not r.has_humans():
+        return web.json_response({'found': False}, status=404)
+    host = r.players.get(r.host)
+    return web.json_response({'found': True, 'room': r.code, 'title': r.display_title(), 'host': host.name if host else '',
+                              'players': len(r.players), 'max': MAX_PLAYERS, 'phase': r.phase, 'round': r.round,
+                              'names': [r.players[x].name for x in r.order]})
+
+
 async def index(request):
     raise web.HTTPFound('/static/index.html')
 
@@ -616,6 +628,7 @@ def make_app():
     app.router.add_get('/sw.js', service_worker)
     app.router.add_get('/api/meta', api_meta)
     app.router.add_get('/api/rooms', api_rooms)
+    app.router.add_get('/api/room/{code}', api_room)
     app.router.add_get('/ws', ws_handler)
     app.router.add_static('/static/', os.path.join(HERE, 'static'))
     return app

@@ -461,12 +461,48 @@ let roomsPoll = null;
 function startRoomsPoll() { stopRoomsPoll(); loadRooms(); roomsPoll = setInterval(() => { if (!$('#home').classList.contains('hidden')) loadRooms(); }, 5000); }
 function stopRoomsPoll() { clearInterval(roomsPoll); roomsPoll = null; }
 
+// ---------- 招待リンクの確認ポップアップ
+async function showInvite(code) {
+  let info = null;
+  try { const res = await fetch(`${API}/api/room/${code}`); if (res.ok) info = await res.json(); } catch {}
+  if (!info) { toast('その部屋は見つかりませんでした（終了したか、コードが違います）'); return; }
+  const status = info.phase === 'lobby' ? '募集中' : (info.phase === 'end' ? '結果発表中（次のゲームから参加）' : `ラウンド${info.round}進行中（観戦で入ります）`);
+  const saved = localStorage.getItem('geoking_name') || '';
+  $('#modalBody').innerHTML = `
+    <h2 style="margin-top:0">${ico('door')} この部屋に参加しますか？</h2>
+    <div class="invitebox">
+      <div class="invtitle">${escapeHtml(info.title)}</div>
+      <div class="muted small">ホスト: ${escapeHtml(info.host)} ／ ${info.players} / ${info.max} 人 ／ <span class="tag">${status}</span></div>
+      <div class="small" style="margin-top:6px">${info.names.map(nm => `<span class="tag">${escapeHtml(nm)}</span>`).join(' ')}</div>
+    </div>
+    <label>あなたの名前（必須）<input id="inviteName" maxlength="16" placeholder="ニックネームを入力" value="${escapeHtml(saved)}"></label>
+    <div class="row"><button id="inviteJoin" class="primary">参加する</button><button id="inviteCancel">やめる</button></div>`;
+  $('#modalBody').classList.remove('wide'); $('#modal').classList.remove('hidden');
+  const close = () => $('#modal').classList.add('hidden');
+  $('#inviteCancel').onclick = close;
+  const go = () => {
+    const name = $('#inviteName').value.trim();
+    if (!name) { toast('名前を入力してください'); $('#inviteName').focus(); return; }
+    localStorage.setItem('geoking_name', name); $('#nameInput').value = name; close();
+    manualJoin = true; connect(() => send({ type: 'join', room: code, name }));
+  };
+  $('#inviteJoin').onclick = go;
+  $('#inviteName').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  if (!saved) $('#inviteName').focus();
+}
+
 // ---------- 起動
 (async function init() {
   META = await (await fetch(API + '/api/meta')).json();
   const q = new URLSearchParams(location.search);
   const room = q.get('room') || sessionStorage.getItem('geoking_room');
   if (q.get('room')) { $('#codeInput').value = q.get('room').toUpperCase(); }
+  if (q.get('room') && sessionStorage.getItem('geoking_room') !== q.get('room').toUpperCase()) {
+    show('home'); startRoomsPoll(); renderPrefs();
+    history.replaceState(null, '', location.pathname);   // URLからコードを消して二重表示を防ぐ
+    await showInvite(q.get('room').toUpperCase());
+    return;
+  }
   if (room && sessionStorage.getItem('geoking_room') === room) {
     // リロード時の自動再接続
     connect(() => send({ type: 'join', room, name: $('#nameInput').value.trim() || localStorage.getItem('geoking_name') || '', ...rejoinInfo() }));
