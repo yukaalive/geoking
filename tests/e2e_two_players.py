@@ -1,7 +1,8 @@
 """ヘッドレス2人対戦テスト: 部屋作成→参加→設定→全ラウンド進行→終了まで。"""
 import asyncio, json, random, sys, aiohttp
 
-URL = 'ws://localhost:8080/ws'
+import os
+URL = os.environ.get('GEOKING_WS', 'ws://localhost:8080/ws')
 
 async def recv_state(ws, want=None, timeout=5):
     while True:

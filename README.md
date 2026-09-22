@@ -1,5 +1,7 @@
 # GeoKing 地理王 — 国旗王インスパイアのオンライン対戦ゲーム
 
+**公開URL: https://geoking-vlgh.onrender.com**
+
 国旗カードを手札にして、「面積が大きい国は？」「年平均気温が高い国は？」「イスラム教徒の割合が高い国は？」といった
 お題に**裏面のデータを見ずに**一番合いそうな国旗を出し、裏返して勝負するパーティーゲームのオンライン版です。
 
@@ -11,6 +13,12 @@
 5. 規定ラウンド終了で最多得点者が「地理王」
 
 ひとりで試す場合はロビーで「ボットを追加」（ボットはランダムに出します）。
+
+## テスト
+```bash
+python3 tests/e2e_two_players.py                                   # ローカル
+GEOKING_WS=wss://geoking-vlgh.onrender.com/ws python3 tests/e2e_two_players.py  # 本番
+```
 
 ## セットアップ
 ```bash
