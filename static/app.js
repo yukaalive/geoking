@@ -108,17 +108,18 @@ function connect(onOpen) {
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
 
 // ---------- ホーム
-const JP_NAMES = ['さくら', 'ゆうき', 'はると', 'みお', 'そうた', 'ひなた', 'りく', 'あおい', 'ゆい', 'こうき', 'はな', 'だいき', 'めい', 'たくみ', 'りん', 'けんた', 'ももか', 'しょうた', 'あかり', 'ゆうと', 'なな', 'かいと', 'ひかり', 'れん', 'みさき', 'たいち', 'ことね', 'ゆうま', 'まお', 'しゅん'];
-const randomName = () => JP_NAMES[Math.floor(Math.random() * JP_NAMES.length)];
-// 空欄のときはプレースホルダーに出ているおすすめ名をそのまま使う（消さずに入力できる）
-function myName() { const n = $('#nameInput').value.trim() || $('#nameInput').placeholder || randomName(); localStorage.setItem('geoking_name', n); return n; }
-$('#nameInput').placeholder = randomName();
+// 名前は必須。空なら null を返して呼び出し側で止める
+function myName() {
+  const n = $('#nameInput').value.trim();
+  if (!n) { toast('名前を入力してください'); $('#nameInput').focus(); return null; }
+  localStorage.setItem('geoking_name', n); return n;
+}
 $('#nameInput').value = localStorage.getItem('geoking_name') || '';
 $('#nameInput').addEventListener('focus', function () { this.select(); });   // 前回の名前が入っていても、そのまま打てば置き換わる
-$('#createBtn').onclick = () => { manualJoin = true; const name = myName(); connect(() => send({ type: 'create', name })); };
+$('#createBtn').onclick = () => { const name = myName(); if (!name) return; manualJoin = true; connect(() => send({ type: 'create', name })); };
 $('#joinBtn').onclick = () => {
   const code = $('#codeInput').value.trim().toUpperCase(); if (code.length !== 4) return toast('4文字の部屋コードを入力してください');
-  manualJoin = true; const name = myName(); connect(() => send({ type: 'join', room: code, name }));
+  const name = myName(); if (!name) return; manualJoin = true; connect(() => send({ type: 'join', room: code, name }));
 };
 $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
 
@@ -381,7 +382,7 @@ function stopRoomsPoll() { clearInterval(roomsPoll); roomsPoll = null; }
   if (q.get('room')) { $('#codeInput').value = q.get('room').toUpperCase(); }
   if (room && sessionStorage.getItem('geoking_room') === room) {
     // リロード時の自動再接続
-    connect(() => send({ type: 'join', room, name: $('#nameInput').value.trim() || localStorage.getItem('geoking_name') || 'プレイヤー', ...rejoinInfo() }));
+    connect(() => send({ type: 'join', room, name: $('#nameInput').value.trim() || localStorage.getItem('geoking_name') || '', ...rejoinInfo() }));
   }
   show('home'); startRoomsPoll();
 })();

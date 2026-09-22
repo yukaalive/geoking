@@ -19,6 +19,11 @@ async def main():
         await a.send_json({'type': 'create', 'name': 'Alice'})
         st = await recv_state(a); room = st['room']; pidA, tokA = st['you'], st['token']; print('room', room)
         assert tokA and len(tokA) == 32
+        await b.send_json({'type': 'join', 'room': room, 'name': '   '})   # 空の名前は拒否
+        try:
+            await recv_state(b, timeout=1); raise SystemExit('empty name accepted!')
+        except RuntimeError as e:
+            assert '名前' in str(e), e
         await b.send_json({'type': 'join', 'room': room, 'name': 'Bob<img src=x onerror=alert(1)>'})
         st = await recv_state(b, lambda d: len(d['players']) == 2); pidB, tokB = st['you'], st['token']
         assert st['token'] != tokA and all(('token' not in pl) for pl in st['players']), 'token leaked in players list'
@@ -45,7 +50,8 @@ async def main():
         sc = await recv_state(c, lambda d: d['phase'] == 'pick')
         me_c = next(p for p in sc['players'] if p['pid'] == sc['you'])
         assert me_c['spectator'] and sc['hand'] == [], '途中参加はまず観戦のはず'
-        assert any('観戦' in m['text'] for m in sc['chat'])
+        assert any('さんが観戦しました' in m['text'] for m in sc['chat'])
+        assert any('Bob<img src=x onさんが入室しました' in m['text'] for m in sc['chat'])
         await c.send_json({'type': 'pick', 'card': 'jp'})   # 観戦中は出せない（無視）
         await c.send_json({'type': 'join_game'})
         sc = await recv_state(c, lambda d: len(d['hand']) > 0)

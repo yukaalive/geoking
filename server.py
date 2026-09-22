@@ -10,11 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE, 'data', 'countries.json'), encoding='utf-8') as f:
     COUNTRIES = json.load(f)
 COUNTRY_BY_ID = {c['id']: c for c in COUNTRIES}
-# 初期名（日本でよくある名前）とボット名（アメリカでよくある名前）
-JP_NAMES = ['さくら', 'ゆうき', 'はると', 'みお', 'そうた', 'ひなた', 'りく', 'あおい', 'ゆい', 'こうき',
-            'はな', 'だいき', 'めい', 'たくみ', 'りん', 'けんた', 'ももか', 'しょうた', 'あかり', 'ゆうと',
-            'なな', 'かいと', 'ひかり', 'れん', 'みさき', 'たいち', 'ことね', 'ゆうま', 'まお', 'しゅん',
-            'ひろと', 'えみ', 'まさき', 'かな', 'りょう', 'あやか', 'つばさ', 'みゆ', 'けい', 'なつき']
+# ボット名（アメリカでよくある名前）
 BOT_NAMES = ['エミリー', 'マイケル', 'オリビア', 'ジェームズ', 'ソフィア', 'ノア', 'エマ', 'リアム', 'アヴァ', 'イーサン',
              'ミア', 'ジェイコブ', 'イザベラ', 'メイソン', 'シャーロット', 'ルーカス', 'アメリア', 'ベンジャミン', 'ハーパー', 'ローガン',
              'エヴリン', 'アレクサンダー', 'アビゲイル', 'ダニエル', 'エミリア', 'ヘンリー', 'エラ', 'ジャクソン', 'グレース', 'サミュエル']
@@ -40,11 +36,8 @@ rooms = {}  # code -> Room
 
 
 def clean_name(v, room=None):
-    name = ''.join(ch for ch in str(v or '') if ch.isprintable()).strip()[:16]
-    if name:
-        return name
-    used = {p.name for p in room.players.values()} if room else set()
-    return random.choice([x for x in JP_NAMES if x not in used] or JP_NAMES)
+    """名前は必須。空なら '' を返し、呼び出し側でエラーにする。"""
+    return ''.join(ch for ch in str(v or '') if ch.isprintable()).strip()[:16]
 
 
 def cleanup_rooms():
@@ -323,7 +316,7 @@ async def after_player_gone(room, name):
         room.empty_since = room.empty_since or time.time()   # 猶予後に cleanup_rooms が削除
         return
     if room.phase in ('pick', 'reveal', 'end') and name:
-        room.chat.append({'name': 'システム', 'text': f'{name} さんが退出しました', 'ts': time.time()})
+        room.chat.append({'name': 'システム', 'text': f'{name}さんが退出しました', 'ts': time.time()})
         room.chat = room.chat[-60:]
     if room.phase == 'pick' and room.all_picked():
         return await finish_reveal(room)
@@ -347,10 +340,13 @@ async def ws_handler(request):
             cleanup_rooms()
             if len(rooms) >= MAX_ROOMS:
                 return await error('現在満室です。しばらくしてからお試しください')
+            name = clean_name(data.get('name'))
+            if not name:
+                return await error('名前を入力してください')
             pid = uuid.uuid4().hex[:12]
             room = Room(new_code(), pid)
             rooms[room.code] = room
-            p = Player(pid, clean_name(data.get('name')))
+            p = Player(pid, name)
             p.ws, p.connected = ws, True
             room.players[pid] = p
             room.order.append(pid)
@@ -376,15 +372,21 @@ async def ws_handler(request):
             else:
                 if len(r.players) >= MAX_PLAYERS:
                     return await error('満員です（最大8人）')
+                name = clean_name(data.get('name'))
+                if not name:
+                    return await error('名前を入力してください')
                 pid = uuid.uuid4().hex[:12]
-                p = Player(pid, clean_name(data.get('name'), r))
+                p = Player(pid, name)
                 p.ws, p.connected = ws, True
                 r.players[pid] = p
                 r.order.append(pid)
                 r.empty_since = None
                 if r.phase != 'lobby':   # 途中参加はまず観戦。次のゲームから自動で参加、または「途中から参加」
                     p.spectator = True
-                    r.chat.append({'name': 'システム', 'text': f'{p.name} さんが観戦で入りました', 'ts': time.time()})
+                    r.chat.append({'name': 'システム', 'text': f'{p.name}さんが観戦しました', 'ts': time.time()})
+                else:
+                    r.chat.append({'name': 'システム', 'text': f'{p.name}さんが入室しました', 'ts': time.time()})
+                r.chat = r.chat[-60:]
             ctx['room'], ctx['pid'] = r, pid
             return await broadcast(r)
 
@@ -446,7 +448,7 @@ async def ws_handler(request):
             if p.spectator and room.phase in ('pick', 'reveal'):
                 p.spectator = False
                 room.deal_late(p)
-                room.chat.append({'name': 'システム', 'text': f'{p.name} さんが途中から参加しました', 'ts': time.time()})
+                room.chat.append({'name': 'システム', 'text': f'{p.name}さんが途中から参加しました', 'ts': time.time()})
                 await broadcast(room)
             return
 
