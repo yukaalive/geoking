@@ -92,8 +92,10 @@ function connect(onOpen) {
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
 
 // ---------- ホーム
-function myName() { const n = $('#nameInput').value.trim() || 'プレイヤー'; localStorage.setItem('geoking_name', n); return n; }
-$('#nameInput').value = localStorage.getItem('geoking_name') || '';
+const JP_NAMES = ['さくら', 'ゆうき', 'はると', 'みお', 'そうた', 'ひなた', 'りく', 'あおい', 'ゆい', 'こうき', 'はな', 'だいき', 'めい', 'たくみ', 'りん', 'けんた', 'ももか', 'しょうた', 'あかり', 'ゆうと', 'なな', 'かいと', 'ひかり', 'れん', 'みさき', 'たいち', 'ことね', 'ゆうま', 'まお', 'しゅん'];
+const randomName = () => JP_NAMES[Math.floor(Math.random() * JP_NAMES.length)];
+function myName() { const n = $('#nameInput').value.trim() || randomName(); localStorage.setItem('geoking_name', n); return n; }
+$('#nameInput').value = localStorage.getItem('geoking_name') || randomName();
 $('#createBtn').onclick = () => { manualJoin = true; const name = myName(); connect(() => send({ type: 'create', name })); };
 $('#joinBtn').onclick = () => {
   const code = $('#codeInput').value.trim().toUpperCase(); if (code.length !== 4) return toast('4文字の部屋コードを入力してください');
@@ -104,14 +106,9 @@ $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#jo
 // ---------- ロビー操作
 function pushSettings() {
   if (!state || state.host !== pid) return;
-  send({ type: 'settings', settings: {
-    categories: [...document.querySelectorAll('input[name=cat]:checked')].map(i => i.value),
-    rounds: +$('#setRounds').value, hand_size: +$('#setHand').value, timer: +$('#setTimer').value,
-    max_star: +$('#setStar').value, show_names: $('#setNames').checked, public: $('#setPublic').checked, title: $('#setTitle').value.trim(),
-  } });
+  send({ type: 'settings', settings: { public: $('#setPublic').checked, title: $('#setTitle').value.trim() } });
 }
-['#setRounds', '#setHand', '#setTimer', '#setStar', '#setNames', '#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
-document.querySelectorAll('input[name=cat]').forEach(i => i.addEventListener('change', pushSettings));
+['#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
@@ -160,9 +157,8 @@ function renderLobby() {
     ul.appendChild(li);
   }
   const s = state.settings;
-  if (document.activeElement?.closest('.settings, #catFields') == null) {
-    document.querySelectorAll('input[name=cat]').forEach(i => i.checked = s.categories.includes(i.value));
-    $('#setRounds').value = s.rounds; $('#setHand').value = s.hand_size; $('#setTimer').value = s.timer; $('#setStar').value = s.max_star; $('#setNames').checked = s.show_names; $('#setPublic').checked = s.public; $('#setTitle').value = state.title_raw || ''; $('#setTitle').placeholder = state.title || '例：ゆかの部屋';
+  if (document.activeElement?.closest('.settings') == null) {
+    $('#setPublic').checked = s.public; $('#setTitle').value = state.title_raw || ''; $('#setTitle').placeholder = state.title || '例：ゆかの部屋';
   }
   $('#startBtn').disabled = state.players.length < 2;
   $('#startBtn').textContent = state.players.length < 2 ? 'ゲーム開始（2人以上必要・ボット可）' : `ゲーム開始（${state.settings.rounds}ラウンド）`;

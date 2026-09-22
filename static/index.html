@@ -47,25 +47,12 @@
         <p class="muted small">部屋コード <b id="lobbyCode"></b> を友だちに伝えるか、招待リンクを共有してください。ゲームが始まったあとでも途中参加できます。</p>
       </div>
       <div class="card">
-        <h2>ルール設定 <span class="muted small guestonly">（ホストのみ変更できます）</span></h2>
-        <fieldset id="catFields" class="hostonly-disable">
-          <legend>お題のカテゴリ</legend>
-          <label><input type="checkbox" name="cat" value="basic" checked> 🏳️ 基本（国旗王スタイル：面積・人口・GDP・南北…）</label>
-          <label><input type="checkbox" name="cat" value="climate" checked> 🌦️ 気候・自然（気温・降水量・赤道からの距離）</label>
-          <label><input type="checkbox" name="cat" value="religion" checked> 🛐 宗教（キリスト教・イスラム教・無宗教の割合）</label>
-          <label><input type="checkbox" name="cat" value="society" checked> 🏙️ 社会・暮らし（寿命・高齢化・出生率・都市化）</label>
-        </fieldset>
+        <h2>部屋の設定 <span class="muted small guestonly">（ホストのみ変更できます）</span></h2>
         <div class="settings hostonly-disable">
           <label>部屋の名前 <input id="setTitle" maxlength="20" placeholder="例：ゆかの部屋" style="width:180px"></label>
-          <label>ラウンド数 <input type="number" id="setRounds" min="3" max="12" value="7"></label>
-          <label>手札枚数 <input type="number" id="setHand" min="4" max="12" value="8"></label>
-          <label>制限時間（秒、0=なし） <input type="number" id="setTimer" min="0" max="180" step="5" value="0"></label>
-          <label>難易度上限
-            <select id="setStar"><option value="1">★のみ（かんたん）</option><option value="2">★★まで</option><option value="3" selected>★★★まで（全部）</option></select>
-          </label>
-          <label class="chk"><input type="checkbox" id="setNames"> 国旗の下に国名を表示（初心者向け）</label>
           <label class="chk"><input type="checkbox" id="setPublic"> 🌐 公開部屋にする（トップページの一覧に載せて誰でも参加可）</label>
         </div>
+        <p class="muted small">7ラウンド・手札8枚。お題は「基本・気候・宗教・社会」からランダムに出ます。</p>
         <button id="startBtn" class="primary big hostonly">ゲーム開始</button>
         <p class="guestonly muted">ホストが開始するのを待っています…</p>
       </div>

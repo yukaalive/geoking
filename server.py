@@ -10,7 +10,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE, 'data', 'countries.json'), encoding='utf-8') as f:
     COUNTRIES = json.load(f)
 COUNTRY_BY_ID = {c['id']: c for c in COUNTRIES}
-BOT_NAMES = ['ボット・アトラス', 'ボット・コンパス', 'ボット・グローブ', 'ボット・メルカトル', 'ボット・ポラリス']
+# 初期名（日本でよくある名前）とボット名（アメリカでよくある名前）
+JP_NAMES = ['さくら', 'ゆうき', 'はると', 'みお', 'そうた', 'ひなた', 'りく', 'あおい', 'ゆい', 'こうき',
+            'はな', 'だいき', 'めい', 'たくみ', 'りん', 'けんた', 'ももか', 'しょうた', 'あかり', 'ゆうと',
+            'なな', 'かいと', 'ひかり', 'れん', 'みさき', 'たいち', 'ことね', 'ゆうま', 'まお', 'しゅん',
+            'ひろと', 'えみ', 'まさき', 'かな', 'りょう', 'あやか', 'つばさ', 'みゆ', 'けい', 'なつき']
+BOT_NAMES = ['エミリー', 'マイケル', 'オリビア', 'ジェームズ', 'ソフィア', 'ノア', 'エマ', 'リアム', 'アヴァ', 'イーサン',
+             'ミア', 'ジェイコブ', 'イザベラ', 'メイソン', 'シャーロット', 'ルーカス', 'アメリア', 'ベンジャミン', 'ハーパー', 'ローガン',
+             'エヴリン', 'アレクサンダー', 'アビゲイル', 'ダニエル', 'エミリア', 'ヘンリー', 'エラ', 'ジャクソン', 'グレース', 'サミュエル']
 
 DEFAULT_SETTINGS = {
     'categories': ['basic', 'climate', 'religion', 'society'],
@@ -30,9 +37,12 @@ CHAT_INTERVAL = 0.7    # 秒。連投制限
 rooms = {}  # code -> Room
 
 
-def clean_name(v):
+def clean_name(v, room=None):
     name = ''.join(ch for ch in str(v or '') if ch.isprintable()).strip()[:16]
-    return name or 'プレイヤー'
+    if name:
+        return name
+    used = {p.name for p in room.players.values()} if room else set()
+    return random.choice([x for x in JP_NAMES if x not in used] or JP_NAMES)
 
 
 def cleanup_rooms():
@@ -332,7 +342,7 @@ async def ws_handler(request):
                 if r.phase == 'end':
                     return await error('このゲームは終了しています。ホストが再戦を始めるまでお待ちください')
                 pid = uuid.uuid4().hex[:12]
-                p = Player(pid, clean_name(data.get('name')))
+                p = Player(pid, clean_name(data.get('name'), r))
                 p.ws, p.connected = ws, True
                 r.players[pid] = p
                 r.order.append(pid)
@@ -376,7 +386,7 @@ async def ws_handler(request):
             if len(room.players) >= MAX_PLAYERS:
                 return await error('満員です')
             used = {p.name for p in room.players.values()}
-            name = next((n for n in BOT_NAMES if n not in used), f'ボット{len(room.players)}')
+            name = random.choice([x for x in BOT_NAMES if x not in used] or BOT_NAMES)
             bpid = 'bot_' + uuid.uuid4().hex[:6]
             room.players[bpid] = Player(bpid, name, is_bot=True)
             room.order.append(bpid)
