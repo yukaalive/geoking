@@ -303,7 +303,7 @@ function renderHand() {
   const picked = state.my_pick;
   if (selectedCard && !state.hand.includes(selectedCard)) selectedCard = null;
   $('#pickTitle').textContent = picked
-    ? `「${countryName(picked)}」を出しました。全員が出すまでは、別のカードを2回クリックで変更できます`
+    ? `${state.settings.show_names ? '「' + countryName(picked) + '」' : 'カード'}を出しました。全員が出すまでは、別のカードを2回クリックで変更できます`
     : (state.hand.length ? 'お題に一番合うと思う国旗を1枚選ぼう（2回クリックで決定）' : '手札がありません。次のゲームから参加できます');
   for (const id of state.hand) {
     const cls = 'flagcard' + (id === picked ? ' picked' : '') + (id === selectedCard && id !== picked ? ' selected' : '');
