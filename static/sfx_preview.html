@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>効果音の試聴 - 地理王</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+main{max-width:720px}
+.opt{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:2px dashed var(--line-soft)}
+.opt b{font-size:22px;width:44px;text-align:center;background:var(--accent);border:2px solid var(--ink);border-radius:10px;padding:4px 0}
+.opt .d{flex:1}.opt .d small{display:block;color:var(--muted)}
+.cmp{margin-top:18px;padding:12px;border:2px solid var(--ink);border-radius:12px;background:var(--bg)}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span>効果音の試聴</span></div></header>
+<main><div class="card">
+<h1>負けた時の音（候補）</h1>
+<p class="muted small">ボタンを押すと鳴ります。音量にご注意ください。参考として、勝った時の音（現在）も一番下で聴けます。</p>
+<div id="list"></div>
+<div class="cmp"><b>比較用</b>　<button id="win">勝った時の音（現在）</button>　<button id="lose0">負けた時の音（現在）</button></div>
+</div></main>
+<script>
+let ctx = null;
+const ensure = () => { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; };
+const tone = (type, f, t, d, v = .18, slide = null) => {
+  const c = ensure(); const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, c.currentTime + t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, c.currentTime + t + d);
+  g.gain.setValueAtTime(0.0001, c.currentTime + t); g.gain.exponentialRampToValueAtTime(v, c.currentTime + t + .01); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + t + d);
+  o.connect(g).connect(c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + d + .02);
+};
+const noise = (t, d, v = .12, freq = 1800, q = .8, slideTo = null) => {
+  const c = ensure(); const buf = c.createBuffer(1, c.sampleRate * d, c.sampleRate); const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = v;
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(freq, c.currentTime + t); if (slideTo) bp.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + t + d); bp.Q.value = q;
+  src.connect(bp).connect(g).connect(c.destination); src.start(c.currentTime + t);
+};
+const CANDIDATES = [
+  ['A', 'ズーン（現在と同系・少し重く）', '低い音がゆっくり下がる。落ち着いた「残念」', () => { tone('sine', 220, 0, .35, .16, 140); tone('sine', 110, 0, .35, .10, 70); }],
+  ['B', 'ぷぺぇ〜（トロンボーン風）', '3音が下がるコミカルな「残念」。パーティー向き', () => { tone('triangle', 392, 0, .16, .2); tone('triangle', 330, .16, .16, .2); tone('triangle', 262, .32, .34, .2, 196); }],
+  ['C', 'チーン（小さな鐘）', 'あっさり。負けを引きずらない', () => { tone('sine', 1046, 0, .7, .14); tone('sine', 2093, 0, .4, .05); }],
+  ['D', 'ボヨヨン（バネ）', '弾む音。可愛い失敗感', () => { tone('sawtooth', 220, 0, .12, .12, 90); tone('sawtooth', 180, .13, .12, .10, 80); tone('sawtooth', 150, .26, .18, .08, 70); }],
+  ['E', 'ドドン（太鼓2連）', '低いドラム2発。「決着」感が強い', () => { noise(0, .18, .18, 180, 1.2); tone('sine', 90, 0, .22, .25, 45); noise(.24, .22, .2, 160, 1.2); tone('sine', 80, .24, .28, .28, 40); }],
+  ['F', 'ピロロロ〜ン（下降アルペジオ）', 'ゲームらしい「ミス」の音', () => { [784, 659, 523, 392, 330].forEach((f, i) => tone('square', f, i * .07, .09, .09)); tone('triangle', 262, .36, .3, .12, 200); }],
+  ['G', 'ふぃ〜（ため息）', '息が抜けるようなノイズ。ゆるい雰囲気', () => { noise(0, .6, .16, 1400, .6, 300); tone('sine', 330, 0, .5, .06, 220); }],
+];
+const list = document.getElementById('list');
+for (const [k, name, desc, fn] of CANDIDATES) {
+  const row = document.createElement('div'); row.className = 'opt';
+  row.innerHTML = `<b>${k}</b><div class="d">${name}<small>${desc}</small></div>`;
+  const b = document.createElement('button'); b.className = 'primary'; b.textContent = '再生'; b.onclick = fn; row.appendChild(b); list.appendChild(row);
+}
+document.getElementById('win').onclick = () => [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, i * .09, .22, .2));
+document.getElementById('lose0').onclick = () => tone('sine', 220, 0, .25, .12, 160);
+</script>
+</body>
+</html>

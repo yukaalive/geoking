@@ -15,12 +15,14 @@ const sfx = (() => {
     g.gain.setValueAtTime(0.0001, c.currentTime + t); g.gain.exponentialRampToValueAtTime(v, c.currentTime + t + .01); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + t + d);
     o.connect(g).connect(c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + d + .02);
   };
-  const noise = (t, d, v = .12) => {   // めくり音用のノイズ
+  // ノイズ: めくり音・ため息用。freq→slideTo でフィルタを動かせる
+  const noise = (t, d, v = .12, freq = 1800, q = .8, slideTo = null) => {
     const c = ensure(); if (!c) return;
     const buf = c.createBuffer(1, c.sampleRate * d, c.sampleRate); const data = buf.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
     const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = v;
-    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = .8;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(freq, c.currentTime + t);
+    if (slideTo) bp.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + t + d); bp.Q.value = q;
     src.connect(bp).connect(g).connect(c.destination); src.start(c.currentTime + t);
   };
   const vibrate = (pattern) => { if (prefs.vibe && navigator.vibrate) { try { navigator.vibrate(pattern); } catch {} } };
@@ -33,7 +35,7 @@ const sfx = (() => {
     round()   { tone('sine', 660, 0, .1, .15); tone('sine', 990, .1, .16, .15); vibrate(15); },        // 新しいお題
     reveal()  { noise(0, .18); tone('triangle', 300, .05, .12, .12, 600); vibrate(20); },              // めくる
     win()     { [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, i * .09, .22, .2)); vibrate([30, 40, 30, 40, 80]); }, // 勝ち
-    lose()    { tone('sine', 220, 0, .25, .12, 160); vibrate(40); },                                    // 負け
+    lose()    { noise(0, .6, .16, 1400, .6, 300); tone('sine', 330, 0, .5, .06, 220); vibrate(40); },   // 負け: 「ふぃ〜」ため息
     tick()    { tone('square', 1200, 0, .04, .06); },                                                    // 残り秒
     chat()    { tone('sine', 1400, 0, .05, .05); },                                                      // チャット受信
     champion(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone('triangle', f, i * .12, .3, .2)); vibrate([60, 60, 60, 60, 200]); },
