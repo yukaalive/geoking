@@ -155,8 +155,13 @@ function renderGame() {
   const pr = state.prompt, cat = META.categories[pr.cat];
   $('#roundNum').textContent = state.round; $('#roundTotal').textContent = state.total_rounds;
   $('#promptCat').textContent = `${cat.icon} ${cat.name} ／ 難易度 ${stars(pr.star)}`;
-  $('#promptText').textContent = pr.text;
-  $('#promptHint').textContent = pr.hint || (pr.dir === 'max' ? '値が最も大きい国を出した人が勝ち' : '値が最も小さい国を出した人が勝ち');
+  // 「〜が高い国は？」の「高い/低い」などを強調表示
+  const m = pr.text.match(/^(.*?)(大きい|小さい|多い|少ない|高い|低い|長い|短い|北|南|東|西|近い)(国は？)$/);
+  $('#promptText').innerHTML = m ? `${escapeHtml(m[1])}<span class="kw">${m[2]}</span>${m[3]}` : escapeHtml(pr.text);
+  $('#promptHint').textContent = pr.hint || '';
+  const F = META.fields[pr.key];
+  $('#promptDir').textContent = m ? `${m[1]}最も${m[2]}国を出した人の勝ち` : (pr.dir === 'max' ? `${F.label}が最も大きい国を出した人の勝ち` : `${F.label}が最も小さい国を出した人の勝ち`);
+  $('#promptDir').className = 'dir ' + pr.dir;
 
   // スコア
   const sl = $('#scoreList'); sl.innerHTML = '';
