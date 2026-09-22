@@ -233,3 +233,6 @@ button.pref.off{opacity:.55}
 .invitebox{border:2px solid var(--ink);border-radius:12px;padding:10px 12px;background:var(--bg);margin:6px 0 4px}
 .invitebox .invtitle{font-family:var(--font-head);font-size:20px}
 .invitebox .tag{margin-left:0;margin-right:4px}
+/* スマホ幅のヘッダー: 部屋名を省き、コードとボタンを1〜2行に収める */
+@media(max-width:560px){.roomtitle{display:none}.roominfo{gap:4px;font-size:12px}.roominfo b{font-size:14px;letter-spacing:2px;padding:0 6px}button.mini{padding:3px 7px;font-size:11px;margin-left:2px}.prefs{margin-left:0}button.pref{padding:3px 6px}.top{gap:6px;padding-left:12px;padding-right:12px}.brand{font-size:19px}}
+.modalgrid .minfo > div:first-child{padding-right:44px}
