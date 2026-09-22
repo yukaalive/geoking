@@ -87,7 +87,7 @@ function connect(onOpen) {
     else if (msg.type === 'error') {
       if (msg.message.includes('見つかりません') || msg.message.includes('認証に失敗')) {
         sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token');
-        if (state) { state = null; show('home'); startRoomsPoll(); }   // 部屋が消えた → ホームへ
+        if (state) { stopTimer(); state = null; $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll(); }   // 部屋が消えた → ホームへ
         else if (!manualJoin) return;
       }
       toast(msg.message);
@@ -97,7 +97,7 @@ function connect(onOpen) {
     if (!state) return;
     reconnectTries++;
     if (reconnectTries > 8) {   // 約1分あきらめたら停止（無限再接続ループを防ぐ）
-      toast('サーバーに接続できません。ページを再読み込みしてください'); state = null; return;
+      toast('サーバーに接続できません。ページを再読み込みしてください'); stopTimer(); state = null; return;
     }
     toast('接続が切れました。再接続します…');
     const delay = Math.min(15000, 1000 * 2 ** (reconnectTries - 1));
@@ -259,6 +259,7 @@ function renderReveal() {
   const winners = r.rows.filter(x => x.winner).map(x => x.name);
   const label = state.round >= state.total_rounds ? '最終結果' : `次のラウンド（${state.round + 1} / ${state.total_rounds}）`;
   const tick = () => {
+    if (!state) { stopTimer(); return; }
     const left = state.next_at ? Math.max(0, Math.ceil(state.next_at - Date.now() / 1000)) : 0;
     $('#nextCountdown').textContent = `${left}秒後に${label}へ`;
   };
@@ -322,6 +323,7 @@ function renderTimer() {
   if (!state.deadline) { $('#timer').classList.add('hidden'); return; }
   $('#timer').classList.remove('hidden');
   const tick = () => {
+    if (!state || !state.deadline) { stopTimer(); return; }
     const left = Math.max(0, Math.ceil(state.deadline - Date.now() / 1000));
     $('#timer').textContent = left + '秒'; $('#timer').classList.toggle('urgent', left <= 10);
   };

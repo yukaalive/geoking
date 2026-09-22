@@ -15,18 +15,30 @@
 <main id="app">
   <!-- ホーム -->
   <section id="home" class="screen">
-    <div class="card hero">
-      <h1>国旗だけを見て、データで勝負。</h1>
-      <p>国旗カードを8枚配られ、「面積が大きい国は？」「年平均気温が高い国は？」「イスラム教徒の割合が高い国は？」といったお題に、<b>裏面のデータを見ずに</b>一番合いそうな国を出します。裏返して、最もお題に合った人が1点。</p>
-      <label>あなたの名前<input id="nameInput" maxlength="16" placeholder="例：ゆか"></label>
-      <div class="row">
-        <button id="createBtn" class="primary">部屋を作る</button>
-        <div class="join">
-          <input id="codeInput" maxlength="4" placeholder="部屋コード" autocapitalize="characters">
-          <button id="joinBtn">参加する</button>
+    <div class="herodemo">
+      <div class="herotext">
+        <h1>国旗だけを見て、<br>データで勝負。</h1>
+        <p>裏の数字は見ちゃダメ。お題に一番合いそうな国旗を出して、めくって勝負。</p>
+        <label>あなたの名前<input id="nameInput" maxlength="16" placeholder="例：ゆか"></label>
+        <div class="row">
+          <button id="createBtn" class="primary big-cta">部屋を作る</button>
+          <div class="join">
+            <input id="codeInput" maxlength="4" placeholder="部屋コード" autocapitalize="characters">
+            <button id="joinBtn" class="ghost-cta">参加する</button>
+          </div>
+        </div>
+        <p class="small herohint">ひとりで遊ぶなら、部屋を作ってボットを追加。</p>
+      </div>
+      <div class="scene" aria-hidden="true">
+        <div class="qcard"><small>お題</small>面積が大きい国は？</div>
+        <div class="win">👑 ブラジル 851万km²</div>
+        <div class="cards">
+          <div class="card3d"><div class="inner"><div class="face front"><img src="https://flagcdn.com/w320/br.png" alt=""></div><div class="face back">ブラジル<b>851万km²</b></div></div></div>
+          <div class="card3d"><div class="inner"><div class="face front"><img src="https://flagcdn.com/w320/jp.png" alt=""></div><div class="face back">日本<b>37.8万km²</b></div></div></div>
+          <div class="card3d"><div class="inner"><div class="face front"><img src="https://flagcdn.com/w320/mn.png" alt=""></div><div class="face back">モンゴル<b>156万km²</b></div></div></div>
+          <div class="card3d"><div class="inner"><div class="face front"><img src="https://flagcdn.com/w320/mt.png" alt=""></div><div class="face back">マルタ<b>316km²</b></div></div></div>
         </div>
       </div>
-      <p class="muted small">ひとりで遊ぶ場合は部屋を作ってボットを追加してください。</p>
     </div>
     <div class="card hero" id="publicRooms">
       <h2>🌐 募集中の公開部屋 <button id="refreshRooms" class="mini">更新</button></h2>
