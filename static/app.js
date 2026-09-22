@@ -6,7 +6,7 @@ let META = null;          // countries, fields, categories, prompts
 let ws = null, state = null, pendingAction = null;
 let selectedCard = null, manualJoin = false;
 let timerInterval = null;
-let reconnectTries = 0;
+let reconnectTries = 0, revealInterval = null;
 let pid = null;  // サーバーが発行する。再接続用トークンと共に sessionStorage に保持
 const rejoinInfo = () => ({ pid: sessionStorage.getItem('geoking_pid'), token: sessionStorage.getItem('geoking_token') });
 
@@ -112,12 +112,12 @@ function pushSettings() {
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
+  stopTimer();
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
   state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
   if (message) toast(message);
 }
 $('#startBtn').onclick = () => send({ type: 'start' });
-$('#nextBtn').onclick = () => send({ type: 'next' });
 $('#rematchBtn').onclick = () => send({ type: 'start' });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
 $('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) send({ type: 'chat', text: t }); $('#chatInput').value = ''; };
@@ -193,6 +193,9 @@ function renderGame() {
     $('#pickArea').classList.add('hidden'); $('#revealArea').classList.remove('hidden');
     stopTimer(); renderReveal();
   }
+  if (state.phase === 'pick') {
+    clearInterval(revealInterval); revealInterval = null;
+  }
 }
 
 function renderHand() {
@@ -224,7 +227,12 @@ function renderReveal() {
     box.appendChild(d);
   });
   const winners = r.rows.filter(x => x.winner).map(x => x.name);
-  $('#nextBtn').textContent = state.round >= state.total_rounds ? '最終結果を見る' : `次のラウンドへ（${state.round + 1} / ${state.total_rounds}）`;
+  const label = state.round >= state.total_rounds ? '最終結果' : `次のラウンド（${state.round + 1} / ${state.total_rounds}）`;
+  const tick = () => {
+    const left = state.next_at ? Math.max(0, Math.ceil(state.next_at - Date.now() / 1000)) : 0;
+    $('#nextCountdown').textContent = `${left}秒後に${label}へ`;
+  };
+  tick(); revealInterval = setInterval(tick, 250);
   $('#revealArea').querySelector('h3').textContent = winners.length ? `${winners.join('・')} が1点獲得！（カードをクリックで裏面の全データ）` : '全員データなし… 引き分け';
 }
 
@@ -251,7 +259,7 @@ function renderTimer() {
   };
   tick(); timerInterval = setInterval(tick, 250);
 }
-function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+function stopTimer() { clearInterval(timerInterval); timerInterval = null; clearInterval(revealInterval); revealInterval = null; }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 
 // ---------- 公開部屋一覧

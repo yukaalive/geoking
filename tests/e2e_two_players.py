@@ -1,10 +1,10 @@
 """ヘッドレス2人対戦テスト: 部屋作成→参加→設定→全ラウンド進行→終了まで。"""
-import asyncio, json, random, sys, aiohttp
+import asyncio, json, random, sys, time, aiohttp
 
 import os
 URL = os.environ.get('GEOKING_WS', 'ws://localhost:8080/ws')
 
-async def recv_state(ws, want=None, timeout=5):
+async def recv_state(ws, want=None, timeout=9):
     while True:
         msg = await asyncio.wait_for(ws.receive(), timeout)
         d = json.loads(msg.data)
@@ -72,7 +72,8 @@ async def main():
             await asyncio.sleep(0.8)  # チャット連投制限（0.7秒）を待つ
             await b.send_json({'type': 'chat', 'text': f'ブラフ！{rnd}'})
             await recv_state(a, lambda d: any(c['text'] == f'ブラフ！{rnd}' for c in d['chat']))
-            await a.send_json({'type': 'next'})
+            # 5秒後に自動で次へ進む（'next' は廃止）
+        assert ra['next_at'] and ra['next_at'] - time.time() <= 5.5, ra.get('next_at')
         ea = await recv_state(a, lambda d: d['phase'] == 'end')
         total = sum(p['score'] for p in ea['players'])
         print('END scores', {p['name']: p['score'] for p in ea['players']}, 'total', total)

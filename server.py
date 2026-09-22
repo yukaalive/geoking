@@ -33,6 +33,7 @@ MAX_ROOMS = 300
 MAX_PLAYERS = 8
 ROOM_TTL = 6 * 3600
 CHAT_INTERVAL = 0.7    # 秒。連投制限
+REVEAL_SECONDS = 5     # 結果表示の秒数。経過後は自動で次のラウンドへ
 
 rooms = {}  # code -> Room
 
@@ -86,7 +87,9 @@ class Room:
         self.title = ''
         self.deck = []
         self.timer_task = None
+        self.reveal_task = None
         self.deadline = None
+        self.next_at = None     # 結果表示が終わり次のラウンドに進む時刻
         self.created = time.time()
 
     # ---------- game flow
@@ -154,6 +157,7 @@ class Room:
         self.reveal = {'prompt': pr, 'rows': sorted(rows, key=lambda r: (r['rank'] is None, r['rank'] or 0))}
         self.phase = 'reveal'
         self.deadline = None
+        self.next_at = time.time() + REVEAL_SECONDS
 
     def next_round(self):
         if self.round >= len(self.prompts):
@@ -179,7 +183,9 @@ class Room:
         return f"{host.name}の部屋" if host else '部屋'
 
     def reset_to_lobby(self):
-        self.phase, self.round, self.reveal = 'lobby', 0, None
+        if self.reveal_task:
+            self.reveal_task.cancel()
+        self.phase, self.round, self.reveal, self.next_at = 'lobby', 0, None, None
         for p in self.players.values():
             p.hand, p.pick, p.score, p.won = [], None, 0, []
 
@@ -214,6 +220,7 @@ class Room:
             'my_pick': me.pick if me else None,
             'reveal': self.reveal,
             'deadline': self.deadline,
+            'next_at': self.next_at if self.phase == 'reveal' else None,
             'chat': self.chat[-30:],
         }
 
@@ -243,10 +250,28 @@ async def bots_play(room):
     await maybe_reveal(room)
 
 
+async def finish_reveal(room):
+    """結果を公開し、REVEAL_SECONDS 後に自動で次のラウンド（または結果発表）へ進む。"""
+    room.do_reveal()
+    await broadcast(room)
+    if room.reveal_task:
+        room.reveal_task.cancel()
+
+    async def _advance():
+        await asyncio.sleep(REVEAL_SECONDS)
+        if room.phase != 'reveal' or rooms.get(room.code) is not room:
+            return
+        room.next_round()
+        if room.phase == 'pick':
+            await enter_pick_phase(room)
+        else:
+            await broadcast(room)
+    room.reveal_task = asyncio.create_task(_advance())
+
+
 async def maybe_reveal(room):
     if room.phase == 'pick' and room.all_picked():
-        room.do_reveal()
-        await broadcast(room)
+        await finish_reveal(room)
 
 
 async def start_timer(room):
@@ -261,8 +286,7 @@ async def start_timer(room):
             for p in room.players.values():
                 if p.pick is None and p.hand:
                     p.pick = random.choice(p.hand)  # 時間切れはランダム
-            room.do_reveal()
-            await broadcast(room)
+            await finish_reveal(room)
     room.timer_task = asyncio.create_task(_run())
 
 
@@ -282,15 +306,16 @@ def to_int(v, lo, hi, default):
 async def after_player_gone(room, name):
     """退出・キック・切断後の後始末。"""
     if not room.has_humans():
-        if room.timer_task:
-            room.timer_task.cancel()
+        for task in (room.timer_task, room.reveal_task):
+            if task:
+                task.cancel()
         rooms.pop(room.code, None)
         return
     if room.phase in ('pick', 'reveal', 'end') and name:
         room.chat.append({'name': 'システム', 'text': f'{name} さんが退出しました', 'ts': time.time()})
         room.chat = room.chat[-60:]
     if room.phase == 'pick' and room.all_picked():
-        room.do_reveal()
+        return await finish_reveal(room)
     await broadcast(room)
 
 
@@ -430,14 +455,6 @@ async def ws_handler(request):
                 await broadcast(room)
                 await maybe_reveal(room)
             return
-
-        if t == 'next':
-            if not (is_host and room.phase == 'reveal'):
-                return
-            room.next_round()
-            if room.phase == 'pick':
-                return await enter_pick_phase(room)
-            return await broadcast(room)
 
         if t == 'chat':
             text = ''.join(ch for ch in str(data.get('text') or '') if ch.isprintable()).strip()[:80]
