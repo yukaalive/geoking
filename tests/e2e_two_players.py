@@ -53,12 +53,12 @@ async def main():
         assert any('さんが観戦しました' in m['text'] for m in sc['chat'])
         assert any('Bob<img src=x onさんが入室しました' in m['text'] for m in sc['chat'])
         await c.send_json({'type': 'pick', 'card': 'jp'})   # 観戦中は出せない（無視）
-        await c.send_json({'type': 'join_game'})
-        sc = await recv_state(c, lambda d: len(d['hand']) > 0)
-        assert len(sc['hand']) == 5 and sc['round'] == 1, (len(sc['hand']), sc['round'])
-        assert not next(p for p in sc['players'] if p['pid'] == sc['you'])['spectator']
-        assert not set(sc['hand']) & (set(sa['hand']) | set(sb['hand'])), 'late hand overlaps'
-        assert any('途中から参加' in m['text'] for m in sc['chat'])
+        # 観戦者にはライブ情報が届き、プレイヤー同士には届かない
+        assert sc['live'] is not None and set(sc['live']) == {pidA, pidB}, sc.get('live')
+        await a.send_json({'type': 'selecting', 'card': sa['hand'][2]})
+        sc = await recv_state(c, lambda d: d['live'] and d['live'][pidA]['selecting'] == sa['hand'][2])
+        sb_live = await recv_state(b, lambda d: True)
+        assert sb_live.get('live') is None, 'players must not see live picks'
         await recv_state(a, lambda d: len(d['players']) == 3)
         # 退出: Carol が抜ける → left を受け取り、部屋は2人で続行
         await c.send_json({'type': 'leave'})

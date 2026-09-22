@@ -209,3 +209,17 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .status-ico{margin-left:4px}
 .tag.spec{background:var(--sky)}
 .spectate{margin-bottom:14px}
+
+/* ---------- 観戦モードのライブ表示 */
+.others .oflag{display:inline-block;border-radius:6px;padding:2px;border:3px solid transparent;transition:border-color .15s,transform .15s}
+.others .oflag img{display:block;cursor:pointer}
+.others .oflag.sel{border-color:var(--accent);transform:translateY(-3px)}
+.others .oflag.go{border-color:var(--primary);transform:translateY(-5px) scale(1.06);box-shadow:var(--shadow-sm)}
+.others .orow.live .oname{min-width:160px;display:inline-flex;align-items:center;gap:6px}
+.bubble{position:relative;display:inline-block;font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;border:2px solid var(--ink);background:var(--card)}
+.bubble::before{content:"";position:absolute;left:-7px;top:50%;margin-top:-4px;border:4px solid transparent;border-right-color:var(--ink)}
+.bubble.think{color:var(--muted);animation:blinkdots 1.4s infinite}
+.bubble.sel{background:var(--accent)}
+.bubble.go{background:var(--primary);color:var(--primary-ink);animation:popin .3s ease}
+@keyframes blinkdots{50%{opacity:.5}}
+@keyframes popin{from{transform:scale(.6)}to{transform:none}}

@@ -66,6 +66,7 @@ class Player:
         self.score = 0
         self.won = []       # 獲得したお題id
         self.pick = None    # 今ラウンドに出したカード
+        self.selecting = None  # いま選んでいる（まだ出していない）カード。観戦者にだけ見せる
         self.connected = is_bot
         self.token = None if is_bot else secrets.token_hex(16)  # 再接続用の秘密。本人にだけ送る
         self.spectator = False   # 観戦中（途中参加者は既定で観戦。次のゲームから、または「途中から参加」で参加）
@@ -120,6 +121,7 @@ class Room:
         self.reveal = None
         for p in self.players.values():
             p.pick = None
+            p.selecting = None
         self.deadline = time.time() + self.settings['timer'] if self.settings['timer'] else None
 
     def current_prompt(self):
@@ -223,6 +225,9 @@ class Room:
             'prompt': self.current_prompt() if self.phase in ('pick', 'reveal') else None,
             'hand': me.hand if me else [],
             'hands': {x: pl.hand for x, pl in self.players.items()},   # 全員の手札（出したカードは公開まで手札に残るので選択は漏れない）
+            # 観戦者にだけ、各プレイヤーが「いま選んでいる／出した」カードをリアルタイムで見せる
+            'live': ({x: {'selecting': pl.selecting, 'pick': pl.pick} for x, pl in self.players.items() if not pl.spectator}
+                     if (me and me.spectator and self.phase == 'pick') else None),
             'history': self.history if self.phase == 'end' else None,
             'my_pick': me.pick if me else None,
             'reveal': self.reveal,
@@ -443,12 +448,13 @@ async def ws_handler(request):
                 await after_player_gone(room, tp.name)
             return
 
-        if t == 'join_game':   # 観戦 → 今のゲームに途中から参加
+        if t == 'selecting':   # 選択中のカード（観戦者向けのライブ表示。プレイヤー同士には見えない）
+            if room.phase != 'pick':
+                return
             p = room.players[pid]
-            if p.spectator and room.phase in ('pick', 'reveal'):
-                p.spectator = False
-                room.deal_late(p)
-                room.chat.append({'name': 'システム', 'text': f'{p.name}さんが途中から参加しました', 'ts': time.time()})
+            card = data.get('card')
+            p.selecting = card if (isinstance(card, str) and card in p.hand) else None
+            if any(pl.spectator and pl.connected for pl in room.players.values()):
                 await broadcast(room)
             return
 

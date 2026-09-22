@@ -130,7 +130,6 @@ function pushSettings() {
 }
 ['#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
-$('#joinGameBtn').onclick = () => send({ type: 'join_game' });
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
   stopTimer();
@@ -237,6 +236,7 @@ function renderHand() {
       if (id === picked) return;                       // すでに出しているカード
       if (selectedCard === id) { send({ type: 'pick', card: id }); selectedCard = null; return; }   // 2回目で決定・変更
       selectedCard = id;
+      send({ type: 'selecting', card: id });
       document.querySelectorAll('.flagcard').forEach(x => x.classList.remove('selected'));
       c.classList.add('selected');
       $('#pickTitle').textContent = `${picked ? 'このカードに変更する？' : 'この国旗を出す？'} もう一度クリックで決定${state.settings.show_names ? '：' + countryName(id) : ''}`;
@@ -253,14 +253,22 @@ function renderOthersHands() {
   const box = $('#othersHands'); box.innerHTML = '';
   const others = state.players.filter(p => p.pid !== pid && !p.spectator);
   if (!others.length || !state.hands) return;
-  box.appendChild(el('h4', '', 'みんなの手札（何を出したかは公開まで分かりません）'));
+  const live = state.live;   // 観戦者にだけ届く
+  box.appendChild(el('h4', '', live ? 'みんなの手札（観戦モード：選んでいるカードが見えます）' : 'みんなの手札（何を出したかは公開まで分かりません）'));
   for (const p of others) {
-    const row = el('div', 'orow');
-    row.appendChild(el('span', 'oname', `${escapeHtml(p.name)}${p.picked ? ' ' + ico('check', 'sm') : ''}`));
+    const row = el('div', 'orow' + (live ? ' live' : ''));
+    const lv = live ? live[p.pid] : null;
+    let bubble = '';
+    if (lv) {
+      const st = lv.pick ? 'go' : (lv.selecting ? 'sel' : 'think');
+      bubble = `<span class="bubble ${st}">${lv.pick ? '勝負！' : (lv.selecting ? '選択中…' : '考え中…')}</span>`;
+    }
+    row.appendChild(el('span', 'oname', `${escapeHtml(p.name)}${!live && p.picked ? ' ' + ico('check', 'sm') : ''}${bubble}`));
     for (const id of (state.hands[p.pid] || [])) {
+      const wrap = el('span', 'oflag' + (lv && lv.pick === id ? ' go' : (lv && lv.selecting === id ? ' sel' : '')));
       const img = el('img'); img.src = flagUrl(id, 80); img.alt = ''; img.title = state.settings.show_names ? countryName(id) : '';
-      img.style.cursor = 'pointer'; img.onclick = () => showCountry(id);
-      row.appendChild(img);
+      img.onclick = () => showCountry(id);
+      wrap.appendChild(img); row.appendChild(wrap);
     }
     box.appendChild(row);
   }
