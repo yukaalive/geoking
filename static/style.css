@@ -126,7 +126,9 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .flagcard{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:8px;cursor:pointer;text-align:center;box-shadow:var(--shadow-sm);transition:transform .1s,box-shadow .1s;position:relative}
 .flagcard:hover{transform:translate(-2px,-4px);box-shadow:5px 6px 0 var(--ink)}
 .flagcard.selected{outline:4px solid var(--accent);outline-offset:-2px}
-.flagcard.locked{cursor:default}
+.flagcard.picked{outline:4px solid var(--primary);outline-offset:-2px;background:#e6f2ea}
+@media (prefers-color-scheme:dark){.flagcard.picked{background:#1e3a2c}}
+.flagcard.picked .nm{color:var(--primary)}
 .flagcard img{width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:8px;background:#fff;border:1.5px solid var(--ink)}
 .flagcard .nm{font-size:12px;font-weight:800;margin-top:6px;min-height:16px}
 .waiting{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}

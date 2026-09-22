@@ -60,7 +60,10 @@ async def main():
                 sa = await recv_state(a, lambda d: d['phase'] == 'pick' and d['round'] == rnd)
                 sb = await recv_state(b, lambda d: d['phase'] == 'pick' and d['round'] == rnd)
             await a.send_json({'type': 'pick', 'card': 'zz'})  # 手札に無いカードは無視
-            await a.send_json({'type': 'pick', 'card': sa['hand'][0]})
+            await a.send_json({'type': 'pick', 'card': sa['hand'][1]})
+            st1 = await recv_state(a, lambda d: d['my_pick'] == sa['hand'][1])
+            await a.send_json({'type': 'pick', 'card': sa['hand'][0]})   # 公開前なら変更できる
+            await recv_state(a, lambda d: d['my_pick'] == sa['hand'][0])
             await b.send_json({'type': 'pick', 'card': sb['hand'][-1]})
             ra = await recv_state(a, lambda d: d['phase'] == 'reveal')
             rows = ra['reveal']['rows']; pr = ra['reveal']['prompt']
@@ -68,6 +71,7 @@ async def main():
             if vals:
                 best = max(vals) if pr['dir'] == 'max' else min(vals)
                 assert all((r['value'] == best) == r['winner'] for r in rows), rows
+            assert next(r for r in rows if r['pid'] == pidA)['card'] == sa['hand'][0], 'pick change not applied'
             print(f"R{rnd} {pr['text']:<22} " + ' | '.join(f"{r['name']}:{r['card']}={r['value']}{'👑' if r['winner'] else ''}" for r in rows))
             assert len(ra['hand']) == 5 - rnd, 'card not removed from hand'
             await asyncio.sleep(0.8)  # チャット連投制限（0.7秒）を待つ

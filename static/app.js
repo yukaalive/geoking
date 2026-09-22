@@ -215,14 +215,23 @@ function renderGame() {
 
 function renderHand() {
   const hand = $('#hand'); hand.innerHTML = '';
-  const locked = state.my_pick != null;
-  $('#pickTitle').textContent = locked ? `「${countryName(state.my_pick)}」を出しました。他のプレイヤーを待っています…` : (state.hand.length ? 'お題に一番合うと思う国旗を1枚選ぼう（クリックで決定）' : '手札がありません。次のゲームから参加できます');
+  const picked = state.my_pick;
+  if (selectedCard && !state.hand.includes(selectedCard)) selectedCard = null;
+  $('#pickTitle').textContent = picked
+    ? `「${countryName(picked)}」を出しました。全員が出すまでは、別のカードを2回クリックで変更できます`
+    : (state.hand.length ? 'お題に一番合うと思う国旗を1枚選ぼう（2回クリックで決定）' : '手札がありません。次のゲームから参加できます');
   for (const id of state.hand) {
-    const c = el('div', 'flagcard' + (id === state.my_pick ? ' selected' : '') + (locked ? ' locked' : ''));
-    c.innerHTML = `<img src="${flagUrl(id)}" alt="国旗" loading="lazy"><div class="nm">${state.settings.show_names ? countryName(id) : '&nbsp;'}</div>`;
-    if (!locked) {
-      c.onclick = () => { if (selectedCard === id) { send({ type: 'pick', card: id }); selectedCard = null; } else { selectedCard = id; document.querySelectorAll('.flagcard').forEach(x => x.classList.remove('selected')); c.classList.add('selected'); $('#pickTitle').textContent = `この国旗を出す？ もう一度クリックで決定${state.settings.show_names ? '：' + countryName(id) : ''}`; } };
-    }
+    const cls = 'flagcard' + (id === picked ? ' picked' : '') + (id === selectedCard && id !== picked ? ' selected' : '');
+    const c = el('div', cls);
+    c.innerHTML = `<img src="${flagUrl(id)}" alt="国旗" loading="lazy"><div class="nm">${state.settings.show_names ? countryName(id) : (id === picked ? '出したカード' : '&nbsp;')}</div>`;
+    c.onclick = () => {
+      if (id === picked) return;                       // すでに出しているカード
+      if (selectedCard === id) { send({ type: 'pick', card: id }); selectedCard = null; return; }   // 2回目で決定・変更
+      selectedCard = id;
+      document.querySelectorAll('.flagcard').forEach(x => x.classList.remove('selected'));
+      c.classList.add('selected');
+      $('#pickTitle').textContent = `${picked ? 'このカードに変更する？' : 'この国旗を出す？'} もう一度クリックで決定${state.settings.show_names ? '：' + countryName(id) : ''}`;
+    };
     hand.appendChild(c);
   }
   const w = el('div', 'waiting');
