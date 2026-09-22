@@ -2,10 +2,10 @@
 """お題（プロンプト）定義。key は countries.json のフィールド名。dir は max/min。star は難易度(1-3)。"""
 
 CATEGORIES = {
-    'basic':    {'name': '基本（国旗王スタイル）', 'icon': '🏳️'},
-    'climate':  {'name': '気候・自然', 'icon': '🌦️'},
-    'religion': {'name': '宗教', 'icon': '🛐'},
-    'society':  {'name': '社会・暮らし', 'icon': '🏙️'},
+    'basic':    {'name': '基本（国旗王スタイル）', 'icon': 'flag'},
+    'climate':  {'name': '気候・自然', 'icon': 'weather'},
+    'religion': {'name': '宗教', 'icon': 'temple'},
+    'society':  {'name': '社会・暮らし', 'icon': 'city'},
 }
 
 # fmt: 表示形式

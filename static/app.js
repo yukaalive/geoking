@@ -36,7 +36,8 @@ function fmtValue(v, fmt) {
   }
 }
 function countryName(id) { const c = META.countries[id]; return c ? c.name : id; }
-function stars(n) { return '★'.repeat(n) + '☆'.repeat(3 - n); }
+const ico = (name, cls = '') => `<svg class="ico ${cls}" aria-hidden="true"><use href="/static/icons.svg#${name}"/></svg>`;
+function stars(n) { return `<span class="stars">${ico('star').repeat(n)}${ico('star-off').repeat(3 - n)}</span>`; }
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add('hidden'), 2600); }
 function show(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); $('#' + screen).classList.remove('hidden'); if (screen !== 'home' && typeof stopRoomsPoll === 'function') stopRoomsPoll(); }
 
@@ -158,8 +159,8 @@ function render() {
 
 function playerTag(p) {
   let t = '';
-  if (p.pid === state.host) t += '<span class="tag host">ホスト</span>';
-  if (p.is_bot) t += '<span class="tag">BOT</span>';
+  if (p.pid === state.host) t += `<span class="tag host">${ico('crown')}ホスト</span>`;
+  if (p.is_bot) t += `<span class="tag">${ico('bot')}BOT</span>`;
   if (!p.connected && !p.is_bot) t += '<span class="tag off">切断</span>';
   if (p.pid === state.you) t += '<span class="tag">あなた</span>';
   return t;
@@ -185,7 +186,7 @@ function renderLobby() {
 function renderGame() {
   const pr = state.prompt, cat = META.categories[pr.cat];
   $('#roundNum').textContent = state.round; $('#roundTotal').textContent = state.total_rounds;
-  $('#promptCat').textContent = `${cat.icon} ${cat.name} ／ 難易度 ${stars(pr.star)}`;
+  $('#promptCat').innerHTML = `${ico(cat.icon)} ${escapeHtml(cat.name)} ／ 難易度 ${stars(pr.star)}`;
   // 「〜が高い国は？」の「高い/低い」などを強調表示
   const m = pr.text.match(/^(.*?)(大きい|小さい|多い|少ない|高い|低い|長い|短い|北|南|東|西|近い)(国は？)$/);
   $('#promptText').innerHTML = m ? `${escapeHtml(m[1])}<span class="kw">${m[2]}</span>${m[3]}` : escapeHtml(pr.text);
@@ -194,7 +195,7 @@ function renderGame() {
   // スコア
   const sl = $('#scoreList'); sl.innerHTML = '';
   for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
-    sl.appendChild(el('li', '', `<span>${escapeHtml(p.name)}${playerTag(p)}</span><b>${p.score} 点${state.phase === 'pick' ? (p.picked ? ' ✅' : ' …') : ''}</b>`));
+    sl.appendChild(el('li', '', `<span>${escapeHtml(p.name)}${playerTag(p)}</span><b>${p.score} 点${state.phase === 'pick' ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
   }
   // チャット
   const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
@@ -235,7 +236,7 @@ function renderHand() {
     hand.appendChild(c);
   }
   const w = el('div', 'waiting');
-  for (const p of state.players) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ✓' : ''}`));
+  for (const p of state.players) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ' + ico('check', 'sm') : ''}`));
   hand.appendChild(w); w.style.gridColumn = '1 / -1';
   renderOthersHands();
 }
@@ -247,7 +248,7 @@ function renderOthersHands() {
   box.appendChild(el('h4', '', 'みんなの手札（何を出したかは公開まで分かりません）'));
   for (const p of others) {
     const row = el('div', 'orow');
-    row.appendChild(el('span', 'oname', `${escapeHtml(p.name)}${p.picked ? ' ✓' : ''}`));
+    row.appendChild(el('span', 'oname', `${escapeHtml(p.name)}${p.picked ? ' ' + ico('check', 'sm') : ''}`));
     for (const id of (state.hands[p.pid] || [])) {
       const img = el('img'); img.src = flagUrl(id, 80); img.alt = ''; img.title = state.settings.show_names ? countryName(id) : '';
       img.style.cursor = 'pointer'; img.onclick = () => showCountry(id);
@@ -264,7 +265,7 @@ function renderReveal() {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
     d.style.animationDelay = (i * 0.25) + 's';
-    d.innerHTML = `<div class="crown">${row.winner ? '👑' : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${c.name_official !== c.name ? `<small>${c.name}</small>` : ''}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.value == null ? '（データなし＝敗北）' : ''}</div>`;
+    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${c.name_official !== c.name ? `<small>${c.name}</small>` : ''}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.value == null ? '（データなし＝敗北）' : ''}</div>`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
   });
@@ -285,10 +286,10 @@ function renderEnd() {
   const top = sorted[0]?.score;
   sorted.forEach((p, i) => {
     const won = p.won.map(id => META.prompts.find(x => x.id === id)?.text.replace('は？', '')).filter(Boolean);
-    ol.appendChild(el('li', '', `${p.score === top ? '👑 ' : ''}${escapeHtml(p.name)}${p.pid === pid ? '（あなた）' : ''} — <b>${p.score} 点</b><div class="muted small">${won.join('／') || '—'}</div>`));
+    ol.appendChild(el('li', '', `${p.score === top ? ico('crown') + ' ' : ''}${escapeHtml(p.name)}${p.pid === pid ? '（あなた）' : ''} — <b>${p.score} 点</b><div class="muted small">${won.join('／') || '—'}</div>`));
   });
   const champs = sorted.filter(p => p.score === top).map(p => p.name);
-  $('#endTitle').textContent = `🏆 ${champs.join('・')} が地理王！`;
+  $('#endTitle').innerHTML = `${ico('trophy', 'big')} ${escapeHtml(champs.join('・'))} が地理王！`;
   renderHistory();
 }
 
@@ -302,7 +303,7 @@ function renderHistory() {
     for (const r of h.rows) {
       const c = META.countries[r.card];
       const card = el('div', 'hcard' + (r.winner ? ' win' : ''));
-      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? '👑 ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div><div class="who">${escapeHtml(r.name)}</div>`;
+      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? ico('crown', 'sm') + ' ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div><div class="who">${escapeHtml(r.name)}</div>`;
       card.style.cursor = 'pointer'; card.onclick = () => showCountry(r.card);
       cards.appendChild(card);
     }
@@ -352,8 +353,8 @@ async function loadRooms() {
     ul.innerHTML = '';
     if (!rooms.length) { ul.innerHTML = '<li class="muted">いま募集中の部屋はありません。部屋を作って「公開部屋にする」をオンにすると、ここに表示されます。</li>'; return; }
     for (const r of rooms) {
-      const cats = r.categories.map(c => META.categories[c]?.icon || '').join('');
-      const status = r.phase === 'lobby' ? '<span class="tag">募集中</span>' : `<span class="tag live">ラウンド${r.round}進行中・途中参加OK</span>`;
+      const cats = r.categories.map(c => ico(META.categories[c]?.icon || 'flag', 'sm')).join('');
+      const status = r.phase === 'lobby' ? `<span class="tag">${ico('clock')}募集中</span>` : `<span class="tag live">${ico('cards')}ラウンド${r.round}進行中・途中参加OK</span>`;
       const li = el('li', '', `<span><b>${escapeHtml(r.title || r.host + 'の部屋')}</b> <span class="muted small">by ${escapeHtml(r.host)}</span> ${status} <span class="tag">${r.players}/8人</span> <span class="tag">${r.rounds}R ${cats}</span></span>`);
       const b = el('button', 'mini primary', '参加'); b.onclick = () => { $('#codeInput').value = r.room; $('#joinBtn').click(); };
       li.appendChild(b); ul.appendChild(li);

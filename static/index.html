@@ -11,8 +11,8 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand">👑 地理王 <span>GeoKing</span></div>
-  <div id="roomInfo" class="roominfo hidden"><span id="roomTitle" class="roomtitle"></span> <span class="muted small">コード</span> <b id="roomCode"></b> <button id="copyLink" class="mini">招待リンクをコピー</button> <button id="leaveBtn" class="mini danger">退出</button></div>
+  <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg#crown"/></svg> 地理王 <span>GeoKing</span></div>
+  <div id="roomInfo" class="roominfo hidden"><span id="roomTitle" class="roomtitle"></span> <span class="muted small">コード</span> <b id="roomCode"></b> <button id="copyLink" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#copy"/></svg> 招待リンクをコピー</button> <button id="leaveBtn" class="mini danger"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#door"/></svg> 退出</button></div>
 </header>
 
 <main id="app">
@@ -20,7 +20,7 @@
   <section id="home" class="screen">
     <div class="herodemo">
       <div class="herotext">
-        <h1>地理王</h1>
+        <h1><svg class="ico " aria-hidden="true"><use href="/static/icons.svg#crown"/></svg>地理王</h1>
         <p>国旗から、どんな国かを推測せよ！</p>
         <label>あなたの名前（空欄なら表示中の名前になります）<input id="nameInput" maxlength="16" placeholder="例：ゆか"></label>
         <div class="row">
@@ -33,7 +33,7 @@
       </div>
       <div class="scene" aria-hidden="true">
         <div class="qcard"><small>お題</small>面積が大きい国は？</div>
-        <div class="win">👑 ブラジル 851万km²</div>
+        <div class="win"><svg class="ico " aria-hidden="true"><use href="/static/icons.svg#crown"/></svg> ブラジル 851万km²</div>
         <div class="cards">
           <div class="card3d"><div class="inner"><div class="face front"><img src="https://flagcdn.com/w320/br.png" alt=""></div><div class="face back">ブラジル<b>851万km²</b></div></div></div>
           <div class="card3d"><div class="inner"><div class="face front"><img src="https://flagcdn.com/w320/jp.png" alt=""></div><div class="face back">日本<b>37.8万km²</b></div></div></div>
@@ -43,7 +43,7 @@
       </div>
     </div>
     <div class="card hero" id="publicRooms">
-      <h2>🌐 募集中の公開部屋 <button id="refreshRooms" class="mini">更新</button></h2>
+      <h2><svg class="ico " aria-hidden="true"><use href="/static/icons.svg#globe"/></svg> 募集中の公開部屋 <button id="refreshRooms" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#refresh"/></svg> 更新</button></h2>
       <ul id="publicRoomList" class="players"><li class="muted">読み込み中…</li></ul>
       <p class="muted small">世界のどこかの誰かが作った部屋に飛び入りできます。自分の部屋を載せるにはロビーで「公開部屋にする」をオンに。</p>
     </div>
@@ -53,10 +53,10 @@
   <section id="lobby" class="screen hidden">
     <div class="grid2">
       <div class="card">
-        <h2>プレイヤー <span id="playerCount" class="muted"></span></h2>
+        <h2><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#person"/></svg> プレイヤー <span id="playerCount" class="muted"></span></h2>
         <ul id="lobbyPlayers" class="players"></ul>
         <div class="row hostonly">
-          <button id="addBotBtn">ボットを追加</button>
+          <button id="addBotBtn"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#bot"/></svg> ボットを追加</button>
         </div>
         <p class="muted small">部屋コード <b id="lobbyCode"></b> を友だちに伝えるか、招待リンクを共有してください。ゲームが始まったあとでも途中参加できます。</p>
       </div>
@@ -64,7 +64,7 @@
         <h2>部屋の設定 <span class="muted small guestonly">（ホストのみ変更できます）</span></h2>
         <div class="settings hostonly-disable">
           <label>部屋の名前 <input id="setTitle" maxlength="20" placeholder="例：ゆかの部屋" style="width:180px"></label>
-          <label class="chk"><input type="checkbox" id="setPublic"> 🌐 公開部屋にする（トップページの一覧に載せて誰でも参加可）</label>
+          <label class="chk"><input type="checkbox" id="setPublic"> <svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#globe"/></svg> 公開部屋にする（トップページの一覧に載せて誰でも参加可）</label>
         </div>
         <p class="muted small">7ラウンド・手札8枚・回答は1問30秒（時間切れはランダムに出ます）。お題は「基本・気候・宗教・社会」からランダムに出ます。</p>
         <button id="startBtn" class="primary big hostonly">ゲーム開始</button>
@@ -100,11 +100,11 @@
       </div>
       <aside class="right">
         <div class="card">
-          <h3>スコア</h3>
+          <h3><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#trophy"/></svg> スコア</h3>
           <ul id="scoreList" class="scores"></ul>
         </div>
         <div class="card chat">
-          <h3>チャット</h3>
+          <h3><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#chat"/></svg> チャット</h3>
           <div id="chatLog" class="chatlog"></div>
           <form id="chatForm"><input id="chatInput" maxlength="80" placeholder="メッセージを入力"><button>送信</button></form>
         </div>
@@ -115,9 +115,9 @@
   <!-- 結果 -->
   <section id="end" class="screen hidden">
     <div class="card">
-      <h1 id="endTitle">🏆 結果発表</h1>
+      <h1 id="endTitle"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg#trophy"/></svg> 結果発表</h1>
       <ol id="finalList" class="final"></ol>
-      <h2 style="margin-top:18px">出された国の一覧</h2>
+      <h2 style="margin-top:18px"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg#cards"/></svg> 出された国の一覧</h2>
       <div id="historyList" class="history"></div>
 
       <div class="row">
