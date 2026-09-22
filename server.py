@@ -602,7 +602,14 @@ async def healthz(request):
 
 @web.middleware
 async def security_headers(request, handler):
-    resp = await handler(request)
+    if request.method == 'OPTIONS' and request.path.startswith('/api/'):
+        resp = web.Response(status=204)
+    else:
+        resp = await handler(request)
+    if request.path.startswith('/api/'):
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
     resp.headers.setdefault('X-Frame-Options', 'DENY')
     resp.headers.setdefault('Referrer-Policy', 'no-referrer')
