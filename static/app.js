@@ -6,8 +6,8 @@ let META = null;          // countries, fields, categories, prompts
 let ws = null, state = null, pendingAction = null;
 let selectedCard = null, manualJoin = false;
 let timerInterval = null;
-const pid = localStorage.getItem('geoking_pid') || (Math.random().toString(36).slice(2, 14));
-localStorage.setItem('geoking_pid', pid);
+let pid = null;  // サーバーが発行する。再接続用トークンと共に sessionStorage に保持
+const rejoinInfo = () => ({ pid: sessionStorage.getItem('geoking_pid'), token: sessionStorage.getItem('geoking_token') });
 
 // ---------- 表示ユーティリティ
 const flagUrl = (id, w = 320) => `https://flagcdn.com/w${w}/${id}.png`;
@@ -66,7 +66,7 @@ function connect(onOpen) {
   ws.onopen = () => { onOpen && onOpen(); };
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
-    if (msg.type === 'state') { state = msg; sessionStorage.setItem('geoking_room', msg.room); render(); }
+    if (msg.type === 'state') { state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } render(); }
     else if (msg.type === 'error') {
       if (!state) { sessionStorage.removeItem('geoking_room'); if (msg.message.includes('見つかりません') && !manualJoin) return; }
       toast(msg.message);
@@ -75,7 +75,7 @@ function connect(onOpen) {
   ws.onclose = () => {
     if (!state) return;
     toast('接続が切れました。再接続します…');
-    setTimeout(() => { if (state) connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value, pid })); }, 1500);
+    setTimeout(() => { if (state) connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value, ...rejoinInfo() })); }, 1500);
   };
 }
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
@@ -83,10 +83,10 @@ function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj))
 // ---------- ホーム
 function myName() { const n = $('#nameInput').value.trim() || 'プレイヤー'; localStorage.setItem('geoking_name', n); return n; }
 $('#nameInput').value = localStorage.getItem('geoking_name') || '';
-$('#createBtn').onclick = () => { manualJoin = true; const name = myName(); connect(() => send({ type: 'create', name, pid })); };
+$('#createBtn').onclick = () => { manualJoin = true; const name = myName(); connect(() => send({ type: 'create', name })); };
 $('#joinBtn').onclick = () => {
   const code = $('#codeInput').value.trim().toUpperCase(); if (code.length !== 4) return toast('4文字の部屋コードを入力してください');
-  manualJoin = true; const name = myName(); connect(() => send({ type: 'join', room: code, name, pid }));
+  manualJoin = true; const name = myName(); connect(() => send({ type: 'join', room: code, name }));
 };
 $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
 
@@ -138,7 +138,7 @@ function renderLobby() {
   $('#playerCount').textContent = `${state.players.length} / 8`;
   const ul = $('#lobbyPlayers'); ul.innerHTML = '';
   for (const p of state.players) {
-    const li = el('li', '', `<span>${p.name}${playerTag(p)}</span>`);
+    const li = el('li', '', `<span>${escapeHtml(p.name)}${playerTag(p)}</span>`);
     if (state.host === pid && p.pid !== pid) { const b = el('button', 'mini', '退出'); b.onclick = () => send({ type: 'kick', pid: p.pid }); li.appendChild(b); }
     ul.appendChild(li);
   }
@@ -166,7 +166,7 @@ function renderGame() {
   // スコア
   const sl = $('#scoreList'); sl.innerHTML = '';
   for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
-    sl.appendChild(el('li', '', `<span>${p.name}${playerTag(p)}</span><b>${p.score} 点${state.phase === 'pick' ? (p.picked ? ' ✅' : ' …') : ''}</b>`));
+    sl.appendChild(el('li', '', `<span>${escapeHtml(p.name)}${playerTag(p)}</span><b>${p.score} 点${state.phase === 'pick' ? (p.picked ? ' ✅' : ' …') : ''}</b>`));
   }
   // チャット
   const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
@@ -195,7 +195,7 @@ function renderHand() {
     hand.appendChild(c);
   }
   const w = el('div', 'waiting');
-  for (const p of state.players) w.appendChild(el('span', p.picked ? 'done' : '', `${p.name}${p.picked ? ' ✓' : ''}`));
+  for (const p of state.players) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ✓' : ''}`));
   hand.appendChild(w); w.style.gridColumn = '1 / -1';
 }
 
@@ -269,7 +269,7 @@ function stopRoomsPoll() { clearInterval(roomsPoll); roomsPoll = null; }
   if (q.get('room')) { $('#codeInput').value = q.get('room').toUpperCase(); }
   if (room && sessionStorage.getItem('geoking_room') === room) {
     // リロード時の自動再接続
-    connect(() => send({ type: 'join', room, name: $('#nameInput').value.trim() || localStorage.getItem('geoking_name') || 'プレイヤー', pid }));
+    connect(() => send({ type: 'join', room, name: $('#nameInput').value.trim() || localStorage.getItem('geoking_name') || 'プレイヤー', ...rejoinInfo() }));
   }
   show('home'); startRoomsPoll();
 })();

@@ -2,7 +2,7 @@
 """GeoKing（地理王） オンライン対戦サーバー。aiohttp + WebSocket。
     python3 server.py  →  http://localhost:8080
 """
-import asyncio, json, os, random, string, time, uuid
+import asyncio, json, os, random, secrets, string, time, uuid
 from aiohttp import web, WSMsgType
 from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS
 
@@ -22,12 +22,29 @@ DEFAULT_SETTINGS = {
     'public': False,       # 公開部屋一覧に載せる（世界の誰かと遊ぶ）
 }
 
+MAX_ROOMS = 300
+MAX_PLAYERS = 8
+ROOM_TTL = 6 * 3600
+CHAT_INTERVAL = 0.7    # 秒。連投制限
+
 rooms = {}  # code -> Room
 
 
+def clean_name(v):
+    name = ''.join(ch for ch in str(v or '') if ch.isprintable()).strip()[:16]
+    return name or 'プレイヤー'
+
+
+def cleanup_rooms():
+    now = time.time()
+    for code in [c for c, r in rooms.items() if now - r.created > ROOM_TTL]:
+        rooms.pop(code, None)
+
+
 def new_code():
+    alphabet = string.ascii_uppercase.replace('O', '').replace('I', '') + '23456789'
     while True:
-        code = ''.join(random.choices(string.ascii_uppercase.replace('O', '').replace('I', '') + '23456789', k=4))
+        code = ''.join(random.choices(alphabet, k=4))
         if code not in rooms:
             return code
 
@@ -41,7 +58,8 @@ class Player:
         self.won = []       # 獲得したお題id
         self.pick = None    # 今ラウンドに出したカード
         self.connected = is_bot
-        self.last_seen = time.time()
+        self.token = None if is_bot else secrets.token_hex(16)  # 再接続用の秘密。本人にだけ送る
+        self.last_chat = 0.0
 
 
 class Room:
@@ -63,8 +81,10 @@ class Room:
     def start(self):
         s = self.settings
         pool = [p for p in PROMPTS if p['cat'] in s['categories'] and p['star'] <= s['max_star']]
+        if not pool:
+            pool = [p for p in PROMPTS if p['cat'] in s['categories']] or list(PROMPTS)
         if len(pool) < s['rounds']:
-            pool = pool * ((s['rounds'] // max(len(pool), 1)) + 1)
+            pool = pool * ((s['rounds'] // len(pool)) + 1)
         self.prompts = random.sample(pool, s['rounds'])
         deck = [c['id'] for c in COUNTRIES]
         random.shuffle(deck)
@@ -98,13 +118,11 @@ class Room:
             if p.pick is None:
                 continue
             c = COUNTRY_BY_ID[p.pick]
-            v = c.get(key)
-            rows.append({'pid': pid, 'name': p.name, 'card': p.pick, 'value': v})
+            rows.append({'pid': pid, 'name': p.name, 'card': p.pick, 'value': c.get(key)})
         valid = [r for r in rows if r['value'] is not None]
         valid.sort(key=lambda r: r['value'], reverse=(direction == 'max'))
         best = valid[0]['value'] if valid else None
-        rank = 0
-        prev = object()
+        rank, prev = 0, object()
         for r in valid:
             if r['value'] != prev:
                 rank += 1
@@ -130,6 +148,22 @@ class Room:
         else:
             self.begin_round()
 
+    def reset_to_lobby(self):
+        self.phase, self.round, self.reveal = 'lobby', 0, None
+        for p in self.players.values():
+            p.hand, p.pick, p.score, p.won = [], None, 0, []
+
+    def remove_player(self, pid):
+        self.players.pop(pid, None)
+        if pid in self.order:
+            self.order.remove(pid)
+        if self.host == pid:
+            humans = [x for x in self.order if not self.players[x].is_bot]
+            self.host = humans[0] if humans else (self.order[0] if self.order else None)
+
+    def has_humans(self):
+        return any(p.connected and not p.is_bot for p in self.players.values())
+
     # ---------- views
     def public_players(self):
         return [{
@@ -142,6 +176,7 @@ class Room:
         me = self.players.get(pid)
         return {
             'type': 'state', 'room': self.code, 'host': self.host, 'you': pid,
+            'token': me.token if me else None,   # 本人の再接続用トークン（他人には送られない）
             'phase': self.phase, 'round': self.round, 'total_rounds': len(self.prompts) or self.settings['rounds'],
             'settings': self.settings, 'players': self.public_players(),
             'prompt': self.current_prompt() if self.phase in ('pick', 'reveal') else None,
@@ -168,7 +203,7 @@ async def broadcast(room):
 
 
 async def bots_play(room):
-    for p in room.players.values():
+    for p in list(room.players.values()):
         if p.is_bot and p.pick is None and p.hand:
             await asyncio.sleep(random.uniform(0.6, 1.8))
             if room.phase == 'pick' and p.pick is None:
@@ -189,6 +224,7 @@ async def start_timer(room):
         room.timer_task.cancel()
     if not room.deadline:
         return
+
     async def _run():
         await asyncio.sleep(max(0, room.deadline - time.time()))
         if room.phase == 'pick':
@@ -206,130 +242,192 @@ async def enter_pick_phase(room):
     asyncio.create_task(bots_play(room))
 
 
+def to_int(v, lo, hi, default):
+    try:
+        return max(lo, min(hi, int(v)))
+    except (TypeError, ValueError):
+        return default
+
+
 # ---------- websocket handler
 async def ws_handler(request):
     ws = web.WebSocketResponse(heartbeat=25)
     await ws.prepare(request)
-    room, pid = None, None
+    ctx = {'room': None, 'pid': None}
 
     async def error(msg):
         await send(ws, {'type': 'error', 'message': msg})
 
-    async for msg in ws:
-        if msg.type != WSMsgType.TEXT:
-            continue
-        try:
-            data = json.loads(msg.data)
-        except Exception:
-            continue
+    async def handle(data):
         t = data.get('type')
+        room, pid = ctx['room'], ctx['pid']
 
         if t == 'create':
-            name = (data.get('name') or 'プレイヤー').strip()[:16]
-            pid = data.get('pid') or uuid.uuid4().hex[:12]
+            cleanup_rooms()
+            if len(rooms) >= MAX_ROOMS:
+                return await error('現在満室です。しばらくしてからお試しください')
+            pid = uuid.uuid4().hex[:12]
             room = Room(new_code(), pid)
             rooms[room.code] = room
-            p = Player(pid, name); p.ws = ws; p.connected = True
-            room.players[pid] = p; room.order.append(pid)
-            await broadcast(room)
+            p = Player(pid, clean_name(data.get('name')))
+            p.ws, p.connected = ws, True
+            room.players[pid] = p
+            room.order.append(pid)
+            ctx['room'], ctx['pid'] = room, pid
+            return await broadcast(room)
 
-        elif t == 'join':
-            code = (data.get('room') or '').strip().upper()
+        if t == 'join':
+            code = str(data.get('room') or '').strip().upper()[:4]
             r = rooms.get(code)
             if not r:
-                await error('その部屋コードは見つかりません'); continue
-            name = (data.get('name') or 'プレイヤー').strip()[:16]
-            pid = data.get('pid') or uuid.uuid4().hex[:12]
-            if pid in r.players:          # 再接続
-                p = r.players[pid]; p.ws = ws; p.connected = True; p.name = name or p.name
+                return await error('その部屋コードは見つかりません')
+            want_pid = str(data.get('pid') or '')[:12]
+            if want_pid and want_pid in r.players:
+                # 再接続: 秘密トークンが一致した本人のみ（他人のIDでのなりすまし防止）
+                p = r.players[want_pid]
+                if p.is_bot or not secrets.compare_digest(str(data.get('token') or ''), p.token or ''):
+                    return await error('再接続の認証に失敗しました')
+                if p.ws is not None and p.ws is not ws and not p.ws.closed:
+                    await p.ws.close()
+                p.ws, p.connected = ws, True
+                pid = want_pid
             else:
                 if r.phase != 'lobby':
-                    await error('このゲームはすでに開始しています'); continue
-                if len(r.players) >= 8:
-                    await error('満員です（最大8人）'); continue
-                p = Player(pid, name); p.ws = ws; p.connected = True
-                r.players[pid] = p; r.order.append(pid)
-            room = r
-            await broadcast(room)
+                    return await error('このゲームはすでに開始しています')
+                if len(r.players) >= MAX_PLAYERS:
+                    return await error('満員です（最大8人）')
+                pid = uuid.uuid4().hex[:12]
+                p = Player(pid, clean_name(data.get('name')))
+                p.ws, p.connected = ws, True
+                r.players[pid] = p
+                r.order.append(pid)
+            ctx['room'], ctx['pid'] = r, pid
+            return await broadcast(r)
 
-        elif room is None:
-            await error('先に部屋を作成または参加してください')
+        if room is None or pid not in room.players:
+            return await error('先に部屋を作成または参加してください')
+        is_host = (pid == room.host)
 
-        elif t == 'settings' and pid == room.host and room.phase == 'lobby':
+        if t == 'settings':
+            if not (is_host and room.phase == 'lobby'):
+                return
             s = data.get('settings') or {}
-            cats = [c for c in s.get('categories', room.settings['categories']) if c in CATEGORIES] or ['basic']
+            if not isinstance(s, dict):
+                return await error('入力値が不正です')
+            cats = s.get('categories', room.settings['categories'])
+            cats = [c for c in cats if c in CATEGORIES] if isinstance(cats, list) else room.settings['categories']
+            cur = room.settings
             room.settings.update({
-                'categories': cats,
-                'rounds': max(3, min(12, int(s.get('rounds', room.settings['rounds'])))),
-                'hand_size': max(4, min(12, int(s.get('hand_size', room.settings['hand_size'])))),
-                'show_names': bool(s.get('show_names', room.settings['show_names'])),
-                'timer': max(0, min(180, int(s.get('timer', room.settings['timer'])))),
-                'max_star': max(1, min(3, int(s.get('max_star', room.settings['max_star'])))),
-                'public': bool(s.get('public', room.settings['public'])),
+                'categories': cats or ['basic'],
+                'rounds': to_int(s.get('rounds', cur['rounds']), 3, 12, cur['rounds']),
+                'hand_size': to_int(s.get('hand_size', cur['hand_size']), 4, 12, cur['hand_size']),
+                'show_names': bool(s.get('show_names', cur['show_names'])),
+                'timer': to_int(s.get('timer', cur['timer']), 0, 180, cur['timer']),
+                'max_star': to_int(s.get('max_star', cur['max_star']), 1, 3, cur['max_star']),
+                'public': bool(s.get('public', cur['public'])),
             })
             if room.settings['hand_size'] < room.settings['rounds']:
                 room.settings['hand_size'] = room.settings['rounds'] + 1
-            await broadcast(room)
+            return await broadcast(room)
 
-        elif t == 'add_bot' and pid == room.host and room.phase == 'lobby':
-            if len(room.players) >= 8:
-                await error('満員です'); continue
+        if t == 'add_bot':
+            if not (is_host and room.phase == 'lobby'):
+                return
+            if len(room.players) >= MAX_PLAYERS:
+                return await error('満員です')
             used = {p.name for p in room.players.values()}
             name = next((n for n in BOT_NAMES if n not in used), f'ボット{len(room.players)}')
             bpid = 'bot_' + uuid.uuid4().hex[:6]
-            room.players[bpid] = Player(bpid, name, is_bot=True); room.order.append(bpid)
-            await broadcast(room)
+            room.players[bpid] = Player(bpid, name, is_bot=True)
+            room.order.append(bpid)
+            return await broadcast(room)
 
-        elif t == 'kick' and pid == room.host and room.phase == 'lobby':
-            target = data.get('pid')
+        if t == 'kick':
+            if not (is_host and room.phase == 'lobby'):
+                return
+            target = str(data.get('pid') or '')
             if target in room.players and target != room.host:
-                room.players.pop(target); room.order.remove(target)
-                await broadcast(room)
+                tp = room.players[target]
+                room.remove_player(target)
+                if tp.ws is not None and not tp.ws.closed:
+                    await send(tp.ws, {'type': 'error', 'message': 'ホストによって退出させられました'})
+                    await tp.ws.close()
+            return await broadcast(room)
 
-        elif t == 'start' and pid == room.host and room.phase in ('lobby', 'end'):
+        if t == 'start':
+            if not (is_host and room.phase in ('lobby', 'end')):
+                return
             if len(room.players) < 2:
-                await error('2人以上（ボット可）で開始できます'); continue
+                return await error('2人以上（ボット可）で開始できます')
             room.start()
-            await enter_pick_phase(room)
+            return await enter_pick_phase(room)
 
-        elif t == 'pick' and room.phase == 'pick':
+        if t == 'pick':
+            if room.phase != 'pick':
+                return
             p = room.players[pid]
             card = data.get('card')
-            if card in p.hand:
+            if isinstance(card, str) and card in p.hand:
                 p.pick = card
                 await broadcast(room)
                 await maybe_reveal(room)
+            return
 
-        elif t == 'next' and pid == room.host and room.phase == 'reveal':
+        if t == 'next':
+            if not (is_host and room.phase == 'reveal'):
+                return
             room.next_round()
             if room.phase == 'pick':
-                await enter_pick_phase(room)
-            else:
-                await broadcast(room)
+                return await enter_pick_phase(room)
+            return await broadcast(room)
 
-        elif t == 'chat':
-            text = (data.get('text') or '').strip()[:80]
-            if text:
-                room.chat.append({'name': room.players[pid].name, 'text': text, 'ts': time.time()})
-                await broadcast(room)
+        if t == 'chat':
+            text = ''.join(ch for ch in str(data.get('text') or '') if ch.isprintable()).strip()[:80]
+            p = room.players[pid]
+            now = time.time()
+            if text and now - p.last_chat >= CHAT_INTERVAL:
+                p.last_chat = now
+                room.chat.append({'name': p.name, 'text': text, 'ts': now})
+                room.chat = room.chat[-60:]
+                return await broadcast(room)
+            return
 
-        elif t == 'to_lobby' and pid == room.host:
-            room.phase = 'lobby'; room.round = 0; room.reveal = None
-            for p in room.players.values():
-                p.hand, p.pick, p.score, p.won = [], None, 0, []
-            await broadcast(room)
+        if t == 'to_lobby':
+            if not is_host:
+                return
+            room.reset_to_lobby()
+            return await broadcast(room)
 
-    # 切断処理
-    if room and pid in room.players:
+    async for msg in ws:
+        if msg.type != WSMsgType.TEXT:
+            continue
+        if len(msg.data) > 4000:
+            await error('メッセージが大きすぎます')
+            continue
+        try:
+            data = json.loads(msg.data)
+            if not isinstance(data, dict):
+                raise ValueError
+        except ValueError:
+            await error('入力値が不正です')
+            continue
+        try:
+            await handle(data)
+        except Exception:   # 1人の不正入力で接続や部屋を落とさない
+            await error('処理に失敗しました')
+
+    # ---------- 切断処理
+    room, pid = ctx['room'], ctx['pid']
+    if room and pid in room.players and room.players[pid].ws is ws:
         p = room.players[pid]
-        p.connected = False; p.ws = None
+        p.connected, p.ws = False, None
         if room.phase == 'lobby':
-            room.players.pop(pid); room.order.remove(pid)
-            if room.host == pid and room.order:
-                room.host = room.order[0]
+            room.remove_player(pid)
         elif room.phase == 'pick' and room.all_picked():
             room.do_reveal()
-        if not any(pl.connected and not pl.is_bot for pl in room.players.values()):
+        if not room.has_humans():
+            if room.timer_task:
+                room.timer_task.cancel()
             rooms.pop(room.code, None)
         else:
             await broadcast(room)
@@ -344,29 +442,40 @@ async def api_meta(request):
         'prompts': PROMPTS,
     })
 
-async def index(request):
-    raise web.HTTPFound('/static/index.html')
 
 async def api_rooms(request):
     """募集中（ロビー状態）の公開部屋一覧。"""
+    cleanup_rooms()
     now = time.time()
-    for code in [c for c, r in rooms.items() if now - r.created > 6 * 3600]:
-        rooms.pop(code, None)  # 6時間で自動掃除
     out = []
     for r in rooms.values():
-        if r.settings['public'] and r.phase == 'lobby' and 0 < len(r.players) < 8:
+        if r.settings['public'] and r.phase == 'lobby' and 0 < len(r.players) < MAX_PLAYERS:
             host = r.players.get(r.host)
             out.append({'room': r.code, 'host': host.name if host else '', 'players': len(r.players),
                         'categories': r.settings['categories'], 'rounds': r.settings['rounds'], 'age': int(now - r.created)})
     out.sort(key=lambda x: x['age'])
     return web.json_response({'rooms': out[:20]})
 
+
+async def index(request):
+    raise web.HTTPFound('/static/index.html')
+
+
 async def healthz(request):
     return web.json_response({'ok': True, 'rooms': len(rooms)})
 
 
+@web.middleware
+async def security_headers(request, handler):
+    resp = await handler(request)
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    resp.headers.setdefault('X-Frame-Options', 'DENY')
+    resp.headers.setdefault('Referrer-Policy', 'no-referrer')
+    return resp
+
+
 def make_app():
-    app = web.Application()
+    app = web.Application(middlewares=[security_headers], client_max_size=64 * 1024)
     app.router.add_get('/', index)
     app.router.add_get('/healthz', healthz)
     app.router.add_get('/api/meta', api_meta)
