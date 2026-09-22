@@ -240,3 +240,5 @@ button.pref.off{opacity:.55}
 button.react{padding:6px 10px;font-size:13px;border-radius:999px;box-shadow:none}
 button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .chatlog{height:150px}
+.chatlog .who,.scores .who{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.chatlog{height:130px}

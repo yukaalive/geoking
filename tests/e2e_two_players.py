@@ -94,14 +94,15 @@ async def main():
             print(f"R{rnd} {pr['text']:<22} " + ' | '.join(f"{r['name']}:{r['card']}={r['value']}{'👑' if r['winner'] else ''}" for r in rows))
             assert len(ra['hand']) == 5 - rnd, 'card not removed from hand'
             await asyncio.sleep(0.8)  # 連投制限（0.7秒）を待つ
-            await b.send_json({'type': 'chat', 'text': f'自由入力 {rnd}'})   # 自由入力は拒否される
-            try:
-                await recv_state(b, lambda d: any('自由入力' in c['text'] for c in d['chat']), timeout=1); raise SystemExit('free text accepted!')
-            except RuntimeError as e:
-                assert '定型' in str(e), e
-            reaction = ['いいね！', 'まさか！', '勝負！', 'ナイス！'][rnd - 1]
-            await b.send_json({'type': 'chat', 'text': reaction})
-            await recv_state(a, lambda d: sum(1 for c in d['chat'] if c['text'] == reaction) >= 1)
+            for bad in ['ばか', 'これ見て http://x.com', '090-1234-5678 に電話して']:   # NGワード・URL・電話番号は拒否
+                await b.send_json({'type': 'chat', 'text': bad})
+                try:
+                    await recv_state(b, lambda d: any(c['text'] == bad for c in d['chat']), timeout=1); raise SystemExit(f'bad chat accepted: {bad}')
+                except RuntimeError as e:
+                    assert '送信できません' in str(e), e
+            await asyncio.sleep(0.8)
+            await b.send_json({'type': 'chat', 'text': f'ブラフ！{rnd}'})   # 普通の発言は流れる
+            await recv_state(a, lambda d: any(c['text'] == f'ブラフ！{rnd}' for c in d['chat']))
             # 5秒後に自動で次へ進む（'next' は廃止）
         assert ra['next_at'] and ra['next_at'] - time.time() <= 5.5, ra.get('next_at')
         ea = await recv_state(a, lambda d: d['phase'] == 'end')
@@ -110,6 +111,15 @@ async def main():
         assert all(len(h['rows']) == 2 for h in ea['history'])
         print('END scores', {p['name']: p['score'] for p in ea['players']}, 'total', total)
         assert total >= 4, 'each round should award at least one point'
+        # ミュート: Alice が Bob をミュートすると Alice の画面から Bob の発言が消える
+        await a.send_json({'type': 'mute', 'pid': pidB, 'on': True})
+        st = await recv_state(a, lambda d: pidB in d.get('muted', []))
+        assert not any(c.get('pid') == pidB for c in st['chat']), 'muted messages still visible'
+        await a.send_json({'type': 'mute', 'pid': pidB, 'on': False})
+        await recv_state(a, lambda d: pidB not in d.get('muted', []))
+        # 通報: 1人目では制限されない
+        await a.send_json({'type': 'report', 'pid': pidB, 'reason': '迷惑行為'})
+        msg = json.loads((await asyncio.wait_for(a.receive(), 5)).data); assert msg['type'] == 'toast', msg
         # 再接続: Bobが切断→同じpidで戻る
         await b.close()
         b2 = await s.ws_connect(URL)

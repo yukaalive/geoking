@@ -127,6 +127,7 @@ function connect(onOpen) {
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
     if (msg.type === 'state') { reconnectTries = 0; state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } render(); }
+    else if (msg.type === 'toast') toast(msg.message);
     else if (msg.type === 'left') { leaveToHome(msg.message); if (ws) { ws.onclose = null; ws.close(); } }
     else if (msg.type === 'error') {
       if (msg.message.includes('見つかりません') || msg.message.includes('認証に失敗')) {
@@ -190,6 +191,7 @@ function leaveToHome(message) {
 $('#startBtn').onclick = () => send({ type: 'start' });
 $('#rematchBtn').onclick = () => send({ type: 'start' });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
+$('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) send({ type: 'chat', text: t }); $('#chatInput').value = ''; };
 function renderReactions() {
   const box = $('#reactions'); if (box.childElementCount) return;
   for (const r of (META.reactions || [])) { const b = el('button', 'react', escapeHtml(r)); b.onclick = () => send({ type: 'chat', text: r }); box.appendChild(b); }
@@ -277,12 +279,14 @@ function renderGame() {
   // スコア
   const sl = $('#scoreList'); sl.innerHTML = '';
   for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
-    sl.appendChild(el('li', '', `<span>${escapeHtml(p.name)}${playerTag(p)}</span><b>${p.spectator ? '—' : p.score + ' 点'}${state.phase === 'pick' && !p.spectator ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
+    sl.appendChild(el('li', '', `<span>${p.pid !== pid && !p.is_bot ? `<b class="who" data-pid="${p.pid}" title="通報・ミュート">${escapeHtml(p.name)}</b>` : escapeHtml(p.name)}${playerTag(p)}</span><b>${p.spectator ? '—' : p.score + ' 点'}${state.phase === 'pick' && !p.spectator ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
   }
   // チャット
+  sl.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
   renderReactions();
   const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
-  log.innerHTML = state.chat.map(c => `<div><b>${escapeHtml(c.name)}</b> ${escapeHtml(c.text)}</div>`).join('');
+  log.innerHTML = state.chat.map(c => `<div>${c.pid && c.pid !== pid ? `<b class="who" data-pid="${c.pid}" title="通報・ミュート">${escapeHtml(c.name)}</b>` : `<b>${escapeHtml(c.name)}</b>`} ${escapeHtml(c.text)}</div>`).join('');
+  log.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
   if (atBottom) log.scrollTop = log.scrollHeight;
 
   if (state.phase === 'pick') {
@@ -464,6 +468,21 @@ $('#refreshRooms').onclick = loadRooms;
 let roomsPoll = null;
 function startRoomsPoll() { stopRoomsPoll(); loadRooms(); roomsPoll = setInterval(() => { if (!$('#home').classList.contains('hidden')) loadRooms(); }, 5000); }
 function stopRoomsPoll() { clearInterval(roomsPoll); roomsPoll = null; }
+
+// ---------- 通報・ミュート
+function showPlayerMenu(targetPid) {
+  const p = state.players.find(x => x.pid === targetPid); if (!p) return;
+  const muted = (state.muted || []).includes(targetPid);
+  $('#modalBody').classList.remove('wide');
+  $('#modalBody').innerHTML = `<h2 style="margin-top:0">${escapeHtml(p.name)} さん</h2>
+    <p class="small muted">迷惑な発言があった場合は通報してください。ミュートすると、この人の発言があなたの画面に表示されなくなります（相手には通知されません）。</p>
+    <div class="row"><button id="pmMute">${muted ? 'ミュートを解除' : 'ミュートする'}</button><button id="pmReport" class="danger">通報する</button></div>
+    <div id="pmReasons" class="row hidden"><span class="small">理由：</span><button class="mini" data-r="暴言・差別">暴言・差別</button><button class="mini" data-r="迷惑行為">迷惑行為</button><button class="mini" data-r="個人情報・勧誘">個人情報・勧誘</button><button class="mini" data-r="その他">その他</button></div>`;
+  $('#modal').classList.remove('hidden');
+  $('#pmMute').onclick = () => { send({ type: 'mute', pid: targetPid, on: !muted }); $('#modal').classList.add('hidden'); toast(muted ? 'ミュートを解除しました' : 'ミュートしました'); };
+  $('#pmReport').onclick = () => $('#pmReasons').classList.remove('hidden');
+  $('#pmReasons').querySelectorAll('button').forEach(b => b.onclick = () => { send({ type: 'report', pid: targetPid, reason: b.dataset.r }); $('#modal').classList.add('hidden'); });
+}
 
 // ---------- 招待リンクの確認ポップアップ
 async function showInvite(code) {

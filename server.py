@@ -5,7 +5,7 @@
 import asyncio, json, logging, os, random, secrets, string, time, uuid
 from aiohttp import web, WSMsgType
 from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS
-from moderation import check_name
+from moderation import check_name, check_chat
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 log = logging.getLogger('geoking')   # Render の Logs タブ / ローカルの標準出力に出る
@@ -34,8 +34,9 @@ MAX_PLAYERS = 8
 ROOM_TTL = 6 * 3600
 EMPTY_GRACE = 90       # 秒。人間が全員切断しても、この間は部屋を残す（リロード・再接続用）
 CHAT_INTERVAL = 0.7    # 秒。連投制限
-# 自由入力のチャットは無し。送れるのはこの定型リアクションだけ（不適切な発言・個人情報のやりとりを構造的に防ぐ）
+# 定型リアクション（ボタン）。自由入力もできるが moderation.check_chat（NGワード・連絡先・URL）を通過したものだけ流れる
 REACTIONS = ['よろしく！', 'いいね！', 'まさか！', '勝負！', 'ナイス！', 'おめでとう！', 'むずかしい…', 'ドンマイ！']
+REPORTS_TO_MUTE = 2   # 異なる2人から通報されたら、その部屋ではチャット禁止
 REVEAL_SECONDS = 5     # 結果表示の秒数。経過後は自動で次のラウンドへ
 
 rooms = {}  # code -> Room
@@ -78,6 +79,9 @@ class Player:
         self.token = None if is_bot else secrets.token_hex(16)  # 再接続用の秘密。本人にだけ送る
         self.spectator = False   # 観戦中（途中参加者は既定で観戦。次のゲームから、または「途中から参加」で参加）
         self.last_chat = 0.0
+        self.muted = set()       # 自分が非表示にした相手の pid
+        self.reported_by = set() # 自分を通報した人の pid
+        self.chat_banned = False # 通報が重なりチャット禁止
 
 
 class Room:
@@ -245,7 +249,8 @@ class Room:
             'reveal': self.reveal,
             'deadline': self.deadline,
             'next_at': self.next_at if self.phase == 'reveal' else None,
-            'chat': self.chat[-30:],
+            'chat': [c for c in self.chat[-40:] if not (me and c.get('pid') in me.muted)][-30:],
+            'muted': sorted(me.muted) if me else [],
         }
 
 
@@ -479,6 +484,32 @@ async def ws_handler(request):
                 await broadcast(room)
             return
 
+        if t == 'mute':   # 相手の発言を自分の画面から非表示に（相手には知らされない）
+            target = str(data.get('pid') or '')
+            me = room.players[pid]
+            if target in room.players and target != pid:
+                if data.get('on', True):
+                    me.muted.add(target)
+                else:
+                    me.muted.discard(target)
+                await send(ws, room.state_for(pid))
+            return
+
+        if t == 'report':   # 通報: ログに残し、異なる2人から通報された人はその部屋でチャット禁止
+            target = str(data.get('pid') or '')
+            reason = ''.join(ch for ch in str(data.get('reason') or '') if ch.isprintable())[:40]
+            if target in room.players and target != pid:
+                tp = room.players[target]
+                tp.reported_by.add(pid)
+                log.warning('room %s REPORT %s -> %s reason=%s recent=%s', room.code, room.players[pid].name, tp.name, reason,
+                            [c['text'] for c in room.chat if c.get('pid') == target][-5:])
+                if len(tp.reported_by) >= REPORTS_TO_MUTE and not tp.chat_banned:
+                    tp.chat_banned = True
+                    room.chat.append({'name': 'システム', 'text': f'{tp.name}さんのチャットは通報により制限されました', 'ts': time.time()})
+                    await broadcast(room)
+                await send(ws, {'type': 'toast', 'message': '通報しました。運営が確認します'})
+            return
+
         if t == 'leave':
             p = room.players[pid]
             room.remove_player(pid)
@@ -509,14 +540,19 @@ async def ws_handler(request):
             return
 
         if t == 'chat':
-            text = str(data.get('text') or '').strip()
-            if text not in REACTIONS:   # 自由入力は受け付けない
-                return await error('送れるのは定型のリアクションだけです')
+            text = ''.join(ch for ch in str(data.get('text') or '') if ch.isprintable()).strip()[:80]
             p = room.players[pid]
+            if p.chat_banned:
+                return await error('通報が複数あったため、この部屋ではチャットできません')
+            if text not in REACTIONS:
+                ok, why = check_chat(text)   # NGワード・URL・連絡先・連打
+                if not ok:
+                    log.info('room %s chat blocked from %s: %r', room.code, p.name, text)
+                    return await error(why)
             now = time.time()
             if text and now - p.last_chat >= CHAT_INTERVAL:
                 p.last_chat = now
-                room.chat.append({'name': p.name, 'text': text, 'ts': now})
+                room.chat.append({'name': p.name, 'pid': pid, 'text': text, 'ts': now})
                 room.chat = room.chat[-60:]
                 return await broadcast(room)
             return
