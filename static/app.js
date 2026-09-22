@@ -1,4 +1,6 @@
 /* GeoKing client */
+// サーバーの基点。ブラウザ版は同じサーバー（空文字）。アプリ版は index.html で window.GEOKING_SERVER に本番URLを入れる
+const API = (window.GEOKING_SERVER || '').replace(/\/$/, '');
 
 // ---------- 効果音（Web Audio で合成、音声ファイル不要）と振動
 const sfx = (() => {
@@ -118,8 +120,9 @@ $('#modal').onclick = (e) => { if (e.target.id === 'modal') $('#modal').classLis
 
 // ---------- WebSocket
 function connect(onOpen) {
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  const base = API ? new URL(API) : location;
+  const proto = base.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${base.host}/ws`);
   ws.onopen = () => { onOpen && onOpen(); };
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
@@ -189,7 +192,7 @@ $('#rematchBtn').onclick = () => send({ type: 'start' });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
 $('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) send({ type: 'chat', text: t }); $('#chatInput').value = ''; };
 $('#copyLink').onclick = async () => {
-  const url = `${location.origin}/static/index.html?room=${state.room}`;
+  const url = `${API || location.origin}/static/index.html?room=${state.room}`;
   try { await navigator.clipboard.writeText(url); toast('招待リンクをコピーしました'); } catch { prompt('このリンクを共有してください', url); }
 };
 
@@ -441,7 +444,7 @@ function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp
 async function loadRooms() {
   const ul = $('#publicRoomList');
   try {
-    const { rooms } = await (await fetch('/api/rooms')).json();
+    const { rooms } = await (await fetch(API + '/api/rooms')).json();
     ul.innerHTML = '';
     if (!rooms.length) { ul.innerHTML = '<li class="muted">いま募集中の部屋はありません。部屋を作って「公開部屋にする」をオンにすると、ここに表示されます。</li>'; return; }
     for (const r of rooms) {
@@ -460,7 +463,7 @@ function stopRoomsPoll() { clearInterval(roomsPoll); roomsPoll = null; }
 
 // ---------- 起動
 (async function init() {
-  META = await (await fetch('/api/meta')).json();
+  META = await (await fetch(API + '/api/meta')).json();
   const q = new URLSearchParams(location.search);
   const room = q.get('room') || sessionStorage.getItem('geoking_room');
   if (q.get('room')) { $('#codeInput').value = q.get('room').toUpperCase(); }

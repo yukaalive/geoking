@@ -1,0 +1,12 @@
+{
+  "appId": "jp.yukaalive.geoking",
+  "appName": "地理王",
+  "webDir": "www",
+  "backgroundColor": "#f7f1df",
+  "ios": { "contentInset": "always", "scheme": "地理王" },
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 800, "backgroundColor": "#f7f1df", "showSpinner": false },
+    "StatusBar": { "style": "LIGHT", "backgroundColor": "#fffdf6" }
+  }
+}
