@@ -155,3 +155,24 @@ fieldset{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin
 @keyframes heropop{0%,68%{opacity:0;transform:scale(.6)}75%,92%{opacity:1;transform:scale(1)}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.scene .inner,.scene .win{animation:none}.scene .win{opacity:1}}
 #publicRooms{max-width:none;margin:0}
+
+/* ---- トップ: 可愛くシンプル配色（上書き） */
+.herodemo{background:#fff;border:2px solid #ffe3d6;box-shadow:0 8px 24px rgba(255,122,89,.12);color:var(--ink);position:relative;overflow:hidden}
+.herodemo::before{content:"";position:absolute;width:320px;height:320px;border-radius:50%;background:#fff1e8;right:-90px;top:-140px;z-index:0}
+.herodemo::after{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:#e8f6ff;left:-70px;bottom:-110px;z-index:0}
+.herodemo>*{position:relative;z-index:1}
+@media (prefers-color-scheme:dark){.herodemo{background:#1a2233;border-color:#3a2f2a}.herodemo::before{background:#2a2420}.herodemo::after{background:#1c2a3a}}
+.herotext h1{color:var(--ink);font-size:clamp(40px,6vw,60px);letter-spacing:.04em;margin:0 0 4px}
+.herotext h1::before{content:"👑 ";font-size:.7em;vertical-align:.1em}
+.herotext p{color:#ff7a59;font-weight:800;font-size:18px;opacity:1;margin:0 0 4px}
+.herotext label{color:var(--muted)}
+.herotext input{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.big-cta{background:#ff7a59!important;border-color:#ff7a59!important;color:#fff!important;border-radius:999px;box-shadow:0 6px 16px rgba(255,122,89,.35)}
+.big-cta:hover{filter:brightness(1.05)}
+.ghost-cta{color:var(--ink);border-color:var(--line);background:var(--card);border-radius:999px}
+.ghost-cta:hover{border-color:#ff7a59}
+.scene .qcard{background:#fff;border:2px solid #ffe3d6;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.scene .qcard small{color:#ff7a59}
+.scene .face{box-shadow:0 6px 14px rgba(0,0,0,.12)}
+.scene .back{background:#fffaf5;border:1px solid #ffe3d6}
+.scene .win{background:#ffb84d;color:#4a2a00;box-shadow:0 4px 12px rgba(255,184,77,.4)}
