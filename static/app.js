@@ -7,7 +7,7 @@
 let ws = null, state = null, pendingAction = null;
 let selectedCard = null, manualJoin = false;
 let timerInterval = null;
-let reconnectTries = 0, revealInterval = null;
+let reconnectTries = 0, revealInterval = null, confettiTimer = null;
 let pid = null;  // サーバーが発行する。再接続用トークンと共に sessionStorage に保持
 const rejoinInfo = () => ({ pid: sessionStorage.getItem('geoking_pid'), token: sessionStorage.getItem('geoking_token') });
 
@@ -249,7 +249,7 @@ function renderGame() {
     stopTimer(); renderReveal();
   }
   if (state.phase === 'pick') {
-    clearInterval(revealInterval); revealInterval = null;
+    clearInterval(revealInterval); revealInterval = null; clearInterval(confettiTimer);
   }
 }
 
@@ -330,10 +330,10 @@ const CONFETTI = {
   silver: { n: 25, cols: ['#d5dae2', '#fff', '#9ca3af', '#f4c542'] },
   bronze: { n: 10, cols: ['#e0a878', '#c47a3a', '#fff'] },
 };
-function spawnConfetti(target, tier) {
+function spawnConfetti(target, tier, scale = 1) {
   const cfg = CONFETTI[tier]; if (!cfg || !target || !target.isConnected) return;
   const box = el('div', 'confetti');
-  for (let i = 0; i < cfg.n; i++) {
+  for (let i = 0; i < Math.round(cfg.n * scale); i++) {
     const s = document.createElement('i');
     const a = Math.random() * Math.PI * 2, r = 80 + Math.random() * 140;
     s.style.setProperty('--dx', (Math.cos(a) * r).toFixed(0) + 'px');
@@ -357,8 +357,14 @@ function renderReveal() {
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
     const tier = wrankTier(row.world_rank || 999).cls.trim();
-    if (tier) setTimeout(() => spawnConfetti(d.querySelector('.wrank'), tier), i * 250 + 350);
+    if (tier) { d.dataset.tier = tier; setTimeout(() => spawnConfetti(d.querySelector('.wrank'), tier), i * 250 + 350); }
   });
+  // 結果画面が出ている間は紙吹雪を繰り返す（最初の大きな一発のあと、少し控えめに）
+  clearInterval(confettiTimer);
+  confettiTimer = setInterval(() => {
+    if (!state || state.phase !== 'reveal' || !box.isConnected) { clearInterval(confettiTimer); return; }
+    box.querySelectorAll('.rev[data-tier]').forEach(d => spawnConfetti(d.querySelector('.wrank'), d.dataset.tier, 0.6));
+  }, 1300);
   const winners = r.rows.filter(x => x.winner).map(x => x.name);
   const label = state.round >= state.total_rounds ? '最終結果' : `次のラウンド（${state.round + 1} / ${state.total_rounds}）`;
   const tick = () => {

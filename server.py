@@ -38,7 +38,7 @@ EMPTY_GRACE = 90       # 秒。人間が全員切断しても、この間は部�
 CHAT_INTERVAL = 0.7    # 秒。連投制限
 # チャットは moderation.check_chat（NGワード・連絡先・URL・連打）を通過したものだけ流れる
 REPORTS_TO_MUTE = 2   # 異なる2人から通報されたら、その部屋ではチャット禁止
-REVEAL_SECONDS = 5     # 結果表示の秒数。経過後は自動で次のラウンドへ
+REVEAL_SECONDS = 8     # 結果表示の秒数。経過後は自動で次のラウンドへ
 
 rooms = {}  # code -> Room
 
