@@ -36,7 +36,8 @@ const sfx = (() => {
     reveal()  { noise(0, .18); tone('triangle', 300, .05, .12, .12, 600); vibrate(20); },              // めくる
     win()     { [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, i * .09, .22, .2)); vibrate([30, 40, 30, 40, 80]); }, // 勝ち
     lose()    { noise(0, .6, .16, 1400, .6, 300); tone('sine', 330, 0, .5, .06, 220); vibrate(40); },   // 負け: 「ふぃ〜」ため息
-    tick()    { tone('square', 1200, 0, .04, .06); },                                                    // 残り秒
+    tick()    { tone('square', 1000, 0, .06, .12); vibrate(10); },                                        // 残り10秒〜: カチッ
+    tickFast(){ tone('square', 1500, 0, .07, .16); tone('square', 1500, .1, .05, .1); vibrate([15, 40, 15]); }, // 残り3秒: ピピッ
     chat()    { tone('sine', 1400, 0, .05, .05); },                                                      // チャット受信
     champion(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone('triangle', f, i * .12, .3, .2)); vibrate([60, 60, 60, 60, 200]); },
     // ---- 画面操作の音
@@ -490,7 +491,7 @@ function renderTimer() {
     if (!state || !state.deadline) { stopTimer(); return; }
     const left = Math.max(0, Math.ceil(state.deadline - Date.now() / 1000));
     $('#timer').textContent = left + '秒'; $('#timer').classList.toggle('urgent', left <= 10);
-    if (left <= 5 && left > 0 && left !== lastTickSec && state.my_pick == null) { sfx.tick(); lastTickSec = left; }   // 残り5秒のカウント音
+    if (left <= 10 && left > 0 && left !== lastTickSec && state.my_pick == null) { (left <= 3 ? sfx.tickFast : sfx.tick)(); lastTickSec = left; }   // 残り10秒からカウント音（残り3秒は高く）
   };
   tick(); timerInterval = setInterval(tick, 250);
 }
