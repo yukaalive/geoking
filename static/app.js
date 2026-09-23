@@ -1,6 +1,5 @@
 /* GeoKing client */
 // サーバーの基点。ブラウザ版は同じサーバー（空文字）。アプリ版は index.html で window.GEOKING_SERVER に本番URLを入れる
-const API = (window.GEOKING_SERVER || '').replace(/\/$/, '');
 
 // ---------- 効果音（Web Audio で合成、音声ファイル不要）と振動
 const sfx = (() => {
@@ -62,10 +61,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('change', (e) => { if (e.target.matches('input[type=checkbox], select')) sfx.toggle(); });
 
-const $ = (s) => document.querySelector(s);
-const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
-let META = null;          // countries, fields, categories, prompts
 let ws = null, state = null, pendingAction = null;
 let selectedCard = null, manualJoin = false;
 let timerInterval = null;
@@ -74,60 +70,8 @@ let pid = null;  // サーバーが発行する。再接続用トークンと共
 const rejoinInfo = () => ({ pid: sessionStorage.getItem('geoking_pid'), token: sessionStorage.getItem('geoking_token') });
 
 // ---------- 表示ユーティリティ
-const flagUrl = (id, w = 320) => `https://flagcdn.com/w${w}/${id}.png`;
-function fmtValue(v, fmt) {
-  if (v == null) return 'データなし';
-  const n = Number(v);
-  switch (fmt) {
-    case 'km2': return n.toLocaleString('ja-JP', { maximumFractionDigits: 0 }) + ' km²';
-    case 'people': return n >= 1e8 ? (n / 1e8).toFixed(2) + '億人' : n >= 1e4 ? (n / 1e4).toFixed(1) + '万人' : n.toLocaleString('ja-JP') + '人';
-    case 'usd': return n >= 1e12 ? (n / 1e12).toFixed(2) + '兆ドル' : n >= 1e8 ? (n / 1e8).toFixed(0) + '億ドル' : (n / 1e6).toFixed(0) + '百万ドル';
-    case 'usd_small': return n.toLocaleString('ja-JP', { maximumFractionDigits: 0 }) + ' ドル';
-    case 'chars': return n + ' 文字';
-    case 'density': return n.toLocaleString('ja-JP', { maximumFractionDigits: 1 }) + ' 人/km²';
-    case 'kana_rank': return `五十音順 ${n} 番目`;
-    case 'lat': return (n >= 0 ? '北緯 ' : '南緯 ') + Math.abs(n).toFixed(1) + '°';
-    case 'lng': return (n >= 0 ? '東経 ' : '西経 ') + Math.abs(n).toFixed(1) + '°';
-    case 'deg': return n.toFixed(1) + '°';
-    case 'countries': return n + ' か国';
-    case 'langs': return n + ' 言語';
-    case 'temp': return n.toFixed(1) + ' ℃';
-    case 'mm': return n.toLocaleString('ja-JP') + ' mm';
-    case 'pct': return n.toFixed(1) + ' %';
-    case 'ton': return n.toFixed(2) + ' t';
-    case 'years': return n.toFixed(1) + ' 歳';
-    case 'float2': return n.toFixed(2);
-    default: return String(v);
-  }
-}
-function countryName(id) { const c = META.countries[id]; return c ? c.name : id; }
-const ico = (name, cls = '') => `<svg class="ico ${cls}" aria-hidden="true"><use href="/static/icons.svg?v=2#${name}"/></svg>`;
-function stars(n) { return `<span class="stars">${ico('star').repeat(n)}${ico('star-off').repeat(3 - n)}</span>`; }
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add('hidden'), 2600); }
 function show(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); $('#' + screen).classList.remove('hidden'); if (screen !== 'home' && typeof stopRoomsPoll === 'function') stopRoomsPoll(); }
 
-// ---------- カード裏面（全データ）モーダル
-function showCountry(id) {
-  const c = META.countries[id]; if (!c) return;
-  const F = META.fields;
-  const groups = [
-    ['基本', ['area', 'population', 'density', 'gdp', 'gdp_pc', 'eez', 'name_len', 'kana_rank', 'lat', 'lng', 'borders', 'languages', 'military']],
-    ['気候・自然', ['temp', 'precip', 'forest_pct', 'agri_pct', 'co2_pc']],
-    ['宗教', ['rel_chr', 'rel_mus', 'rel_bud', 'rel_hin', 'rel_non', 'rel_folk', 'rel_jew', 'rel_div']],
-    ['社会・暮らし', ['life_exp', 'age65_pct', 'fertility', 'urban_pct', 'internet_pct', 'tourists', 'physicians', 'elec_pct']],
-  ];
-  let info = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${c.name_official}</h2><div class="muted">読み：${c.official_kana}<br>${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}<br>首都: ${c.capital || '—'}${c.landlocked ? '（内陸国）' : ''}</div></div></div><div class="dl">`;
-  for (const [title, keys] of groups) {
-    info += `<div class="sec">${title}</div>`;
-    for (const k of keys) info += `<div class="k">${F[k].label}</div><div class="v">${fmtValue(c[k], F[k].fmt)}</div>`;
-  }
-  info += '</div>';
-  $('#modalBody').innerHTML = `<div class="modalgrid"><div class="minfo">${info}</div><div class="mmap worldmap"><div class="muted small">地図を読み込み中…</div></div></div>`;
-  $('#modal').classList.remove('hidden');
-  $('#modalBody').classList.add('wide');
-  loadWorld().then(() => { const box = $('#modalBody .mmap'); if (box) box.innerHTML = `<div class="muted small" style="margin-bottom:4px">世界の中の位置</div>` + worldMapSvg(id) + `<div class="muted small" style="margin:10px 0 4px">周辺を拡大</div>` + worldMapSvg(id, true) + `<div class="muted small" style="margin-top:6px">${c.lat >= 0 ? '北緯' : '南緯'} ${Math.abs(c.lat).toFixed(1)}°　${c.lng >= 0 ? '東経' : '西経'} ${Math.abs(c.lng).toFixed(1)}°</div>`; });
-}
-$('#modalClose').onclick = () => { $('#modal').classList.add('hidden'); sfx.close(); };
 new MutationObserver(() => { const m = $('#modal'); if (!m.classList.contains('hidden')) sfx.open(); }).observe($('#modal'), { attributes: true, attributeFilter: ['class'] });
 $('#creditsLink').onclick = (e) => {
   e.preventDefault();
@@ -465,25 +409,6 @@ function renderHistory() {
   }
 }
 
-let WORLD = null;
-async function loadWorld() {
-  if (!WORLD) { try { WORLD = await (await fetch('/static/worldmap.json')).json(); } catch { WORLD = {}; } }
-  return WORLD;
-}
-// 指定した国を強調した世界地図SVGを返す
-function worldMapSvg(id, zoom = false) {
-  const c = META.countries[id];
-  const x = (c.lng + 180) / 360 * 1000, y = (90 - c.lat) / 180 * 500;
-  // zoom: その国を中心に 300x200（経度約108°×緯度72°）を切り出す
-  const vb = zoom ? `${Math.max(0, Math.min(700, x - 150)).toFixed(0)} ${Math.max(0, Math.min(300, y - 100)).toFixed(0)} 300 200` : '0 40 1000 420';
-  let svg = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}の位置">`;
-  for (const [iso, d] of Object.entries(WORLD || {})) svg += `<path class="land${iso === c.cca3 ? ' played' : ''}" d="${d}"/>`;
-  const r = zoom ? 3 : 5, lbl = zoom ? 'lbl' : 'lbl';
-  svg += `<circle class="pulse${zoom ? ' small' : ''}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r * 3}"/><circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>`;
-  svg += `<text class="${lbl}" x="${(x + r + 4).toFixed(1)}" y="${(y + 4).toFixed(1)}" ${zoom ? 'font-size="8"' : ''}>${c.name}</text></svg>`;
-  return svg;
-}
-
 // ---------- タイマー
 function renderTimer() {
   stopTimer();
@@ -498,7 +423,6 @@ function renderTimer() {
   tick(); timerInterval = setInterval(tick, 250);
 }
 function stopTimer() { clearInterval(timerInterval); timerInterval = null; clearInterval(revealInterval); revealInterval = null; }
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 
 // ---------- 公開部屋一覧
 async function loadRooms() {

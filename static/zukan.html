@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6f4a">
+<title>図鑑 - 地理王</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+1p:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span>図鑑</span></div>
+  <a class="mini" href="/static/index.html" style="text-decoration:none;font-weight:800;border:2px solid var(--ink);border-radius:12px;padding:4px 10px;color:var(--ink)">対戦へ戻る</a>
+</header>
+<main>
+  <div class="ztabs">
+    <button id="tabFlags" class="on"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> 国旗一覧</button>
+    <button id="tabRank"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> ランキング</button>
+  </div>
+
+  <!-- 国旗一覧 -->
+  <section id="flags" class="card">
+    <div class="zfilters">
+      <input id="q" placeholder="国名で検索（ひらがな・カタカナ・英語）">
+      <select id="region"></select>
+      <select id="sort">
+        <option value="kana">五十音順</option>
+        <option value="area">面積が大きい順</option>
+        <option value="population">人口が多い順</option>
+        <option value="gdp">GDPが高い順</option>
+        <option value="temp">年平均気温が高い順</option>
+      </select>
+      <label class="chk" style="margin:0"><input type="checkbox" id="onlyUnlearned"> まだ覚えていない国だけ</label>
+    </div>
+    <p class="zcount" id="flagCount"></p>
+    <div id="flagGrid" class="zgrid"></div>
+  </section>
+
+  <!-- ランキング -->
+  <section id="rank" class="card hidden">
+    <div class="zfilters">
+      <select id="promptSel"></select>
+      <select id="rankRegion"></select>
+      <button id="rankFlip" class="mini">昇順／降順を反転</button>
+    </div>
+    <p class="zcount" id="rankInfo"></p>
+    <ol id="rankList" class="rank-list"></ol>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+<div id="modal" class="modal hidden"><div class="modalbox"><button id="modalClose" class="close">×</button><div id="modalBody"></div></div></div>
+<footer class="foot muted small"><a href="/static/index.html" class="muted">対戦へ戻る</a> ／ <a href="/static/privacy.html" class="muted">プライバシーポリシー</a></footer>
+<script src="/static/common.js"></script>
+<script src="/static/zukan.js"></script>
+<script src="/static/native.js"></script>
+</body>
+</html>
