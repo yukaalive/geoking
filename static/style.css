@@ -249,6 +249,13 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .rev.win .wrank{background:#fff}
 .rev .wrank em{display:block;font-style:normal;font-family:var(--font-head);font-size:13px;letter-spacing:.04em;margin:-2px 0 2px}
 .rev .wrank em .ico{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+/* 金銀銅のバッジは、カードがめくれた後にポンと飛び出す（カードの表示遅延に合わせる） */
+.rev .wrank.bronze,.rev .wrank.silver{position:relative;animation:wrankPop .5s cubic-bezier(.2,1.6,.4,1) both;animation-delay:inherit}
+.rev .wrank.gold{position:relative}
+/* 紙吹雪 */
+.wrank .confetti{position:absolute;inset:-40px -20px;pointer-events:none;overflow:visible}
+.wrank .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;left:50%;top:60%;opacity:0;animation:conf 1.4s ease-out forwards}
+@keyframes conf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
 /* 銅：11〜30位 */
 .rev .wrank.bronze{background:linear-gradient(135deg,#f7dcc3,#e0a878);border-color:#9a5b2c;padding:4px 12px;font-size:13px;box-shadow:2px 2px 0 #9a5b2c;color:#6b3a14}
 .rev .wrank.bronze b{font-size:19px;color:#6b3a14}

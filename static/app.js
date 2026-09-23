@@ -344,6 +344,28 @@ function wrankHtml(rank, total) {
   const t = wrankTier(rank);
   return `<div class="wrank${t.cls}">${t.tag ? `<em>${t.tag}</em>` : ''}世界 <b>${rank}</b> 位 <span>／ ${total}か国</span></div>`;
 }
+// 紙吹雪：金は多め、銀は中くらい、銅は少しだけ
+const CONFETTI = {
+  gold: { n: 60, cols: ['#f4c542', '#e8674a', '#1f6f4a', '#fff', '#ffd25e'] },
+  silver: { n: 25, cols: ['#d5dae2', '#fff', '#9ca3af', '#f4c542'] },
+  bronze: { n: 10, cols: ['#e0a878', '#c47a3a', '#fff'] },
+};
+function spawnConfetti(target, tier) {
+  const cfg = CONFETTI[tier]; if (!cfg || !target || !target.isConnected) return;
+  const box = el('div', 'confetti');
+  for (let i = 0; i < cfg.n; i++) {
+    const s = document.createElement('i');
+    const a = Math.random() * Math.PI * 2, r = 80 + Math.random() * 140;
+    s.style.setProperty('--dx', (Math.cos(a) * r).toFixed(0) + 'px');
+    s.style.setProperty('--dy', (Math.sin(a) * r * 0.6 - 60 + Math.random() * 120).toFixed(0) + 'px');
+    s.style.setProperty('--rot', (Math.random() * 720 - 360).toFixed(0) + 'deg');
+    s.style.background = cfg.cols[i % cfg.cols.length];
+    s.style.animationDelay = (Math.random() * 0.15).toFixed(2) + 's';
+    box.appendChild(s);
+  }
+  target.appendChild(box);
+  setTimeout(() => box.remove(), 1800);
+}
 function renderReveal() {
   const r = state.reveal, F = META.fields[r.prompt.key];
   const box = $('#revealRows'); box.innerHTML = '';
@@ -354,6 +376,8 @@ function renderReveal() {
     d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>読み：${c.official_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : ''))}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.missing ? '（データなし＝0として比較）' : ''}</div>${wrankHtml(row.world_rank, row.world_total)}`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
+    const tier = wrankTier(row.world_rank || 999).cls.trim();
+    if (tier) setTimeout(() => spawnConfetti(d.querySelector('.wrank'), tier), i * 250 + 350);
   });
   const winners = r.rows.filter(x => x.winner).map(x => x.name);
   const label = state.round >= state.total_rounds ? '最終結果' : `次のラウンド（${state.round + 1} / ${state.total_rounds}）`;
