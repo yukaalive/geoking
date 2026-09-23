@@ -301,7 +301,10 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .ztabs button.on{background:var(--primary);color:var(--primary-ink)}
 .zfilters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .zfilters input:not([type]){width:auto;min-width:180px;margin:0}
-.zfilters select{padding:8px 10px}
+.zfilters select{padding:8px 10px;max-width:100%;min-width:0;text-overflow:ellipsis}
+.zfilters #promptSel{flex:1 1 260px;width:auto}
+.zfilters input:not([type]){max-width:100%}
+@media(max-width:560px){.zfilters #promptSel,.zfilters input:not([type]){flex:1 1 100%;width:100%;min-width:0}}
 .zgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
 .zcard{background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:8px;text-align:center;cursor:pointer;box-shadow:var(--shadow-sm);position:relative;transition:transform .1s}
 .zcard:hover{transform:translate(-2px,-3px)}
@@ -317,4 +320,4 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .rank-list .nm{flex:1;font-weight:800}.rank-list .nm small{display:block;font-weight:600;color:var(--muted);font-size:11px}
 .rank-list .val{font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
 .dl .r{color:var(--muted);font-size:11px;margin-left:6px;font-weight:700}
-@media(max-width:560px){.rank-list img{width:44px;height:30px}.rank-list .rk{width:34px;font-size:15px}}
+@media(max-width:560px){.rank-list li{gap:8px;padding:8px 2px}.rank-list img{width:44px;height:30px;flex:none}.rank-list .rk{width:30px;font-size:15px;flex:none}.rank-list .nm{min-width:0;font-size:14px;line-height:1.25}.rank-list .val{white-space:normal;text-align:right;max-width:38%;font-size:14px;line-height:1.2}}

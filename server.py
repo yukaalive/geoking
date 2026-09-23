@@ -724,8 +724,11 @@ async def security_headers(request, handler):
         resp = await handler(request)
     if request.path.startswith('/api/'):
         resp.headers['Access-Control-Allow-Origin'] = '*'
-        resp.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
         resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    # 画面の部品（HTML/CSS/JS/JSON/SVG）は毎回サーバーに確認させ、更新をすぐ反映（ETag があるので転送は軽い）
+    if request.path.startswith('/static/') and request.path.rsplit('.', 1)[-1] in ('html', 'css', 'js', 'json', 'svg'):
+        resp.headers.setdefault('Cache-Control', 'no-cache')
     resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
     resp.headers.setdefault('X-Frame-Options', 'DENY')
     resp.headers.setdefault('Referrer-Policy', 'no-referrer')
