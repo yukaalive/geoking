@@ -709,11 +709,45 @@ VISITS = {}   # 訪問id -> {mode, name, start, sec, state}
 ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 
 
+ADMIN_FAILS = {}          # IP -> [失敗回数, 最終失敗時刻]。5回失敗で15分ロック
+ADMIN_LOCK_SEC, ADMIN_MAX_FAILS = 15 * 60, 5
+
+def client_ip(request):
+    xff = request.headers.get('X-Forwarded-For', '')
+    return (xff.split(',')[0].strip() if xff else (request.remote or '?'))
+
+def admin_auth(request):
+    """管理者ページの認証。ブラウザの ID/パスワード入力（Basic 認証、ユーザー名 admin、パスワード ADMIN_KEY）。
+    合言葉を URL に載せない（履歴・ログ・リファラに残らない）。失敗が続く IP はロック。"""
+    ip = client_ip(request); now = time.time()
+    f = ADMIN_FAILS.get(ip)
+    if f and f[0] >= ADMIN_MAX_FAILS and now - f[1] < ADMIN_LOCK_SEC:
+        log.warning('admin locked ip=%s', ip)
+        return web.Response(status=429, text='しばらく待ってから再試行してください')
+    ok = False
+    auth = request.headers.get('Authorization', '')
+    if ADMIN_KEY and auth.startswith('Basic '):
+        try:
+            import base64
+            user, _, pw = base64.b64decode(auth[6:]).decode('utf-8', 'replace').partition(':')
+            ok = hmac.compare_digest(user, 'admin') and hmac.compare_digest(pw, ADMIN_KEY)
+        except Exception:
+            ok = False
+    if not ok:
+        if auth:   # 入力して間違えた時だけ失敗回数を数える（最初のダイアログ表示は数えない）
+            ADMIN_FAILS[ip] = [(f[0] + 1 if f and now - f[1] < ADMIN_LOCK_SEC else 1), now]
+            log.warning('admin auth failed ip=%s fails=%d', ip, ADMIN_FAILS[ip][0])
+        return web.Response(status=401, text='認証が必要です', headers={'WWW-Authenticate': 'Basic realm="geoking admin", charset="UTF-8"'})
+    ADMIN_FAILS.pop(ip, None)
+    log.info('admin access ip=%s path=%s', ip, request.path)
+    return None
+
+
 async def admin_visits(request):
-    """管理者用の利用一覧。環境変数 ADMIN_KEY を設定し、/admin/visits?key=そのキー で開く。"""
-    key = request.query.get('key', '')
-    if not ADMIN_KEY or not hmac.compare_digest(key, ADMIN_KEY):
-        return web.Response(status=403, text='forbidden')
+    """管理者用の利用一覧。環境変数 ADMIN_KEY を設定し、/admin/visits を開いて admin / ADMIN_KEY を入力。"""
+    denied = admin_auth(request)
+    if denied:
+        return denied
     rows = sorted(VISITS.values(), key=lambda v: v['start'], reverse=True)
     jst = timezone(timedelta(hours=9))
     total_game = sum(v['sec'] for v in rows if v['mode'] == '対戦'); total_zukan = sum(v['sec'] for v in rows if v['mode'] == '図鑑')

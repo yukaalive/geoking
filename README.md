@@ -77,7 +77,7 @@ python3 server.py            # PORT環境変数で変更可
 ### 利用ログ（誰が何分くらい見たか）
 対戦画面と図鑑は、開いた時・5分ごと・離れた時に `POST /api/visit` でニックネームと滞在秒数を送り、サーバーが `visit 図鑑 離脱 name=ゆか 滞在=4分10秒` のように記録します。
 - Render の Logs で `visit` を検索すると時系列で見られます（長期の記録はこちら）
-- 管理者ページ `https://geoking-vlgh.onrender.com/admin/visits?key=合言葉` で、サーバー起動後の訪問を一覧（開始時刻・画面・名前・滞在・状態と合計）できます。合言葉は Render の Environment で `ADMIN_KEY` に設定します。未設定なら 403 で開けません。無料プランはスリープで再起動するため一覧は消えます
+- 管理者ページ `https://geoking-vlgh.onrender.com/admin/visits` を開くとブラウザが ID とパスワードを求めます（ID は `admin`、パスワードは Render の Environment で設定した `ADMIN_KEY`）。合言葉は URL に載せません。5回間違えるとその IP は15分ロック、成功・失敗はログに残ります。`ADMIN_KEY` 未設定なら誰も開けません。無料プランはスリープで再起動するため一覧は消えます
 
 ## 安全対策（チャット）
 - チャットの発言・ニックネーム・部屋名は `moderation.py` で検査します（NGワード〔日本語・ローマ字・英語〕、URL・メール・電話番号・SNSのID、連打）。該当すると送信・登録できません
