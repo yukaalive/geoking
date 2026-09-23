@@ -73,18 +73,19 @@ function worldMapSvg(id, zoom = false) {
 // 表示するのはお題（prompts.py）で使う指標だけ。お題にない指標は一覧から自動で外れる
 const COUNTRY_GROUPS = [
   ['基本', ['area', 'population', 'density', 'gdp', 'gdp_pc', 'eez', 'name_len', 'kana_rank', 'lat', 'lng', 'borders', 'languages', 'military']],
-  ['気候・自然', ['temp', 'precip', 'forest_pct', 'agri_pct', 'co2_pc']],
+  ['気候・自然', ['climate', 'temp', 'precip', 'forest_pct', 'agri_pct', 'co2_pc']],
   ['宗教', ['rel_chr', 'rel_mus', 'rel_bud', 'rel_hin', 'rel_non', 'rel_folk', 'rel_jew', 'rel_div']],
   ['社会・暮らし', ['life_exp', 'age65_pct', 'fertility', 'urban_pct', 'internet_pct', 'tourists', 'physicians', 'elec_pct']],
 ];
-const NO_RANK_KEYS = new Set(['kana_rank', 'lat', 'lng']);
+const NO_RANK_KEYS = new Set(['kana_rank', 'lat', 'lng', 'climate']);
+const EXTRA_KEYS = new Set(['climate']);   // お題にはないが表示する指標
 function showCountry(id) {
   const c = META.countries[id]; if (!c) return;
   const F = META.fields;
   let info = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${c.name_official}</h2><div class="muted">読み：${c.official_kana}<br>${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}<br>首都: ${c.capital || '—'}${c.landlocked ? '（内陸国）' : ''}</div></div></div><div class="dl">`;
   const used = new Set(META.prompts.map(p => p.key));
   for (const [title, allKeys] of COUNTRY_GROUPS) {
-    const keys = allKeys.filter(k => used.has(k) && F[k]);
+    const keys = allKeys.filter(k => (used.has(k) || EXTRA_KEYS.has(k)) && F[k]);
     if (!keys.length) continue;
     info += `<div class="sec">${title}</div>`;
     for (const k of keys) {

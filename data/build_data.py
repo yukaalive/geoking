@@ -2,7 +2,7 @@
 """mledoze/countries + World Bank API + 手動データ を統合して countries.json を生成する。"""
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from manual_data import TEMP, RELIGION
+from manual_data import TEMP, RELIGION, CLIMATE
 
 RAW = os.path.join(os.path.dirname(__file__), 'raw')
 OUT = os.path.join(os.path.dirname(__file__), 'countries.json')
@@ -133,6 +133,7 @@ def main():
             'name_en_len': len(c['name']['official']),
             'income': wb_meta.get(wbkey, {}).get('incomeLevel', {}).get('value', ''),
             'temp': TEMP.get(c['cca2']),
+            'climate': CLIMATE.get(c['cca2']),   # 気候区分（文字列。お題には使わず、カード裏面の表示のみ）
         }
         rel = dict(RELIGION.get(c['cca2'], {}))
         total = sum(rel.values())

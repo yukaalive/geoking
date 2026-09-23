@@ -21,7 +21,7 @@ $('#creditsLink').onclick = (e) => {
     <li>国の基本情報・面積・位置: <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a>（ODbL）</li>
     <li>人口・GDP・平均寿命・降水量・都市人口率など: <a href="https://data.worldbank.org/" target="_blank" rel="noopener">World Bank Open Data</a>（CC BY 4.0）</li>
     <li>宗教構成: Pew Research Center の公表値を参考にした概算</li>
-    <li>年平均気温: 公開資料を参考にした概算</li>
+    <li>年平均気温・気候区分: 公開資料（ケッペンの気候区分）を参考にした概算</li>
     <li>国旗画像: <a href="https://flagcdn.com/" target="_blank" rel="noopener">flagcdn.com</a></li>
     <li>ゲームデザインの着想: ウナム日月『国旗王（こっきんぐ）』</li></ul>`;
   $('#modal').classList.remove('hidden'); $('#modalBody').classList.remove('wide');

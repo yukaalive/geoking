@@ -25,6 +25,7 @@ FIELDS = {
     'languages':   {'label': '公用語数', 'fmt': 'langs'},
     'military':    {'label': '軍事費', 'fmt': 'usd'},
     'temp':        {'label': '年平均気温', 'fmt': 'temp'},
+    'climate':     {'label': '気候区分', 'fmt': 'text'},
     'precip':      {'label': '年間降水量', 'fmt': 'mm'},
     'forest_pct':  {'label': '森林率', 'fmt': 'pct'},
     'agri_pct':    {'label': '農地率', 'fmt': 'pct'},
