@@ -1,4 +1,4 @@
-"""宣伝動画の音声: 効果音（app.js の sfx を numpy で再現）＋ナレーション（macOS say/Kyoko）＋BGM（声の間は自動で小さく）。
+"""宣伝動画の音声（ナレーション原稿は build_video と同じフォルダの voice/*.wav。「日本」は「ニッポン」とカタカナで書くと say がそう読む）: 効果音（app.js の sfx を numpy で再現）＋ナレーション（macOS say/Kyoko）＋BGM（声の間は自動で小さく）。
 build_video.py で作った geoking_promo.mp4 に合成して geoking_promo_sound.mp4 を出す。"""
 import numpy as np, wave, subprocess, math, os, imageio_ffmpeg
 FF = imageio_ffmpeg.get_ffmpeg_exe(); SR = 44100
