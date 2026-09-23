@@ -1,11 +1,4 @@
-"""宣伝用ショート動画（1080x1920, 30fps, 無音）を組み立てる。
-手順:
- 1. iPhone シミュレーターで `xcrun simctl io <UDID> recordVideo --codec h264 raw.mp4` を回しながら1ゲーム遊ぶ
-    （2人目は video_player2.py <部屋コード> を別ターミナルで動かすとチャットや選択をしてくれる）
- 2. fonts/ に DelaGothicOne-Regular.ttf と MPLUS1p-Black.ttf（Google Fonts, OFL）を置く
- 3. python3 -m pip install imageio-ffmpeg → このスクリプトと同じフォルダに raw.mp4 を置いて実行
- 4. SEGS の秒数は録画ごとに変わるので、`ffmpeg -i raw.mp4 -vf "fps=1/2,scale=110:-1,tile=16x8" sheet.png` で見て合わせる
-"""
+"""録画 raw.mp4 から宣伝用ショート動画（1080x1920, 30fps）を組み立てる。"""
 import subprocess, os, imageio_ffmpeg
 FF = imageio_ffmpeg.get_ffmpeg_exe()
 F_HEAD = 'fonts/DelaGothicOne-Regular.ttf'; F_BODY = 'fonts/MPLUS1p-Black.ttf'
@@ -43,7 +36,7 @@ def card(name, dur, lines):
     vf = ''.join(lines)
     run(['-f', 'lavfi', '-i', f'color=c={BG}:s={W}x{H}:d={dur}:r=30', '-vf', vf.rstrip(','), *ENC, f'seg/{name}.mp4'])
     return f'seg/{name}.mp4'
-intro = card('intro', 2.8, [
+intro = card('intro', 4.0, [
     f"drawbox=0:0:{W}:{H}:color={BG}:t=fill,",
     f"drawtext=fontfile={F_HEAD}:text='地理王':fontcolor={INK}:fontsize=230:x=(w-text_w)/2:y=560,",
     f"drawbox=0:850:{W}:8:color={INK}:t=fill,",
@@ -52,7 +45,7 @@ intro = card('intro', 2.8, [
     f"drawbox=140:1230:800:130:color={ACCENT}:t=fill,drawbox=140:1230:800:130:color={INK}:t=6,",
     f"drawtext=fontfile={F_BODY}:text='登録不要・無料・ブラウザですぐ':fontcolor={INK}:fontsize=50:x=(w-text_w)/2:y=1268,",
 ])
-outro = card('outro', 3.5, [
+outro = card('outro', 4.5, [
     f"drawtext=fontfile={F_HEAD}:text='地理王':fontcolor={INK}:fontsize=170:x=(w-text_w)/2:y=520,",
     f"drawtext=fontfile={F_BODY}:text='友だちと部屋コードで対戦':fontcolor={GREEN}:fontsize=60:x=(w-text_w)/2:y=780,",
     f"drawtext=fontfile={F_BODY}:text='国旗をタップすると国のデータと地図':fontcolor={INK}:fontsize=48:x=(w-text_w)/2:y=880,",
