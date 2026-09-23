@@ -400,7 +400,7 @@ function renderHistory() {
   for (const h of history) for (const r of h.rows) addCol(r.pid, r.name);
   if (!cols.length) return;
   const wrap = el('div', 'htablewrap');
-  const table = el('div', 'htable'); table.style.gridTemplateColumns = `minmax(110px,150px) repeat(${cols.length}, minmax(120px, 1fr))`;
+  const table = el('div', 'htable'); table.style.gridTemplateColumns = `120px repeat(${cols.length}, 150px)`;   // 列幅は固定（人数で拡大しない）
   // 見出し行
   table.appendChild(el('div', 'hth corner', 'お題'));
   for (const c of cols) table.appendChild(el('div', 'hth' + (c.pid === pid ? ' me' : ''), `${ico('person', 'sm')} ${escapeHtml(c.name)}${c.pid === pid ? '<small>（あなた）</small>' : ''}`));
