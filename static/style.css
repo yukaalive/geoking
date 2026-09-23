@@ -157,7 +157,20 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 /* ---------- チャット・スコア */
 .chatlog{height:180px;overflow-y:auto;font-size:13px;border:2px solid var(--ink);border-radius:10px;padding:6px 8px;background:var(--bg)}
 .chatlog div{margin:2px 0}.chatlog b{color:var(--primary)}
-.chat form{display:flex;gap:6px;margin-top:6px}.chat input{flex:1}
+.chat form{display:flex;gap:6px;margin-top:6px}
+.chat input{flex:1;min-width:0;font-size:17px;font-weight:700;padding:11px 12px;background:#fff;caret-color:var(--accent-2);letter-spacing:.02em}
+.chat input:focus{outline:3px solid var(--accent);border-color:var(--primary)}
+@media (prefers-color-scheme:dark){.chat input{background:var(--card)}}
+/* 入力中の文字を大きく見せるプレビュー */
+.chatpreview{margin-top:8px;padding:8px 12px;border:2px dashed var(--primary);border-radius:12px;background:var(--card);font-size:18px;font-weight:800;line-height:1.4;word-break:break-word;display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.chatpreview small{color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap}
+/* 画面を流れるチャット */
+.floatmsg{position:fixed;left:var(--x,20%);bottom:-80px;max-width:min(72vw,380px);padding:8px 14px;border:2px solid var(--ink);border-radius:999px;background:var(--card);box-shadow:var(--shadow-sm);font-size:15px;font-weight:800;line-height:1.35;z-index:40;pointer-events:none;word-break:break-word;animation:floatUp 6.5s linear forwards}
+.floatmsg b{color:var(--primary);margin-right:6px}
+.floatmsg.me{background:var(--accent)}
+.floatmsg.sys{background:var(--ink);color:var(--card)}.floatmsg.sys b{color:var(--accent)}
+@keyframes floatUp{0%{transform:translateY(0) rotate(0);opacity:0}6%{opacity:1}88%{opacity:1}100%{transform:translateY(calc(-100vh - 140px)) rotate(var(--sway,0deg));opacity:0}}
+@media (prefers-reduced-motion:reduce){.floatmsg{display:none}}
 
 /* ---------- 結果 */
 .final li{padding:9px 0;border-bottom:2px dashed var(--line-soft);font-size:16px;font-weight:700}

@@ -153,7 +153,7 @@ $('#vibeBtn').onclick = () => { sfx.toggle('vibe'); renderPrefs(); toast(sfx.pre
 $('#lobbyBtn').onclick = () => { if (confirm('ゲームを中断してロビーに戻りますか？\n（得点はリセットされ、設定を変えて再開できます）')) send({ type: 'to_lobby' }); };
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
-  stopTimer(); prevKey = ''; prevChatLen = 0; prevRoom = null; prevPlayers = null;
+  stopTimer(); prevKey = ''; prevChatLen = 0; prevRoom = null; prevPlayers = null; seenChat.clear(); chatPrimed = false;
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
   state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
   sfx.leave();
@@ -162,7 +162,15 @@ function leaveToHome(message) {
 $('#startBtn').onclick = () => send({ type: 'start' });
 $('#rematchBtn').onclick = () => send({ type: 'start' });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
-$('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) { send({ type: 'chat', text: t }); sfx.send(); } $('#chatInput').value = ''; };
+$('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) { send({ type: 'chat', text: t }); sfx.send(); } $('#chatInput').value = ''; updateChatPreview(); };
+// 入力中の文字を大きく表示（何が入っているか見やすく）
+function updateChatPreview() {
+  const v = $('#chatInput').value, pv = $('#chatPreview');
+  if (!v) { pv.classList.add('hidden'); return; }
+  pv.classList.remove('hidden');
+  pv.innerHTML = `<span>${escapeHtml(v)}</span><small>${v.length}/80</small>`;
+}
+$('#chatInput').addEventListener('input', updateChatPreview);
 
 $('#copyLink').onclick = async () => {
   const url = `${API || location.origin}/static/index.html?room=${state.room}`;
@@ -171,6 +179,19 @@ $('#copyLink').onclick = async () => {
 
 // ---------- 描画
 let prevKey = '', prevChatLen = 0, lastTickSec = null, prevPlayers = null, prevRoom = null;
+const seenChat = new Set(); let chatPrimed = false;   // 画面を流れるチャットの重複防止
+
+// チャットを画面の下から上へ流す（名前＋本文）
+function floatChat(c) {
+  const me = state && state.players.find(p => p.pid === pid);
+  const d = el('div', 'floatmsg' + (c.name === 'システム' ? ' sys' : (me && c.pid === pid ? ' me' : '')));
+  d.innerHTML = `<b>${escapeHtml(c.name)}</b>${escapeHtml(c.text)}`;
+  d.style.setProperty('--x', (4 + Math.random() * 50).toFixed(0) + '%');
+  d.style.setProperty('--sway', (Math.random() * 6 - 3).toFixed(1) + 'deg');
+  const olds = document.querySelectorAll('.floatmsg'); if (olds.length >= 8) olds[0].remove();
+  document.body.appendChild(d);
+  d.addEventListener('animationend', () => d.remove());
+}
 function playTransitions() {
   const key = `${state.room}:${state.phase}:${state.round}`;
   // 部屋に入った／人が増えた・減った
@@ -193,10 +214,18 @@ function playTransitions() {
     prevKey = key;
   }
   const chat = state.chat || [];
-  if (chat.length > prevChatLen && prevChatLen > 0) {
-    const last = chat[chat.length - 1]; const me = state.players.find(p => p.pid === pid);
-    if (last && me && last.name !== me.name && last.name !== 'システム') sfx.chat();
+  let ding = false;
+  for (const c of chat) {
+    const k = `${c.ts}|${c.pid || ''}|${c.text}`;
+    if (seenChat.has(k)) continue;
+    seenChat.add(k);
+    if (!chatPrimed) continue;                      // 入室時にすでにあった履歴は流さない
+    floatChat(c);
+    if (c.pid !== pid && c.name !== 'システム') ding = true;
   }
+  if (ding) sfx.chat();
+  chatPrimed = true;
+  if (seenChat.size > 400) seenChat.clear();
   prevChatLen = chat.length;
 }
 
