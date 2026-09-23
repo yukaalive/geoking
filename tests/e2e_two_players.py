@@ -109,6 +109,8 @@ async def main():
         total = sum(p['score'] for p in ea['players'])
         assert ea['history'] and [h['round'] for h in ea['history']] == [1, 2, 3, 4], 'history missing'
         assert all(len(h['rows']) == 2 for h in ea['history'])
+        assert ea['leftover'] and all(len(v) == 1 for v in ea['leftover'].values()), ea.get('leftover')   # 5枚配布・4ラウンド → 1枚残る
+        assert all(isinstance(r['value'], (int, float)) for h in ea['history'] for r in h['rows']), 'データなしは0のはず'
         print('END scores', {p['name']: p['score'] for p in ea['players']}, 'total', total)
         assert total >= 4, 'each round should award at least one point'
         # ミュート: Alice が Bob をミュートすると Alice の画面から Bob の発言が消える

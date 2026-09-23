@@ -43,7 +43,7 @@ const sfx = (() => {
     tap()     { tone('square', 660, 0, .04, .05); },                                                     // ボタン全般（軽いカチ）
     enter()   { tone('triangle', 523, 0, .1, .14); tone('triangle', 784, .1, .18, .14); vibrate(15); },   // 部屋に入った
     leave()   { tone('triangle', 784, 0, .1, .12); tone('triangle', 523, .1, .18, .12); },               // 部屋を出た
-    joined()  { tone('sine', 880, 0, .06, .1); tone('sine', 1320, .06, .1, .1); },                        // 誰かが入室
+    joined()  { tone('triangle', 988, 0, .18, .2); tone('triangle', 784, .2, .32, .2); vibrate(20); },   // 誰かが入室（ピンポーン）
     left()    { tone('sine', 660, 0, .08, .08, 440); },                                                    // 誰かが退室
     start()   { [392, 523, 659, 784].forEach((f, i) => tone('square', f, i * .07, .1, .1)); tone('triangle', 1047, .3, .3, .18); vibrate([20, 30, 40]); }, // ゲーム開始
     send()    { tone('sine', 1100, 0, .05, .06); },                                                        // 自分がチャット送信
@@ -115,7 +115,7 @@ function showCountry(id) {
     ['宗教', ['rel_chr', 'rel_mus', 'rel_bud', 'rel_hin', 'rel_non', 'rel_folk', 'rel_jew', 'rel_div']],
     ['社会・暮らし', ['life_exp', 'age65_pct', 'fertility', 'urban_pct', 'internet_pct', 'tourists', 'physicians', 'elec_pct']],
   ];
-  let info = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${c.name_official}</h2><div class="muted">${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}<br>首都: ${c.capital || '—'}${c.landlocked ? '（内陸国）' : ''}</div></div></div><div class="dl">`;
+  let info = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${c.name_official}</h2><div class="muted">読み：${c.official_kana}<br>${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}<br>首都: ${c.capital || '—'}${c.landlocked ? '（内陸国）' : ''}</div></div></div><div class="dl">`;
   for (const [title, keys] of groups) {
     info += `<div class="sec">${title}</div>`;
     for (const k of keys) info += `<div class="k">${F[k].label}</div><div class="v">${fmtValue(c[k], F[k].fmt)}</div>`;
@@ -392,7 +392,7 @@ function renderReveal() {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
     d.style.animationDelay = (i * 0.25) + 's';
-    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : '')}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.value == null ? '（データなし＝敗北）' : ''}</div>`;
+    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>読み：${c.official_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : ''))}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.missing ? '（データなし＝0として比較）' : ''}</div>`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
   });
@@ -433,6 +433,23 @@ function renderHistory() {
       card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? ico('crown', 'sm') + ' ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div><div class="who">${escapeHtml(r.name)}</div>`;
       card.style.cursor = 'pointer'; card.onclick = () => showCountry(r.card);
       cards.appendChild(card);
+    }
+    d.appendChild(cards); box.appendChild(d);
+  }
+  // 使わなかった手札（各プレイヤーに1枚以上残る）
+  const left = state.leftover || {};
+  if (Object.keys(left).length) {
+    const d = el('div', 'hround');
+    d.appendChild(el('div', 'hprompt', '使わなかったカード'));
+    const cards = el('div', 'hcards');
+    for (const p of state.players) {
+      for (const id of (left[p.pid] || [])) {
+        const c = META.countries[id];
+        const card = el('div', 'hcard rest');
+        card.innerHTML = `<img src="${flagUrl(id, 160)}" alt=""><div>${c.name_official}</div><div class="who">${escapeHtml(p.name)}</div>`;
+        card.style.cursor = 'pointer'; card.onclick = () => showCountry(id);
+        cards.appendChild(card);
+      }
     }
     d.appendChild(cards); box.appendChild(d);
   }

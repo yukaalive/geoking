@@ -151,9 +151,9 @@ class Room:
             if p.pick is None:
                 continue
             c = COUNTRY_BY_ID[p.pick]
-            rows.append({'pid': pid, 'name': p.name, 'card': p.pick, 'value': c.get(key)})
-        valid = [r for r in rows if r['value'] is not None]
-        valid.sort(key=lambda r: r['value'], reverse=(direction == 'max'))
+            v = c.get(key)
+            rows.append({'pid': pid, 'name': p.name, 'card': p.pick, 'value': 0 if v is None else v, 'missing': v is None})   # データなしは 0 扱い
+        valid = sorted(rows, key=lambda r: r['value'], reverse=(direction == 'max'))
         best = valid[0]['value'] if valid else None
         rank, prev = 0, object()
         for r in valid:
@@ -162,8 +162,6 @@ class Room:
                 prev = r['value']
             r['rank'] = rank
         for r in rows:
-            if r['value'] is None:
-                r['rank'] = None
             r['winner'] = best is not None and r['value'] == best
             if r['winner']:
                 self.players[r['pid']].score += 1
@@ -244,6 +242,7 @@ class Room:
             'live': ({x: {'selecting': pl.selecting, 'pick': pl.pick} for x, pl in self.players.items() if not pl.spectator}
                      if (me and me.spectator and self.phase == 'pick') else None),
             'history': self.history if self.phase == 'end' else None,
+            'leftover': ({x: pl.hand for x, pl in self.players.items() if not pl.spectator and pl.hand} if self.phase == 'end' else None),   # 使わなかった手札
             'my_pick': me.pick if me else None,
             'reveal': self.reveal,
             'deadline': self.deadline,

@@ -242,3 +242,4 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .chatlog{height:150px}
 .chatlog .who,.scores .who{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 .chatlog{height:130px}
+.history .hcard.rest{opacity:.85;background:var(--bg)}

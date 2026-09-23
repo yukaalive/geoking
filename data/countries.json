@@ -14,7 +14,7 @@
 "landlocked": true,
 "borders": 2,
 "languages": 1,
-"name_len": 6,
+"name_len": 8,
 "name_en_len": 23,
 "income": "High income",
 "temp": 7.6,
@@ -62,6 +62,7 @@
 "eez": 0,
 "density": 177.1,
 "name_kana": "あんどら",
+"official_kana": "あんどらこうこく",
 "kana_rank": 13
 },
 {
@@ -79,7 +80,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 8,
+"name_len": 14,
 "name_en_len": 20,
 "income": "High income",
 "temp": 27.0,
@@ -130,6 +131,7 @@
 "eez": 57847.0,
 "density": 137.7,
 "name_kana": "あらぶしゅちょうこくれんぽう",
+"official_kana": "あらぶしゅちょうこくれんぽう",
 "kana_rank": 6
 },
 {
@@ -147,7 +149,7 @@
 "landlocked": true,
 "borders": 6,
 "languages": 3,
-"name_len": 15,
+"name_len": 17,
 "name_en_len": 31,
 "income": "Low income",
 "temp": 12.6,
@@ -197,6 +199,7 @@
 "eez": 0,
 "density": 67.2,
 "name_kana": "あふがにすたん",
+"official_kana": "あふがにすたんいすらむきょうわこく",
 "kana_rank": 4
 },
 {
@@ -214,7 +217,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 12,
+"name_len": 11,
 "name_en_len": 19,
 "income": "High income",
 "temp": 26.0,
@@ -264,6 +267,7 @@
 "eez": 111568.0,
 "density": 213.1,
 "name_kana": "あんてぃぐあばぶだ",
+"official_kana": "あんてぃぐあばーぶーだ",
 "kana_rank": 12
 },
 {
@@ -281,7 +285,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 19,
 "income": "Upper middle income",
 "temp": 11.4,
@@ -332,6 +336,7 @@
 "eez": 0.0,
 "density": 81.7,
 "name_kana": "あるばにあ",
+"official_kana": "あるばにあきょうわこく",
 "kana_rank": 9
 },
 {
@@ -349,7 +354,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 19,
 "income": "Upper middle income",
 "temp": 7.2,
@@ -400,6 +405,7 @@
 "eez": 0,
 "density": 103.8,
 "name_kana": "あるめにあ",
+"official_kana": "あるめにあきょうわこく",
 "kana_rank": 10
 },
 {
@@ -417,7 +423,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "Lower middle income",
 "temp": 21.6,
@@ -468,6 +474,7 @@
 "eez": 495866.0,
 "density": 31.3,
 "name_kana": "あんごら",
+"official_kana": "あんごらきょうわこく",
 "kana_rank": 11
 },
 {
@@ -485,7 +492,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 2,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 18,
 "income": "Upper middle income",
 "temp": 14.8,
@@ -536,6 +543,7 @@
 "eez": 1075192.0,
 "density": 16.5,
 "name_kana": "あるぜんちん",
+"official_kana": "あるぜんちんきょうわこく",
 "kana_rank": 8
 },
 {
@@ -553,7 +561,7 @@
 "landlocked": true,
 "borders": 8,
 "languages": 1,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 19,
 "income": "High income",
 "temp": 6.4,
@@ -604,6 +612,7 @@
 "eez": 0,
 "density": 109.8,
 "name_kana": "おすとりあ",
+"official_kana": "おーすとりあきょうわこく",
 "kana_rank": 34
 },
 {
@@ -621,7 +630,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 9,
+"name_len": 11,
 "name_en_len": 25,
 "income": "High income",
 "temp": 21.7,
@@ -672,6 +681,7 @@
 "eez": 8993463.0,
 "density": 3.6,
 "name_kana": "おすとらりあ",
+"official_kana": "おーすとらりあれんぽう",
 "kana_rank": 33
 },
 {
@@ -689,7 +699,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 2,
-"name_len": 11,
+"name_len": 14,
 "name_en_len": 22,
 "income": "Upper middle income",
 "temp": 12.0,
@@ -740,6 +750,7 @@
 "eez": 0,
 "density": 118.3,
 "name_kana": "あぜるばいじゃん",
+"official_kana": "あぜるばいじゃんきょうわこく",
 "kana_rank": 3
 },
 {
@@ -757,7 +768,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 3,
-"name_len": 12,
+"name_len": 11,
 "name_en_len": 22,
 "income": "Upper middle income",
 "temp": 9.9,
@@ -808,6 +819,7 @@
 "eez": 13.0,
 "density": 61.3,
 "name_kana": "ぼすにあへるつぇごびな",
+"official_kana": "ぼすにあへるつぇごびな",
 "kana_rank": 160
 },
 {
@@ -875,6 +887,7 @@
 "eez": 185074.0,
 "density": 657.3,
 "name_kana": "ばるばどす",
+"official_kana": "ばるばどす",
 "kana_rank": 133
 },
 {
@@ -892,7 +905,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 12,
+"name_len": 17,
 "name_en_len": 31,
 "income": "Lower middle income",
 "temp": 25.0,
@@ -943,6 +956,7 @@
 "eez": 112166.0,
 "density": 1190.5,
 "name_kana": "ばんぐらでしゅ",
+"official_kana": "ばんぐらでしゅじんみんきょうわこく",
 "kana_rank": 135
 },
 {
@@ -960,7 +974,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 3,
-"name_len": 6,
+"name_len": 8,
 "name_en_len": 18,
 "income": "High income",
 "temp": 9.6,
@@ -1011,6 +1025,7 @@
 "eez": 3531.0,
 "density": 391.2,
 "name_kana": "べるぎ",
+"official_kana": "べるぎーおうこく",
 "kana_rank": 157
 },
 {
@@ -1079,6 +1094,7 @@
 "eez": 0,
 "density": 88.2,
 "name_kana": "ぶるきなふぁそ",
+"official_kana": "ぶるきなふぁそ",
 "kana_rank": 149
 },
 {
@@ -1096,7 +1112,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 20,
 "income": "High income",
 "temp": 10.6,
@@ -1147,6 +1163,7 @@
 "eez": 34745.0,
 "density": 58.0,
 "name_kana": "ぶるがりあ",
+"official_kana": "ぶるがりあきょうわこく",
 "kana_rank": 148
 },
 {
@@ -1164,7 +1181,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 7,
+"name_len": 9,
 "name_en_len": 18,
 "income": "High income",
 "temp": 27.2,
@@ -1215,6 +1232,7 @@
 "eez": 7516.0,
 "density": 2092.0,
 "name_kana": "ばれん",
+"official_kana": "ばーれーんおうこく",
 "kana_rank": 134
 },
 {
@@ -1232,7 +1250,7 @@
 "landlocked": true,
 "borders": 3,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 19,
 "income": "Low income",
 "temp": 20.0,
@@ -1283,6 +1301,7 @@
 "eez": 0,
 "density": 517.0,
 "name_kana": "ぶるんじ",
+"official_kana": "ぶるんじきょうわこく",
 "kana_rank": 151
 },
 {
@@ -1300,7 +1319,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 27.6,
@@ -1351,6 +1370,7 @@
 "eez": 35493.0,
 "density": 131.5,
 "name_kana": "べなん",
+"official_kana": "べなんきょうわこく",
 "kana_rank": 153
 },
 {
@@ -1419,6 +1439,7 @@
 "eez": 43038.0,
 "density": 80.9,
 "name_kana": "ぶるねい",
+"official_kana": "ぶるねいだるさらーむこく",
 "kana_rank": 150
 },
 {
@@ -1436,7 +1457,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 4,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 30,
 "income": "Lower middle income",
 "temp": 21.6,
@@ -1487,6 +1508,7 @@
 "eez": 0,
 "density": 11.5,
 "name_kana": "ぼりびあ",
+"official_kana": "ぼりびあたみんぞくこく",
 "kana_rank": 162
 },
 {
@@ -1504,7 +1526,7 @@
 "landlocked": false,
 "borders": 10,
 "languages": 1,
-"name_len": 9,
+"name_len": 14,
 "name_en_len": 29,
 "income": "Upper middle income",
 "temp": 24.9,
@@ -1555,6 +1577,7 @@
 "eez": 3677664.0,
 "density": 25.0,
 "name_kana": "ぶらじる",
+"official_kana": "ぶらじるれんぽうきょうわこく",
 "kana_rank": 147
 },
 {
@@ -1572,7 +1595,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 4,
+"name_len": 5,
 "name_en_len": 27,
 "income": "High income",
 "temp": 24.9,
@@ -1622,6 +1645,7 @@
 "eez": 619785.0,
 "density": 28.9,
 "name_kana": "ばはま",
+"official_kana": "ばはまこく",
 "kana_rank": 132
 },
 {
@@ -1639,7 +1663,7 @@
 "landlocked": true,
 "borders": 2,
 "languages": 1,
-"name_len": 6,
+"name_len": 8,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 7.4,
@@ -1689,6 +1713,7 @@
 "eez": 0,
 "density": 20.8,
 "name_kana": "ぶたん",
+"official_kana": "ぶーたんおうこく",
 "kana_rank": 146
 },
 {
@@ -1706,7 +1731,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 20,
 "income": "Upper middle income",
 "temp": 21.5,
@@ -1757,6 +1782,7 @@
 "eez": 0,
 "density": 4.4,
 "name_kana": "ぼつわな",
+"official_kana": "ぼつわなきょうわこく",
 "kana_rank": 161
 },
 {
@@ -1774,7 +1800,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 2,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 19,
 "income": "Upper middle income",
 "temp": 6.2,
@@ -1825,6 +1851,7 @@
 "eez": 0,
 "density": 43.8,
 "name_kana": "べらるし",
+"official_kana": "べらるーしきょうわこく",
 "kana_rank": 155
 },
 {
@@ -1893,6 +1920,7 @@
 "eez": 34312.0,
 "density": 18.4,
 "name_kana": "べりず",
+"official_kana": "べりーず",
 "kana_rank": 156
 },
 {
@@ -1961,6 +1989,7 @@
 "eez": 5765430.0,
 "density": 4.2,
 "name_kana": "かなだ",
+"official_kana": "かなだ",
 "kana_rank": 39
 },
 {
@@ -1978,7 +2007,7 @@
 "landlocked": false,
 "borders": 9,
 "languages": 5,
-"name_len": 8,
+"name_len": 13,
 "name_en_len": 32,
 "income": "Low income",
 "temp": 24.0,
@@ -2029,6 +2058,7 @@
 "eez": 13373.0,
 "density": 48.1,
 "name_kana": "こんごみんしゅきょうわこく",
+"official_kana": "こんごみんしゅきょうわこく",
 "kana_rank": 69
 },
 {
@@ -2046,7 +2076,7 @@
 "landlocked": true,
 "borders": 6,
 "languages": 2,
-"name_len": 9,
+"name_len": 15,
 "name_en_len": 24,
 "income": "Low income",
 "temp": 24.9,
@@ -2097,6 +2127,7 @@
 "eez": 0,
 "density": 8.8,
 "name_kana": "ちゅうおうあふりか",
+"official_kana": "ちゅうおうあふりかきょうわこく",
 "kana_rank": 104
 },
 {
@@ -2114,7 +2145,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 3,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 21,
 "income": "Lower middle income",
 "temp": 24.6,
@@ -2165,6 +2196,7 @@
 "eez": 33807.0,
 "density": 19.0,
 "name_kana": "こんごきょうわこく",
+"official_kana": "こんごきょうわこく",
 "kana_rank": 68
 },
 {
@@ -2182,7 +2214,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 4,
-"name_len": 5,
+"name_len": 7,
 "name_en_len": 19,
 "income": "High income",
 "temp": 5.5,
@@ -2233,6 +2265,7 @@
 "eez": 0,
 "density": 220.2,
 "name_kana": "すいす",
+"official_kana": "すいすれんぽう",
 "kana_rank": 82
 },
 {
@@ -2250,7 +2283,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 11,
+"name_len": 14,
 "name_en_len": 25,
 "income": "Lower middle income",
 "temp": 26.4,
@@ -2301,6 +2334,7 @@
 "eez": 171760.0,
 "density": 101.4,
 "name_kana": "ことじぼわる",
+"official_kana": "こーとじぼわーるきょうわこく",
 "kana_rank": 65
 },
 {
@@ -2318,7 +2352,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 5,
+"name_len": 7,
 "name_en_len": 12,
 "income": "",
 "temp": 24.5,
@@ -2352,6 +2386,7 @@
 "eez": 1969553.0,
 "density": 63.6,
 "name_kana": "くっくしょとう",
+"official_kana": "くっくしょとう",
 "kana_rank": 58
 },
 {
@@ -2369,7 +2404,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 5,
+"name_len": 8,
 "name_en_len": 17,
 "income": "High income",
 "temp": 8.5,
@@ -2420,6 +2455,7 @@
 "eez": 3668775.0,
 "density": 26.3,
 "name_kana": "ちり",
+"official_kana": "ちりきょうわこく",
 "kana_rank": 107
 },
 {
@@ -2437,7 +2473,7 @@
 "landlocked": false,
 "borders": 6,
 "languages": 2,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 20,
 "income": "Lower middle income",
 "temp": 24.6,
@@ -2488,6 +2524,7 @@
 "eez": 15143.0,
 "density": 62.8,
 "name_kana": "かめるん",
+"official_kana": "かめるーんきょうわこく",
 "kana_rank": 41
 },
 {
@@ -2505,7 +2542,7 @@
 "landlocked": false,
 "borders": 16,
 "languages": 1,
-"name_len": 7,
+"name_len": 14,
 "name_en_len": 26,
 "income": "Upper middle income",
 "temp": 6.9,
@@ -2556,6 +2593,7 @@
 "eez": 1302395.0,
 "density": 144.9,
 "name_kana": "ちゅうごく",
+"official_kana": "ちゅうかじんみんきょうわこく",
 "kana_rank": 105
 },
 {
@@ -2573,7 +2611,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 20,
 "income": "Upper middle income",
 "temp": 24.5,
@@ -2624,6 +2662,7 @@
 "eez": 728836.0,
 "density": 46.8,
 "name_kana": "ころんびあ",
+"official_kana": "ころんびあきょうわこく",
 "kana_rank": 67
 },
 {
@@ -2641,7 +2680,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 22,
 "income": "High income",
 "temp": 24.8,
@@ -2692,6 +2731,7 @@
 "eez": 599063.0,
 "density": 100.8,
 "name_kana": "こすたりか",
+"official_kana": "こすたりかきょうわこく",
 "kana_rank": 63
 },
 {
@@ -2709,7 +2749,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 16,
 "income": "Upper middle income",
 "temp": 25.2,
@@ -2760,6 +2800,7 @@
 "eez": 352259.0,
 "density": 99.5,
 "name_kana": "きゅば",
+"official_kana": "きゅーばきょうわこく",
 "kana_rank": 51
 },
 {
@@ -2777,7 +2818,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 22,
 "income": "Upper middle income",
 "temp": 23.3,
@@ -2828,6 +2869,7 @@
 "eez": 801936.0,
 "density": 130.8,
 "name_kana": "かぼべるで",
+"official_kana": "かーぼべるできょうわこく",
 "kana_rank": 40
 },
 {
@@ -2845,7 +2887,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "High income",
 "temp": 18.4,
@@ -2896,6 +2938,7 @@
 "eez": 98450.0,
 "density": 148.2,
 "name_kana": "きぷろす",
+"official_kana": "きぷろすきょうわこく",
 "kana_rank": 50
 },
 {
@@ -2913,7 +2956,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 14,
 "income": "High income",
 "temp": 7.9,
@@ -2964,6 +3007,7 @@
 "eez": 0,
 "density": 138.0,
 "name_kana": "ちぇこ",
+"official_kana": "ちぇこきょうわこく",
 "kana_rank": 102
 },
 {
@@ -2981,7 +3025,7 @@
 "landlocked": false,
 "borders": 9,
 "languages": 1,
-"name_len": 8,
+"name_len": 13,
 "name_en_len": 27,
 "income": "High income",
 "temp": 8.5,
@@ -3032,6 +3076,7 @@
 "eez": 56831.0,
 "density": 233.8,
 "name_kana": "どいつ",
+"official_kana": "どいつれんぽうきょうわこく",
 "kana_rank": 115
 },
 {
@@ -3049,7 +3094,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 20,
 "income": "Lower middle income",
 "temp": 28.0,
@@ -3100,6 +3145,7 @@
 "eez": 7223.0,
 "density": 51.0,
 "name_kana": "じぶち",
+"official_kana": "じぶちきょうわこく",
 "kana_rank": 78
 },
 {
@@ -3117,7 +3163,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 7,
+"name_len": 9,
 "name_en_len": 18,
 "income": "High income",
 "temp": 7.5,
@@ -3168,6 +3214,7 @@
 "eez": 2639412.0,
 "density": 139.4,
 "name_kana": "でんまく",
+"official_kana": "でんまーくおうこく",
 "kana_rank": 109
 },
 {
@@ -3185,7 +3232,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 5,
+"name_len": 6,
 "name_en_len": 24,
 "income": "Upper middle income",
 "temp": 26.0,
@@ -3235,6 +3282,7 @@
 "eez": 28552.0,
 "density": 87.7,
 "name_kana": "どみにかこく",
+"official_kana": "どみにかこく",
 "kana_rank": 117
 },
 {
@@ -3252,7 +3300,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "Upper middle income",
 "temp": 24.6,
@@ -3303,6 +3351,7 @@
 "eez": 363805.0,
 "density": 236.7,
 "name_kana": "どみにかきょうわこく",
+"official_kana": "どみにかきょうわこく",
 "kana_rank": 116
 },
 {
@@ -3320,7 +3369,7 @@
 "landlocked": false,
 "borders": 7,
 "languages": 1,
-"name_len": 13,
+"name_len": 20,
 "name_en_len": 39,
 "income": "Upper middle income",
 "temp": 22.5,
@@ -3371,6 +3420,7 @@
 "eez": 131193.0,
 "density": 19.9,
 "name_kana": "あるじぇりあ",
+"official_kana": "あるじぇりあじんみんみんしゅきょうわこく",
 "kana_rank": 7
 },
 {
@@ -3388,7 +3438,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 19,
 "income": "Upper middle income",
 "temp": 21.9,
@@ -3439,6 +3489,7 @@
 "eez": 1096394.0,
 "density": 66.1,
 "name_kana": "えくあどる",
+"official_kana": "えくあどるきょうわこく",
 "kana_rank": 26
 },
 {
@@ -3456,7 +3507,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 19,
 "income": "High income",
 "temp": 5.1,
@@ -3507,6 +3558,7 @@
 "eez": 36451.0,
 "density": 30.2,
 "name_kana": "えすとにあ",
+"official_kana": "えすとにあきょうわこく",
 "kana_rank": 28
 },
 {
@@ -3524,7 +3576,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 11,
+"name_len": 13,
 "name_en_len": 22,
 "income": "Lower middle income",
 "temp": 22.1,
@@ -3575,6 +3627,7 @@
 "eez": 251043.0,
 "density": 118.1,
 "name_kana": "えじぷと",
+"official_kana": "えじぷとあらぶきょうわこく",
 "kana_rank": 27
 },
 {
@@ -3592,7 +3645,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 3,
-"name_len": 6,
+"name_len": 7,
 "name_en_len": 16,
 "income": "Low income",
 "temp": 25.5,
@@ -3643,6 +3696,7 @@
 "eez": 78355.0,
 "density": 30.7,
 "name_kana": "えりとりあ",
+"official_kana": "えりとりあこく",
 "kana_rank": 31
 },
 {
@@ -3660,7 +3714,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 6,
+"name_len": 8,
 "name_en_len": 16,
 "income": "High income",
 "temp": 13.3,
@@ -3711,6 +3765,7 @@
 "eez": 1007778.0,
 "density": 97.5,
 "name_kana": "すぺいん",
+"official_kana": "すぺいんおうこく",
 "kana_rank": 85
 },
 {
@@ -3728,7 +3783,7 @@
 "landlocked": true,
 "borders": 6,
 "languages": 1,
-"name_len": 12,
+"name_len": 19,
 "name_en_len": 39,
 "income": "Low income",
 "temp": 22.2,
@@ -3779,6 +3834,7 @@
 "eez": 0,
 "density": 122.7,
 "name_kana": "えちおぴあ",
+"official_kana": "えちおぴあれんぽうみんしゅきょうわこく",
 "kana_rank": 30
 },
 {
@@ -3796,7 +3852,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 2,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 19,
 "income": "High income",
 "temp": 1.7,
@@ -3847,6 +3903,7 @@
 "eez": 81553.0,
 "density": 16.7,
 "name_kana": "ふぃんらんど",
+"official_kana": "ふぃんらんどきょうわこく",
 "kana_rank": 144
 },
 {
@@ -3864,7 +3921,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 3,
-"name_len": 9,
+"name_len": 14,
 "name_en_len": 16,
 "income": "Upper middle income",
 "temp": 24.4,
@@ -3915,6 +3972,7 @@
 "eez": 1302114.0,
 "density": 51.1,
 "name_kana": "ふぃじ",
+"official_kana": "ふぃじーしょとうきょうわこく",
 "kana_rank": 142
 },
 {
@@ -3932,7 +3990,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 8,
+"name_len": 10,
 "name_en_len": 30,
 "income": "Upper middle income",
 "temp": 27.0,
@@ -3981,6 +4039,7 @@
 "eez": 3007718.0,
 "density": 161.9,
 "name_kana": "みくろねしあ",
+"official_kana": "みくろねしあれんぽう",
 "kana_rank": 171
 },
 {
@@ -3998,7 +4057,7 @@
 "landlocked": false,
 "borders": 8,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 15,
 "income": "High income",
 "temp": 10.7,
@@ -4049,6 +4108,7 @@
 "eez": 10061267.0,
 "density": 124.6,
 "name_kana": "ふらんす",
+"official_kana": "ふらんすきょうわこく",
 "kana_rank": 145
 },
 {
@@ -4066,7 +4126,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "Upper middle income",
 "temp": 25.1,
@@ -4117,6 +4177,7 @@
 "eez": 201759.0,
 "density": 9.7,
 "name_kana": "がぼん",
+"official_kana": "がぼんきょうわこく",
 "kana_rank": 46
 },
 {
@@ -4134,7 +4195,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 21,
+"name_len": 27,
 "name_en_len": 52,
 "income": "High income",
 "temp": 8.5,
@@ -4185,6 +4246,7 @@
 "eez": 5882272.0,
 "density": 286.1,
 "name_kana": "いぎりす",
+"official_kana": "ぐれーとぶりてんおよびきたあいるらんどれんごうおうこく",
 "kana_rank": 15
 },
 {
@@ -4252,6 +4314,7 @@
 "eez": 25571.0,
 "density": 341.0,
 "name_kana": "ぐれなだ",
+"official_kana": "ぐれなだ",
 "kana_rank": 61
 },
 {
@@ -4320,6 +4383,7 @@
 "eez": 22944.0,
 "density": 56.5,
 "name_kana": "じょじあ",
+"official_kana": "じょーじあ",
 "kana_rank": 80
 },
 {
@@ -4337,7 +4401,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 27.2,
@@ -4388,6 +4452,7 @@
 "eez": 227500.0,
 "density": 147.0,
 "name_kana": "がな",
+"official_kana": "がーなきょうわこく",
 "kana_rank": 45
 },
 {
@@ -4405,7 +4470,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 22,
 "income": "Low income",
 "temp": 27.5,
@@ -4456,6 +4521,7 @@
 "eez": 23097.0,
 "density": 264.0,
 "name_kana": "がんびあ",
+"official_kana": "がんびあきょうわこく",
 "kana_rank": 47
 },
 {
@@ -4473,7 +4539,7 @@
 "landlocked": false,
 "borders": 6,
 "languages": 1,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 18,
 "income": "Lower middle income",
 "temp": 25.7,
@@ -4524,6 +4590,7 @@
 "eez": 102163.0,
 "density": 61.4,
 "name_kana": "ぎにあ",
+"official_kana": "ぎにあきょうわこく",
 "kana_rank": 54
 },
 {
@@ -4541,7 +4608,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 3,
-"name_len": 8,
+"name_len": 13,
 "name_en_len": 29,
 "income": "Upper middle income",
 "temp": 24.6,
@@ -4591,6 +4658,7 @@
 "eez": 304133.0,
 "density": 69.1,
 "name_kana": "せきどうぎにあ",
+"official_kana": "せきどうぎにあきょうわこく",
 "kana_rank": 90
 },
 {
@@ -4608,7 +4676,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 17,
 "income": "High income",
 "temp": 15.4,
@@ -4659,6 +4727,7 @@
 "eez": 482936.0,
 "density": 78.9,
 "name_kana": "ぎりしゃ",
+"official_kana": "ぎりしゃきょうわこく",
 "kana_rank": 56
 },
 {
@@ -4676,7 +4745,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 21,
 "income": "Upper middle income",
 "temp": 23.5,
@@ -4727,6 +4796,7 @@
 "eez": 110695.0,
 "density": 171.6,
 "name_kana": "ぐあてまら",
+"official_kana": "ぐあてまらきょうわこく",
 "kana_rank": 60
 },
 {
@@ -4744,7 +4814,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 2,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 25,
 "income": "Low income",
 "temp": 26.8,
@@ -4795,6 +4865,7 @@
 "eez": 106870.0,
 "density": 62.3,
 "name_kana": "ぎにあびさう",
+"official_kana": "ぎにあびさうきょうわこく",
 "kana_rank": 55
 },
 {
@@ -4812,7 +4883,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 31,
 "income": "High income",
 "temp": 26.0,
@@ -4863,6 +4934,7 @@
 "eez": 138672.0,
 "density": 3.9,
 "name_kana": "がいあな",
+"official_kana": "がいあなきょうわこく",
 "kana_rank": 44
 },
 {
@@ -4880,7 +4952,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 20,
 "income": "Lower middle income",
 "temp": 23.5,
@@ -4931,6 +5003,7 @@
 "eez": 210711.0,
 "density": 97.8,
 "name_kana": "ほんじゅらす",
+"official_kana": "ほんじゅらすきょうわこく",
 "kana_rank": 159
 },
 {
@@ -4948,7 +5021,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 19,
 "income": "High income",
 "temp": 10.9,
@@ -4999,6 +5072,7 @@
 "eez": 55257.0,
 "density": 68.5,
 "name_kana": "くろあちあ",
+"official_kana": "くろあちあきょうわこく",
 "kana_rank": 59
 },
 {
@@ -5016,7 +5090,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 24.9,
@@ -5067,6 +5141,7 @@
 "eez": 117375.0,
 "density": 429.0,
 "name_kana": "はいち",
+"official_kana": "はいちきょうわこく",
 "kana_rank": 128
 },
 {
@@ -5135,6 +5210,7 @@
 "eez": 0,
 "density": 102.3,
 "name_kana": "はんがり",
+"official_kana": "はんがりー",
 "kana_rank": 129
 },
 {
@@ -5152,7 +5228,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 21,
 "income": "Upper middle income",
 "temp": 25.9,
@@ -5203,6 +5279,7 @@
 "eez": 6019205.0,
 "density": 150.0,
 "name_kana": "いんどねしあ",
+"official_kana": "いんどねしあきょうわこく",
 "kana_rank": 21
 },
 {
@@ -5271,6 +5348,7 @@
 "eez": 428004.0,
 "density": 78.0,
 "name_kana": "あいるらんど",
+"official_kana": "あいるらんど",
 "kana_rank": 2
 },
 {
@@ -5288,7 +5366,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 2,
-"name_len": 6,
+"name_len": 7,
 "name_en_len": 15,
 "income": "High income",
 "temp": 19.2,
@@ -5339,6 +5417,7 @@
 "eez": 25955.0,
 "density": 487.4,
 "name_kana": "いすらえる",
+"official_kana": "いすらえるこく",
 "kana_rank": 16
 },
 {
@@ -5407,6 +5486,7 @@
 "eez": 2323948.0,
 "density": 445.3,
 "name_kana": "いんど",
+"official_kana": "いんど",
 "kana_rank": 20
 },
 {
@@ -5424,7 +5504,7 @@
 "landlocked": false,
 "borders": 6,
 "languages": 3,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 16,
 "income": "Upper middle income",
 "temp": 21.4,
@@ -5475,6 +5555,7 @@
 "eez": 1370.0,
 "density": 107.3,
 "name_kana": "いらく",
+"official_kana": "いらくきょうわこく",
 "kana_rank": 18
 },
 {
@@ -5492,7 +5573,7 @@
 "landlocked": false,
 "borders": 7,
 "languages": 1,
-"name_len": 11,
+"name_len": 13,
 "name_en_len": 24,
 "income": "Upper middle income",
 "temp": 17.3,
@@ -5543,6 +5624,7 @@
 "eez": 215613.0,
 "density": 56.1,
 "name_kana": "いらん",
+"official_kana": "いらんいすらむきょうわこく",
 "kana_rank": 19
 },
 {
@@ -5611,6 +5693,7 @@
 "eez": 808771.0,
 "density": 3.8,
 "name_kana": "あいすらんど",
+"official_kana": "あいすらんど",
 "kana_rank": 1
 },
 {
@@ -5628,7 +5711,7 @@
 "landlocked": false,
 "borders": 6,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 16,
 "income": "High income",
 "temp": 13.5,
@@ -5679,6 +5762,7 @@
 "eez": 536446.0,
 "density": 195.5,
 "name_kana": "いたりあ",
+"official_kana": "いたりあきょうわこく",
 "kana_rank": 17
 },
 {
@@ -5747,6 +5831,7 @@
 "eez": 272156.0,
 "density": 258.1,
 "name_kana": "じゃまいか",
+"official_kana": "じゃまいか",
 "kana_rank": 79
 },
 {
@@ -5764,7 +5849,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 11,
+"name_len": 12,
 "name_en_len": 27,
 "income": "Upper middle income",
 "temp": 18.3,
@@ -5815,6 +5900,7 @@
 "eez": 97.0,
 "density": 129.0,
 "name_kana": "よるだん",
+"official_kana": "よるだんはしみておうこく",
 "kana_rank": 185
 },
 {
@@ -5832,7 +5918,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 3,
+"name_len": 5,
 "name_en_len": 5,
 "income": "High income",
 "temp": 11.2,
@@ -5883,6 +5969,7 @@
 "eez": 4281860.0,
 "density": 326.4,
 "name_kana": "にほん",
+"official_kana": "にほんこく",
 "kana_rank": 124
 },
 {
@@ -5900,7 +5987,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 24.8,
@@ -5951,6 +6038,7 @@
 "eez": 124028.0,
 "density": 99.1,
 "name_kana": "けにあ",
+"official_kana": "けにあきょうわこく",
 "kana_rank": 62
 },
 {
@@ -5968,7 +6056,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 15,
 "income": "Lower middle income",
 "temp": 1.6,
@@ -6019,6 +6107,7 @@
 "eez": 0,
 "density": 36.7,
 "name_kana": "きるぎす",
+"official_kana": "きるぎすきょうわこく",
 "kana_rank": 53
 },
 {
@@ -6036,7 +6125,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 7,
+"name_len": 9,
 "name_en_len": 19,
 "income": "Lower middle income",
 "temp": 26.8,
@@ -6087,6 +6176,7 @@
 "eez": 48697.0,
 "density": 98.6,
 "name_kana": "かんぼじあ",
+"official_kana": "かんぼじあおうこく",
 "kana_rank": 43
 },
 {
@@ -6104,7 +6194,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 46,
 "income": "Lower middle income",
 "temp": 28.2,
@@ -6153,6 +6243,7 @@
 "eez": 3440220.0,
 "density": 168.3,
 "name_kana": "きりばす",
+"official_kana": "きりばすきょうわこく",
 "kana_rank": 52
 },
 {
@@ -6170,7 +6261,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 3,
-"name_len": 5,
+"name_len": 7,
 "name_en_len": 20,
 "income": "Lower middle income",
 "temp": 25.6,
@@ -6220,6 +6311,7 @@
 "eez": 164476.0,
 "density": 474.1,
 "name_kana": "こもろ",
+"official_kana": "こもろれんごう",
 "kana_rank": 66
 },
 {
@@ -6237,7 +6329,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 11,
+"name_len": 10,
 "name_en_len": 41,
 "income": "High income",
 "temp": 26.0,
@@ -6287,6 +6379,7 @@
 "eez": 9502.0,
 "density": 179.8,
 "name_kana": "せんときっつ・ねーヴぃすれんぽう",
+"official_kana": "せんときっつねーびす",
 "kana_rank": 94
 },
 {
@@ -6304,7 +6397,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 11,
+"name_len": 22,
 "name_en_len": 37,
 "income": "Low income",
 "temp": 5.7,
@@ -6352,6 +6445,7 @@
 "eez": 114379.0,
 "density": 220.4,
 "name_kana": "きたちょうせん",
+"official_kana": "ちょうせんみんしゅしゅぎじんみんきょうわこく",
 "kana_rank": 48
 },
 {
@@ -6369,7 +6463,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 4,
+"name_len": 8,
 "name_en_len": 17,
 "income": "High income",
 "temp": 11.5,
@@ -6420,6 +6514,7 @@
 "eez": 430281.0,
 "density": 515.8,
 "name_kana": "かんこく",
+"official_kana": "だいかんみんこく",
 "kana_rank": 42
 },
 {
@@ -6437,7 +6532,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 6,
+"name_len": 7,
 "name_en_len": 15,
 "income": "High income",
 "temp": 25.4,
@@ -6488,6 +6583,7 @@
 "eez": 10775.0,
 "density": 273.1,
 "name_kana": "くうぇと",
+"official_kana": "くうぇーとこく",
 "kana_rank": 57
 },
 {
@@ -6505,7 +6601,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 2,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 22,
 "income": "Upper middle income",
 "temp": 6.4,
@@ -6556,6 +6652,7 @@
 "eez": 0,
 "density": 7.6,
 "name_kana": "かざふすたん",
+"official_kana": "かざふすたんきょうわこく",
 "kana_rank": 37
 },
 {
@@ -6573,7 +6670,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 1,
-"name_len": 10,
+"name_len": 17,
 "name_en_len": 32,
 "income": "Lower middle income",
 "temp": 23.9,
@@ -6624,6 +6721,7 @@
 "eez": 0,
 "density": 33.2,
 "name_kana": "らおす",
+"official_kana": "らおすじんみんみんしゅきょうわこく",
 "kana_rank": 186
 },
 {
@@ -6641,7 +6739,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 16.4,
@@ -6692,6 +6790,7 @@
 "eez": 18857.0,
 "density": 559.6,
 "name_kana": "ればのん",
+"official_kana": "ればのんきょうわこく",
 "kana_rank": 196
 },
 {
@@ -6759,6 +6858,7 @@
 "eez": 15413.0,
 "density": 292.4,
 "name_kana": "せんとるしあ",
+"official_kana": "せんとるしあ",
 "kana_rank": 96
 },
 {
@@ -6776,7 +6876,7 @@
 "landlocked": true,
 "borders": 2,
 "languages": 1,
-"name_len": 11,
+"name_len": 13,
 "name_en_len": 29,
 "income": "High income",
 "temp": 5.7,
@@ -6823,6 +6923,7 @@
 "eez": 0,
 "density": 256.4,
 "name_kana": "りひてんしゅたいん",
+"official_kana": "りひてんしゅたいんこうこく",
 "kana_rank": 189
 },
 {
@@ -6840,7 +6941,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 2,
-"name_len": 14,
+"name_len": 22,
 "name_en_len": 42,
 "income": "Upper middle income",
 "temp": 26.9,
@@ -6891,6 +6992,7 @@
 "eez": 533559.0,
 "density": 331.6,
 "name_kana": "すりらんか",
+"official_kana": "すりらんかみんしゅしゃかいしゅぎきょうわこく",
 "kana_rank": 87
 },
 {
@@ -6908,7 +7010,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 19,
 "income": "Low income",
 "temp": 25.3,
@@ -6958,6 +7060,7 @@
 "eez": 251781.0,
 "density": 51.5,
 "name_kana": "りべりあ",
+"official_kana": "りべりあきょうわこく",
 "kana_rank": 191
 },
 {
@@ -6975,7 +7078,7 @@
 "landlocked": true,
 "borders": 1,
 "languages": 2,
-"name_len": 5,
+"name_len": 7,
 "name_en_len": 18,
 "income": "Lower middle income",
 "temp": 11.9,
@@ -7026,6 +7129,7 @@
 "eez": 0,
 "density": 77.9,
 "name_kana": "れそと",
+"official_kana": "れそとおうこく",
 "kana_rank": 195
 },
 {
@@ -7043,7 +7147,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 21,
 "income": "High income",
 "temp": 6.2,
@@ -7094,6 +7198,7 @@
 "eez": 6864.0,
 "density": 44.2,
 "name_kana": "りとあにあ",
+"official_kana": "りとあにあきょうわこく",
 "kana_rank": 188
 },
 {
@@ -7111,7 +7216,7 @@
 "landlocked": true,
 "borders": 3,
 "languages": 3,
-"name_len": 10,
+"name_len": 13,
 "name_en_len": 25,
 "income": "High income",
 "temp": 8.7,
@@ -7162,6 +7267,7 @@
 "eez": 0,
 "density": 265.6,
 "name_kana": "るくせんぶるく",
+"official_kana": "るくせんぶるくたいこうこく",
 "kana_rank": 192
 },
 {
@@ -7179,7 +7285,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "High income",
 "temp": 5.6,
@@ -7230,6 +7336,7 @@
 "eez": 28322.0,
 "density": 28.6,
 "name_kana": "らとびあ",
+"official_kana": "らとびあきょうわこく",
 "kana_rank": 187
 },
 {
@@ -7298,6 +7405,7 @@
 "eez": 357386.0,
 "density": 4.2,
 "name_kana": "りびあ",
+"official_kana": "りびあ",
 "kana_rank": 190
 },
 {
@@ -7315,7 +7423,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 2,
-"name_len": 6,
+"name_len": 8,
 "name_en_len": 18,
 "income": "Lower middle income",
 "temp": 17.1,
@@ -7366,6 +7474,7 @@
 "eez": 280452.0,
 "density": 86.1,
 "name_kana": "もろっこ",
+"official_kana": "もろっこおうこく",
 "kana_rank": 182
 },
 {
@@ -7383,7 +7492,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 5,
+"name_len": 7,
 "name_en_len": 22,
 "income": "High income",
 "temp": 14.9,
@@ -7430,6 +7539,7 @@
 "eez": 288.0,
 "density": 18980.7,
 "name_kana": "もなこ",
+"official_kana": "もなここうこく",
 "kana_rank": 177
 },
 {
@@ -7447,7 +7557,7 @@
 "landlocked": true,
 "borders": 2,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 19,
 "income": "Upper middle income",
 "temp": 9.5,
@@ -7498,6 +7608,7 @@
 "eez": 0,
 "density": 69.7,
 "name_kana": "もるどば",
+"official_kana": "もるどばきょうわこく",
 "kana_rank": 181
 },
 {
@@ -7564,6 +7675,7 @@
 "eez": 6383.0,
 "density": 45.1,
 "name_kana": "もんてねぐろ",
+"official_kana": "もんてねぐろ",
 "kana_rank": 184
 },
 {
@@ -7581,7 +7693,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 22,
 "income": "Low income",
 "temp": 22.7,
@@ -7632,6 +7744,7 @@
 "eez": 1239791.0,
 "density": 55.8,
 "name_kana": "まだがすかる",
+"official_kana": "まだがすかるきょうわこく",
 "kana_rank": 165
 },
 {
@@ -7649,7 +7762,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 10,
+"name_len": 15,
 "name_en_len": 32,
 "income": "Upper middle income",
 "temp": 27.4,
@@ -7698,6 +7811,7 @@
 "eez": 2002220.0,
 "density": 200.5,
 "name_kana": "まーしゃるしょとう",
+"official_kana": "まーしゃるしょとうきょうわこく",
 "kana_rank": 170
 },
 {
@@ -7715,7 +7829,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 1,
-"name_len": 9,
+"name_len": 13,
 "name_en_len": 27,
 "income": "Upper middle income",
 "temp": 9.8,
@@ -7766,6 +7880,7 @@
 "eez": 0,
 "density": 70.8,
 "name_kana": "きたまけどにあ",
+"official_kana": "きたまけどにあきょうわこく",
 "kana_rank": 49
 },
 {
@@ -7783,7 +7898,7 @@
 "landlocked": true,
 "borders": 7,
 "languages": 1,
-"name_len": 5,
+"name_len": 8,
 "name_en_len": 16,
 "income": "Low income",
 "temp": 28.3,
@@ -7834,6 +7949,7 @@
 "eez": 0,
 "density": 20.3,
 "name_kana": "まり",
+"official_kana": "まりきょうわこく",
 "kana_rank": 167
 },
 {
@@ -7851,7 +7967,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 10,
+"name_len": 15,
 "name_en_len": 32,
 "income": "Lower middle income",
 "temp": 23.1,
@@ -7902,6 +8018,7 @@
 "eez": 497460.0,
 "density": 81.1,
 "name_kana": "みゃんま",
+"official_kana": "みゃんまーれんぽうきょうわこく",
 "kana_rank": 174
 },
 {
@@ -7919,7 +8036,7 @@
 "landlocked": true,
 "borders": 2,
 "languages": 1,
-"name_len": 5,
+"name_len": 6,
 "name_en_len": 8,
 "income": "Upper middle income",
 "temp": -0.7,
@@ -7970,6 +8087,7 @@
 "eez": 0,
 "density": 2.3,
 "name_kana": "もんごる",
+"official_kana": "もんごるこく",
 "kana_rank": 183
 },
 {
@@ -7987,7 +8105,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 14,
+"name_len": 16,
 "name_en_len": 30,
 "income": "Lower middle income",
 "temp": 27.7,
@@ -8038,6 +8156,7 @@
 "eez": 173180.0,
 "density": 5.2,
 "name_kana": "もりたにあ",
+"official_kana": "もーりたにあいすらむきょうわこく",
 "kana_rank": 179
 },
 {
@@ -8055,7 +8174,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "High income",
 "temp": 19.2,
@@ -8106,6 +8225,7 @@
 "eez": 52923.0,
 "density": 1834.5,
 "name_kana": "まるた",
+"official_kana": "まるたきょうわこく",
 "kana_rank": 168
 },
 {
@@ -8123,7 +8243,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 3,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 21,
 "income": "Upper middle income",
 "temp": 22.4,
@@ -8174,6 +8294,7 @@
 "eez": 1925860.0,
 "density": 609.7,
 "name_kana": "もりしゃす",
+"official_kana": "もーりしゃすきょうわこく",
 "kana_rank": 178
 },
 {
@@ -8191,7 +8312,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 24,
 "income": "Upper middle income",
 "temp": 27.7,
@@ -8241,6 +8362,7 @@
 "eez": 923833.0,
 "density": 1765.6,
 "name_kana": "もるでぃぶ",
+"official_kana": "もるでぃぶきょうわこく",
 "kana_rank": 180
 },
 {
@@ -8258,7 +8380,7 @@
 "landlocked": true,
 "borders": 3,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "Low income",
 "temp": 21.9,
@@ -8309,6 +8431,7 @@
 "eez": 0,
 "density": 187.5,
 "name_kana": "まらうい",
+"official_kana": "まらういきょうわこく",
 "kana_rank": 166
 },
 {
@@ -8326,7 +8449,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 7,
+"name_len": 11,
 "name_en_len": 21,
 "income": "Upper middle income",
 "temp": 21.0,
@@ -8377,6 +8500,7 @@
 "eez": 3187013.0,
 "density": 67.2,
 "name_kana": "めきしこ",
+"official_kana": "めきしこがっしゅうこく",
 "kana_rank": 175
 },
 {
@@ -8445,6 +8569,7 @@
 "eez": 517876.0,
 "density": 108.8,
 "name_kana": "まれしあ",
+"official_kana": "まれーしあ",
 "kana_rank": 169
 },
 {
@@ -8462,7 +8587,7 @@
 "landlocked": false,
 "borders": 6,
 "languages": 1,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 22,
 "income": "Low income",
 "temp": 23.8,
@@ -8513,6 +8638,7 @@
 "eez": 566292.0,
 "density": 44.5,
 "name_kana": "もざんびく",
+"official_kana": "もざんびーくきょうわこく",
 "kana_rank": 176
 },
 {
@@ -8530,7 +8656,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 9,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 19,
 "income": "Lower middle income",
 "temp": 19.9,
@@ -8581,6 +8707,7 @@
 "eez": 562212.0,
 "density": 3.7,
 "name_kana": "なみびあ",
+"official_kana": "なみびあきょうわこく",
 "kana_rank": 120
 },
 {
@@ -8598,7 +8725,7 @@
 "landlocked": true,
 "borders": 7,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 17,
 "income": "Low income",
 "temp": 27.2,
@@ -8649,6 +8776,7 @@
 "eez": 0,
 "density": 22.0,
 "name_kana": "にじぇる",
+"official_kana": "にじぇーるきょうわこく",
 "kana_rank": 123
 },
 {
@@ -8666,7 +8794,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 11,
+"name_len": 16,
 "name_en_len": 27,
 "income": "Lower middle income",
 "temp": 26.8,
@@ -8717,6 +8845,7 @@
 "eez": 179048.0,
 "density": 257.1,
 "name_kana": "ないじぇりあ",
+"official_kana": "ないじぇりあれんぽうきょうわこく",
 "kana_rank": 118
 },
 {
@@ -8734,7 +8863,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 21,
 "income": "Lower middle income",
 "temp": 24.9,
@@ -8785,6 +8914,7 @@
 "eez": 213813.0,
 "density": 53.7,
 "name_kana": "にからぐあ",
+"official_kana": "にからぐあきょうわこく",
 "kana_rank": 122
 },
 {
@@ -8802,7 +8932,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 6,
+"name_len": 8,
 "name_en_len": 26,
 "income": "High income",
 "temp": 9.3,
@@ -8853,6 +8983,7 @@
 "eez": 144842.0,
 "density": 432.2,
 "name_kana": "おらんだ",
+"official_kana": "おらんだおうこく",
 "kana_rank": 36
 },
 {
@@ -8870,7 +9001,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 3,
-"name_len": 7,
+"name_len": 9,
 "name_en_len": 17,
 "income": "High income",
 "temp": 1.5,
@@ -8921,6 +9052,7 @@
 "eez": 2024551.0,
 "density": 17.3,
 "name_kana": "のるうぇ",
+"official_kana": "のるうぇーおうこく",
 "kana_rank": 127
 },
 {
@@ -8938,7 +9070,7 @@
 "landlocked": true,
 "borders": 2,
 "languages": 1,
-"name_len": 11,
+"name_len": 18,
 "name_en_len": 36,
 "income": "Lower middle income",
 "temp": 8.1,
@@ -8989,6 +9121,7 @@
 "eez": 0,
 "density": 201.2,
 "name_kana": "ねぱる",
+"official_kana": "ねぱーるれんぽうみんしゅきょうわこく",
 "kana_rank": 126
 },
 {
@@ -9006,7 +9139,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "High income",
 "temp": 27.5,
@@ -9054,6 +9187,7 @@
 "eez": 309261.0,
 "density": 572.6,
 "name_kana": "なうる",
+"official_kana": "なうるきょうわこく",
 "kana_rank": 119
 },
 {
@@ -9105,6 +9239,7 @@
 "eez": 316584,
 "density": 6.5,
 "name_kana": "にうえ",
+"official_kana": "にうえ",
 "kana_rank": 121
 },
 {
@@ -9173,6 +9308,7 @@
 "eez": 6712792.0,
 "density": 19.7,
 "name_kana": "にゅじらんど",
+"official_kana": "にゅーじーらんど",
 "kana_rank": 125
 },
 {
@@ -9190,7 +9326,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 5,
+"name_len": 6,
 "name_en_len": 17,
 "income": "High income",
 "temp": 25.6,
@@ -9241,6 +9377,7 @@
 "eez": 556490.0,
 "density": 17.8,
 "name_kana": "おまん",
+"official_kana": "おまーんこく",
 "kana_rank": 35
 },
 {
@@ -9258,7 +9395,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 18,
 "income": "High income",
 "temp": 25.4,
@@ -9309,6 +9446,7 @@
 "eez": 331318.0,
 "density": 60.6,
 "name_kana": "ぱなま",
+"official_kana": "ぱなまきょうわこく",
 "kana_rank": 137
 },
 {
@@ -9326,7 +9464,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 3,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 16,
 "income": "Upper middle income",
 "temp": 19.6,
@@ -9377,6 +9515,7 @@
 "eez": 870789.0,
 "density": 26.9,
 "name_kana": "ぺる",
+"official_kana": "ぺるーきょうわこく",
 "kana_rank": 158
 },
 {
@@ -9394,7 +9533,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 3,
-"name_len": 12,
+"name_len": 15,
 "name_en_len": 37,
 "income": "Lower middle income",
 "temp": 25.3,
@@ -9445,6 +9584,7 @@
 "eez": 2402238.0,
 "density": 23.3,
 "name_kana": "ぱぷあにゅぎにあ",
+"official_kana": "ぱぷあにゅーぎにあどくりつこく",
 "kana_rank": 138
 },
 {
@@ -9462,7 +9602,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 27,
 "income": "Upper middle income",
 "temp": 25.9,
@@ -9513,6 +9653,7 @@
 "eez": 1964764.0,
 "density": 341.1,
 "name_kana": "ふぃりぴん",
+"official_kana": "ふぃりぴんきょうわこく",
 "kana_rank": 143
 },
 {
@@ -9530,7 +9671,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 2,
-"name_len": 13,
+"name_len": 15,
 "name_en_len": 28,
 "income": "Lower middle income",
 "temp": 20.2,
@@ -9581,6 +9722,7 @@
 "eez": 224361.0,
 "density": 289.4,
 "name_kana": "ぱきすたん",
+"official_kana": "ぱきすたんいすらむきょうわこく",
 "kana_rank": 136
 },
 {
@@ -9598,7 +9740,7 @@
 "landlocked": false,
 "borders": 7,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 18,
 "income": "High income",
 "temp": 7.9,
@@ -9649,6 +9791,7 @@
 "eez": 30666.0,
 "density": 116.5,
 "name_kana": "ぽらんど",
+"official_kana": "ぽーらんどきょうわこく",
 "kana_rank": 163
 },
 {
@@ -9666,7 +9809,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 19,
 "income": "High income",
 "temp": 15.2,
@@ -9717,6 +9860,7 @@
 "eez": 1728718.0,
 "density": 117.3,
 "name_kana": "ぽるとがる",
+"official_kana": "ぽるとがるきょうわこく",
 "kana_rank": 164
 },
 {
@@ -9734,7 +9878,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "High income",
 "temp": 27.6,
@@ -9783,6 +9927,7 @@
 "eez": 616431.0,
 "density": 38.5,
 "name_kana": "ぱらお",
+"official_kana": "ぱらおきょうわこく",
 "kana_rank": 139
 },
 {
@@ -9800,7 +9945,7 @@
 "landlocked": true,
 "borders": 3,
 "languages": 2,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 20,
 "income": "Upper middle income",
 "temp": 23.6,
@@ -9851,6 +9996,7 @@
 "eez": 0,
 "density": 17.2,
 "name_kana": "ぱらぐあい",
+"official_kana": "ぱらぐあいきょうわこく",
 "kana_rank": 140
 },
 {
@@ -9868,7 +10014,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 1,
-"name_len": 5,
+"name_len": 6,
 "name_en_len": 14,
 "income": "High income",
 "temp": 27.2,
@@ -9919,6 +10065,7 @@
 "eez": 31489.0,
 "density": 256.5,
 "name_kana": "かたる",
+"official_kana": "かたーるこく",
 "kana_rank": 38
 },
 {
@@ -9987,6 +10134,7 @@
 "eez": 29606.0,
 "density": 79.8,
 "name_kana": "るまにあ",
+"official_kana": "るーまにあ",
 "kana_rank": 193
 },
 {
@@ -10004,7 +10152,7 @@
 "landlocked": true,
 "borders": 8,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "Upper middle income",
 "temp": 10.6,
@@ -10053,6 +10201,7 @@
 "eez": 0,
 "density": 74.1,
 "name_kana": "せるびあ",
+"official_kana": "せるびあきょうわこく",
 "kana_rank": 93
 },
 {
@@ -10070,7 +10219,7 @@
 "landlocked": false,
 "borders": 14,
 "languages": 1,
-"name_len": 5,
+"name_len": 7,
 "name_en_len": 18,
 "income": "High income",
 "temp": -5.1,
@@ -10121,6 +10270,7 @@
 "eez": 7730566.0,
 "density": 8.4,
 "name_kana": "ろしあ",
+"official_kana": "ろしあれんぽう",
 "kana_rank": 197
 },
 {
@@ -10138,7 +10288,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 3,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "Low income",
 "temp": 17.9,
@@ -10189,6 +10339,7 @@
 "eez": 0,
 "density": 553.2,
 "name_kana": "るわんだ",
+"official_kana": "るわんだきょうわこく",
 "kana_rank": 194
 },
 {
@@ -10206,7 +10357,7 @@
 "landlocked": false,
 "borders": 7,
 "languages": 1,
-"name_len": 9,
+"name_len": 11,
 "name_en_len": 23,
 "income": "High income",
 "temp": 24.7,
@@ -10257,6 +10408,7 @@
 "eez": 224157.0,
 "density": 17.2,
 "name_kana": "さうじあらびあ",
+"official_kana": "さうじあらびあおうこく",
 "kana_rank": 70
 },
 {
@@ -10274,7 +10426,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 6,
+"name_len": 8,
 "name_en_len": 15,
 "income": "Lower middle income",
 "temp": 26.3,
@@ -10324,6 +10476,7 @@
 "eez": 1602781.0,
 "density": 29.0,
 "name_kana": "そろもんしょとう",
+"official_kana": "そろもんしょとう",
 "kana_rank": 98
 },
 {
@@ -10341,7 +10494,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 3,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 22,
 "income": "High income",
 "temp": 27.2,
@@ -10392,6 +10545,7 @@
 "eez": 1341524.0,
 "density": 271.5,
 "name_kana": "せしぇる",
+"official_kana": "せーしぇるきょうわこく",
 "kana_rank": 91
 },
 {
@@ -10409,7 +10563,7 @@
 "landlocked": false,
 "borders": 7,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 21,
 "income": "Low income",
 "temp": 27.7,
@@ -10460,6 +10614,7 @@
 "eez": 82560.0,
 "density": 27.4,
 "name_kana": "すだん",
+"official_kana": "すーだんきょうわこく",
 "kana_rank": 84
 },
 {
@@ -10477,7 +10632,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 8,
+"name_len": 10,
 "name_en_len": 17,
 "income": "High income",
 "temp": 2.1,
@@ -10528,6 +10683,7 @@
 "eez": 155386.0,
 "density": 23.5,
 "name_kana": "すうぇでん",
+"official_kana": "すうぇーでんおうこく",
 "kana_rank": 83
 },
 {
@@ -10545,7 +10701,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 4,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 21,
 "income": "High income",
 "temp": 27.0,
@@ -10596,6 +10752,7 @@
 "eez": 675.0,
 "density": 8607.3,
 "name_kana": "しんがぽる",
+"official_kana": "しんがぽーるきょうわこく",
 "kana_rank": 77
 },
 {
@@ -10613,7 +10770,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 20,
 "income": "High income",
 "temp": 8.9,
@@ -10664,6 +10821,7 @@
 "eez": 214.0,
 "density": 105.1,
 "name_kana": "すろべにあ",
+"official_kana": "すろべにあきょうわこく",
 "kana_rank": 89
 },
 {
@@ -10681,7 +10839,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 15,
 "income": "High income",
 "temp": 6.8,
@@ -10732,6 +10890,7 @@
 "eez": 0,
 "density": 110.4,
 "name_kana": "すろばきあ",
+"official_kana": "すろばきあきょうわこく",
 "kana_rank": 88
 },
 {
@@ -10749,7 +10908,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 24,
 "income": "Low income",
 "temp": 26.1,
@@ -10800,6 +10959,7 @@
 "eez": 160584.0,
 "density": 122.9,
 "name_kana": "しえられおね",
+"official_kana": "しえられおねきょうわこく",
 "kana_rank": 75
 },
 {
@@ -10817,7 +10977,7 @@
 "landlocked": true,
 "borders": 1,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 34,
 "income": "High income",
 "temp": 11.9,
@@ -10865,6 +11025,7 @@
 "eez": 0,
 "density": 559.2,
 "name_kana": "さんまりの",
+"official_kana": "さんまりのきょうわこく",
 "kana_rank": 73
 },
 {
@@ -10882,7 +11043,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 19,
 "income": "Lower middle income",
 "temp": 27.9,
@@ -10933,6 +11094,7 @@
 "eez": 221818.0,
 "density": 96.2,
 "name_kana": "せねがる",
+"official_kana": "せねがるきょうわこく",
 "kana_rank": 92
 },
 {
@@ -10950,7 +11112,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 2,
-"name_len": 9,
+"name_len": 14,
 "name_en_len": 27,
 "income": "Low income",
 "temp": 27.1,
@@ -11000,6 +11162,7 @@
 "eez": 821444.0,
 "density": 30.8,
 "name_kana": "そまりあ",
+"official_kana": "そまりあれんぽうきょうわこく",
 "kana_rank": 97
 },
 {
@@ -11017,7 +11180,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 20,
 "income": "Upper middle income",
 "temp": 25.7,
@@ -11067,6 +11230,7 @@
 "eez": 133668.0,
 "density": 3.9,
 "name_kana": "すりなむ",
+"official_kana": "すりなむきょうわこく",
 "kana_rank": 86
 },
 {
@@ -11084,7 +11248,7 @@
 "landlocked": true,
 "borders": 6,
 "languages": 1,
-"name_len": 8,
+"name_len": 13,
 "name_en_len": 23,
 "income": "Low income",
 "temp": 26.5,
@@ -11133,6 +11297,7 @@
 "eez": 0,
 "density": 19.7,
 "name_kana": "みなみすーだん",
+"official_kana": "みなみすーだんきょうわこく",
 "kana_rank": 173
 },
 {
@@ -11150,7 +11315,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 15,
+"name_len": 19,
 "name_en_len": 44,
 "income": "Lower middle income",
 "temp": 23.8,
@@ -11200,6 +11365,7 @@
 "eez": 34534.0,
 "density": 249.2,
 "name_kana": "さんとめぷりんしぺ",
+"official_kana": "さんとめぷりんしぺみんしゅきょうわこく",
 "kana_rank": 72
 },
 {
@@ -11217,7 +11383,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 10,
+"name_len": 13,
 "name_en_len": 23,
 "income": "Upper middle income",
 "temp": 24.5,
@@ -11268,6 +11434,7 @@
 "eez": 95099.0,
 "density": 302.5,
 "name_kana": "えるさるばどる",
+"official_kana": "えるさるばどるきょうわこく",
 "kana_rank": 32
 },
 {
@@ -11285,7 +11452,7 @@
 "landlocked": false,
 "borders": 5,
 "languages": 1,
-"name_len": 10,
+"name_len": 12,
 "name_en_len": 20,
 "income": "Low income",
 "temp": 17.8,
@@ -11336,6 +11503,7 @@
 "eez": 10269.0,
 "density": 138.4,
 "name_kana": "しりあ",
+"official_kana": "しりああらぶきょうわこく",
 "kana_rank": 76
 },
 {
@@ -11353,7 +11521,7 @@
 "landlocked": true,
 "borders": 2,
 "languages": 2,
-"name_len": 8,
+"name_len": 10,
 "name_en_len": 19,
 "income": "Lower middle income",
 "temp": 17.3,
@@ -11404,6 +11572,7 @@
 "eez": 0,
 "density": 72.3,
 "name_kana": "えすわてぃに",
+"official_kana": "えすわてぃにおうこく",
 "kana_rank": 29
 },
 {
@@ -11421,7 +11590,7 @@
 "landlocked": true,
 "borders": 6,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 16,
 "income": "Low income",
 "temp": 26.6,
@@ -11472,6 +11641,7 @@
 "eez": 0,
 "density": 16.4,
 "name_kana": "ちゃど",
+"official_kana": "ちゃどきょうわこく",
 "kana_rank": 103
 },
 {
@@ -11489,7 +11659,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 27.2,
@@ -11540,6 +11710,7 @@
 "eez": 15447.0,
 "density": 151.3,
 "name_kana": "とご",
+"official_kana": "とーごきょうわこく",
 "kana_rank": 110
 },
 {
@@ -11557,7 +11728,7 @@
 "landlocked": false,
 "borders": 4,
 "languages": 1,
-"name_len": 4,
+"name_len": 6,
 "name_en_len": 19,
 "income": "Upper middle income",
 "temp": 26.3,
@@ -11608,6 +11779,7 @@
 "eez": 298561.0,
 "density": 139.6,
 "name_kana": "たい",
+"official_kana": "たいおうこく",
 "kana_rank": 99
 },
 {
@@ -11625,7 +11797,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 2,
-"name_len": 9,
+"name_len": 12,
 "name_en_len": 22,
 "income": "Lower middle income",
 "temp": 2.0,
@@ -11676,6 +11848,7 @@
 "eez": 0,
 "density": 75.4,
 "name_kana": "たじきすたん",
+"official_kana": "たじきすたんきょうわこく",
 "kana_rank": 100
 },
 {
@@ -11693,7 +11866,7 @@
 "landlocked": false,
 "borders": 1,
 "languages": 2,
-"name_len": 11,
+"name_len": 18,
 "name_en_len": 34,
 "income": "Lower middle income",
 "temp": 25.3,
@@ -11744,6 +11917,7 @@
 "eez": 77473.0,
 "density": 95.4,
 "name_kana": "ひがしてぃもーる",
+"official_kana": "ひがしてぃもーるみんしゅきょうわこく",
 "kana_rank": 141
 },
 {
@@ -11812,6 +11986,7 @@
 "eez": 0,
 "density": 15.6,
 "name_kana": "とるくめにすたん",
+"official_kana": "とるくめにすたん",
 "kana_rank": 112
 },
 {
@@ -11829,7 +12004,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 17,
 "income": "Lower middle income",
 "temp": 19.2,
@@ -11880,6 +12055,7 @@
 "eez": 99701.0,
 "density": 75.5,
 "name_kana": "ちゅにじあ",
+"official_kana": "ちゅにじあきょうわこく",
 "kana_rank": 106
 },
 {
@@ -11897,7 +12073,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 5,
+"name_len": 7,
 "name_en_len": 16,
 "income": "Upper middle income",
 "temp": 24.5,
@@ -11946,6 +12122,7 @@
 "eez": 666052.0,
 "density": 138.9,
 "name_kana": "とんが",
+"official_kana": "とんがおうこく",
 "kana_rank": 114
 },
 {
@@ -11963,7 +12140,7 @@
 "landlocked": false,
 "borders": 8,
 "languages": 1,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 19,
 "income": "Upper middle income",
 "temp": 11.1,
@@ -12014,6 +12191,7 @@
 "eez": 262233.0,
 "density": 109.6,
 "name_kana": "とるこ",
+"official_kana": "とるこきょうわこく",
 "kana_rank": 113
 },
 {
@@ -12031,7 +12209,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 13,
+"name_len": 15,
 "name_en_len": 31,
 "income": "High income",
 "temp": 25.8,
@@ -12082,6 +12260,7 @@
 "eez": 76562.0,
 "density": 266.6,
 "name_kana": "とりにだどとばご",
+"official_kana": "とりにだーどとばごきょうわこく",
 "kana_rank": 111
 },
 {
@@ -12148,6 +12327,7 @@
 "eez": 753133.0,
 "density": 365.1,
 "name_kana": "つばる",
+"official_kana": "つばる",
 "kana_rank": 108
 },
 {
@@ -12165,7 +12345,7 @@
 "landlocked": false,
 "borders": 8,
 "languages": 2,
-"name_len": 10,
+"name_len": 15,
 "name_en_len": 27,
 "income": "Lower middle income",
 "temp": 22.4,
@@ -12216,6 +12396,7 @@
 "eez": 241567.0,
 "density": 74.6,
 "name_kana": "たんざにあ",
+"official_kana": "たんざにあれんごうきょうわこく",
 "kana_rank": 101
 },
 {
@@ -12284,6 +12465,7 @@
 "eez": 136198.0,
 "density": 64.6,
 "name_kana": "うくらいな",
+"official_kana": "うくらいな",
 "kana_rank": 23
 },
 {
@@ -12301,7 +12483,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 2,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "Low income",
 "temp": 22.8,
@@ -12352,6 +12534,7 @@
 "eez": 0,
 "density": 212.7,
 "name_kana": "うがんだ",
+"official_kana": "うがんだきょうわこく",
 "kana_rank": 22
 },
 {
@@ -12369,7 +12552,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 7,
+"name_len": 11,
 "name_en_len": 24,
 "income": "High income",
 "temp": 8.6,
@@ -12420,6 +12603,7 @@
 "eez": 12167100.0,
 "density": 36.5,
 "name_kana": "あめりか",
+"official_kana": "あめりかがっしゅうこく",
 "kana_rank": 5
 },
 {
@@ -12437,7 +12621,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 10,
+"name_len": 15,
 "name_en_len": 28,
 "income": "High income",
 "temp": 17.6,
@@ -12488,6 +12672,7 @@
 "eez": 184506.0,
 "density": 18.7,
 "name_kana": "うるぐあい",
+"official_kana": "うるぐあいとうほうきょうわこく",
 "kana_rank": 25
 },
 {
@@ -12505,7 +12690,7 @@
 "landlocked": true,
 "borders": 5,
 "languages": 2,
-"name_len": 10,
+"name_len": 13,
 "name_en_len": 22,
 "income": "Lower middle income",
 "temp": 12.1,
@@ -12556,6 +12741,7 @@
 "eez": 0,
 "density": 82.8,
 "name_kana": "うずべきすたん",
+"official_kana": "うずべきすたんきょうわこく",
 "kana_rank": 24
 },
 {
@@ -12573,7 +12759,7 @@
 "landlocked": true,
 "borders": 1,
 "languages": 2,
-"name_len": 6,
+"name_len": 7,
 "name_en_len": 18,
 "income": "",
 "temp": 15.5,
@@ -12607,6 +12793,7 @@
 "eez": 0,
 "density": 1818.2,
 "name_kana": "ばちかん",
+"official_kana": "ばちかんしこく",
 "kana_rank": 130
 },
 {
@@ -12624,7 +12811,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 1,
-"name_len": 18,
+"name_len": 19,
 "name_en_len": 32,
 "income": "Upper middle income",
 "temp": 26.5,
@@ -12674,6 +12861,7 @@
 "eez": 36244.0,
 "density": 256.9,
 "name_kana": "せんとびんせんとぐれなでぃん",
+"official_kana": "せんとびんせんとぐれなでぃーんしょとう",
 "kana_rank": 95
 },
 {
@@ -12691,7 +12879,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 13,
+"name_len": 15,
 "name_en_len": 32,
 "income": "Lower middle income",
 "temp": 25.4,
@@ -12742,6 +12930,7 @@
 "eez": 473659.0,
 "density": 31.1,
 "name_kana": "べねずえら",
+"official_kana": "べねずえらぼりばるきょうわこく",
 "kana_rank": 154
 },
 {
@@ -12759,7 +12948,7 @@
 "landlocked": false,
 "borders": 3,
 "languages": 1,
-"name_len": 11,
+"name_len": 17,
 "name_en_len": 29,
 "income": "Upper middle income",
 "temp": 24.5,
@@ -12810,6 +12999,7 @@
 "eez": 752197.0,
 "density": 306.7,
 "name_kana": "べとなむ",
+"official_kana": "べとなむしゃかいしゅぎきょうわこく",
 "kana_rank": 152
 },
 {
@@ -12827,7 +13017,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 3,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 19,
 "income": "Lower middle income",
 "temp": 24.0,
@@ -12877,6 +13067,7 @@
 "eez": 625850.0,
 "density": 27.5,
 "name_kana": "ばぬあつ",
+"official_kana": "ばぬあつきょうわこく",
 "kana_rank": 131
 },
 {
@@ -12894,7 +13085,7 @@
 "landlocked": false,
 "borders": 0,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 26,
 "income": "Upper middle income",
 "temp": 26.7,
@@ -12944,6 +13135,7 @@
 "eez": 130480.0,
 "density": 77.2,
 "name_kana": "さもあ",
+"official_kana": "さもあどくりつこく",
 "kana_rank": 71
 },
 {
@@ -12961,7 +13153,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 2,
-"name_len": 6,
+"name_len": 9,
 "name_en_len": 18,
 "income": "Upper middle income",
 "temp": 9.5,
@@ -13006,6 +13198,7 @@
 "eez": 0,
 "density": 144.6,
 "name_kana": "こそぼ",
+"official_kana": "こそぼきょうわこく",
 "kana_rank": 64
 },
 {
@@ -13023,7 +13216,7 @@
 "landlocked": false,
 "borders": 2,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 17,
 "income": "Low income",
 "temp": 23.9,
@@ -13074,6 +13267,7 @@
 "eez": 527384.0,
 "density": 79.1,
 "name_kana": "いえめん",
+"official_kana": "いえめんきょうわこく",
 "kana_rank": 14
 },
 {
@@ -13091,7 +13285,7 @@
 "landlocked": false,
 "borders": 6,
 "languages": 11,
-"name_len": 8,
+"name_len": 13,
 "name_en_len": 24,
 "income": "Upper middle income",
 "temp": 17.8,
@@ -13142,6 +13336,7 @@
 "eez": 1547576.0,
 "density": 53.0,
 "name_kana": "みなみあふりか",
+"official_kana": "みなみあふりかきょうわこく",
 "kana_rank": 172
 },
 {
@@ -13159,7 +13354,7 @@
 "landlocked": true,
 "borders": 8,
 "languages": 1,
-"name_len": 7,
+"name_len": 10,
 "name_en_len": 18,
 "income": "Lower middle income",
 "temp": 21.4,
@@ -13210,6 +13405,7 @@
 "eez": 0,
 "density": 29.1,
 "name_kana": "ざんびあ",
+"official_kana": "ざんびあきょうわこく",
 "kana_rank": 74
 },
 {
@@ -13227,7 +13423,7 @@
 "landlocked": true,
 "borders": 4,
 "languages": 15,
-"name_len": 8,
+"name_len": 11,
 "name_en_len": 20,
 "income": "Lower middle income",
 "temp": 21.0,
@@ -13278,6 +13474,7 @@
 "eez": 0,
 "density": 43.4,
 "name_kana": "じんばぶえ",
+"official_kana": "じんばぶえきょうわこく",
 "kana_rank": 81
 }
 ]
