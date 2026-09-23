@@ -40,14 +40,15 @@ function fmtValue(v, fmt) {
 
 // 指標ごとの世界順位（大きい順）。データがある国の中での順位と母数を返す
 const RANK_CACHE = {};
-function worldRank(id, key) {
+// dir='max' は大きい順、'min' は小さい順。同値は同じ順位（1,1,1,4… の方式。サーバーの出す世界順位と同じ）
+function worldRank(id, key, dir = 'max') {
   if (!RANK_CACHE[key]) {
-    const vals = Object.values(META.countries).map(c => c[key]).filter(v => v != null).sort((a, b) => b - a);
-    RANK_CACHE[key] = vals;
+    RANK_CACHE[key] = Object.values(META.countries).map(c => c[key]).filter(v => v != null);
   }
   const v = META.countries[id][key]; if (v == null) return null;
   const vals = RANK_CACHE[key];
-  return { rank: vals.findIndex(x => x <= v) + 1, total: vals.length };
+  const better = dir === 'max' ? vals.filter(x => x > v).length : vals.filter(x => x < v).length;
+  return { rank: better + 1, total: vals.length };
 }
 
 // ---------- 世界地図

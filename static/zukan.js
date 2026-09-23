@@ -37,10 +37,9 @@ function renderRank() {
   const missing = Object.keys(META.countries).length - all;
   $('#rankInfo').textContent = `${pr.text}　${desc ? '大きい方から' : '小さい方から'}並べています。${missing ? `データなし ${missing} か国は除外。` : ''}${region ? `（${REGION_JA[region] || region}のみ）` : ''}`;
   const ol = $('#rankList'); ol.innerHTML = '';
-  // 世界順位は地域で絞っても全体での順位を表示
+  // 世界順位は地域で絞っても全体での順位を表示。同値は同じ順位で、次は人数分飛ぶ（1,1,1,4…）
   list.forEach((c, i) => {
-    const wr = worldRank(c.id, pr.key);
-    const shown = desc ? wr.rank : (wr.total - wr.rank + 1);
+    const shown = worldRank(c.id, pr.key, desc ? 'max' : 'min').rank;
     const li = el('li');
     li.innerHTML = `<span class="rk${shown <= 3 ? ' top' : ''}">${shown}</span><img src="${flagUrl(c.id, 80)}" alt="" loading="lazy"><span class="nm">${escapeHtml(c.name)}<small>${escapeHtml(c.name_official)}${pr.key === 'kana_rank' ? '　読み：' + escapeHtml(c.name_kana) : (pr.key === 'name_len' ? '　読み：' + escapeHtml(c.official_kana) : '')}</small></span><span class="val">${fmtValue(c[pr.key], F.fmt)}</span>`;
     li.onclick = () => { sfx.select(); showCountry(c.id); };
