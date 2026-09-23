@@ -23,7 +23,8 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 
 ## 4. 1.0 提出の準備（バージョン情報）
 ### スクリーンショット
-- iPhone 6.7インチ（1290×2796）: `docs/store-assets/promo/appstore-1.png` 〜 `appstore-4.png` をこの順で
+- iPhone 6.5インチの欄: `docs/store-assets/promo/appstore65-1.png` 〜 `appstore65-4.png`（1284×2778）をこの順で
+- 6.9インチの欄がある場合: `appstore69-1.png` 〜 `appstore69-4.png`（1320×2868）。6.7インチ（1290×2796）は `appstore-1..4.png`
 - iPad は対象外（ビルド2以降は iPhone のみ）
 
 ### プロモーション用テキスト（170字まで）

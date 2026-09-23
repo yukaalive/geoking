@@ -135,7 +135,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     for i, (shot, head, desc, flags) in enumerate(FRAMES, 1):
         src = os.path.join(HERE, shot)
-        for tag, W, H in (('play', 1080, 2400), ('appstore', 1290, 2796)):
+        for tag, W, H in (('play', 1080, 2400), ('appstore', 1290, 2796), ('appstore65', 1284, 2778), ('appstore69', 1320, 2868)):
             out = os.path.join(OUT, f'{tag}-{i}.png')
             render(build_svg(src, head, desc, flags, i, W, H), out, W, H)
             print('wrote', out)
