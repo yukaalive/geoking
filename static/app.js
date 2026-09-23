@@ -205,7 +205,6 @@ function floatChat(c) {
   const d = el('div', 'floatmsg' + (c.name === 'システム' ? ' sys' : (me && c.pid === pid ? ' me' : '')));
   d.innerHTML = `<b>${escapeHtml(c.name)}</b>${escapeHtml(c.text)}`;
   d.style.setProperty('--x', (4 + Math.random() * 50).toFixed(0) + '%');
-  d.style.setProperty('--sway', (Math.random() * 6 - 3).toFixed(1) + 'deg');
   const olds = document.querySelectorAll('.floatmsg'); if (olds.length >= 8) olds[0].remove();
   document.body.appendChild(d);
   d.addEventListener('animationend', () => d.remove());

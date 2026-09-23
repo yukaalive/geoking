@@ -170,7 +170,7 @@ body.composing #chatForm button{white-space:nowrap}
 .floatmsg b{color:var(--primary);margin-right:6px}
 .floatmsg.me{background:var(--accent)}
 .floatmsg.sys{background:var(--ink);color:var(--card)}.floatmsg.sys b{color:var(--accent)}
-@keyframes floatUp{0%{transform:translateY(0) rotate(0);opacity:0}6%{opacity:1}88%{opacity:1}100%{transform:translateY(calc(-100vh - 140px)) rotate(var(--sway,0deg));opacity:0}}
+@keyframes floatUp{0%{transform:translateY(0);opacity:0}6%{opacity:1}88%{opacity:1}100%{transform:translateY(calc(-100vh - 140px));opacity:0}}
 @media (prefers-reduced-motion:reduce){.floatmsg{display:none}}
 
 /* ---------- 結果 */
