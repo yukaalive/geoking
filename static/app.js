@@ -332,24 +332,17 @@ function renderOthersHands() {
   }
 }
 
-// お題の向き（「小さい順」「多い順」など）を世界順位の説明に使う
-function rankOrderLabel(prompt) {
-  const m = prompt.text.match(/(大きい|小さい|多い|少ない|高い|低い|長い|短い|早い|遅い|広い|近い)/);
-  if (m) return m[1] + '順';
-  if (/北/.test(prompt.text)) return '北から'; if (/南/.test(prompt.text)) return '南から'; if (/東/.test(prompt.text)) return '東から'; if (/西/.test(prompt.text)) return '西から';
-  return prompt.dir === 'max' ? '大きい順' : '小さい順';
-}
-// 世界順位の良さを3段階で強調（1位／トップ3／トップ10）
+// 世界順位を金・銀・銅で強調（1位／2〜10位／11〜30位）
 function wrankTier(rank) {
-  if (rank === 1) return { cls: ' t1', tag: `${ico('crown', 'sm')} 世界1位！` };
-  if (rank <= 3) return { cls: ' t2', tag: `${ico('star', 'sm')} トップ3！` };
-  if (rank <= 10) return { cls: ' t3', tag: 'トップ10' };
+  if (rank === 1) return { cls: ' gold', tag: `${ico('crown', 'sm')} 世界1位！` };
+  if (rank <= 10) return { cls: ' silver', tag: `${ico('trophy', 'sm')} トップ10！` };
+  if (rank <= 30) return { cls: ' bronze', tag: `${ico('star', 'sm')} トップ30！` };
   return { cls: '', tag: '' };
 }
-function wrankHtml(rank, total, prompt) {
+function wrankHtml(rank, total) {
   if (!rank) return '';
   const t = wrankTier(rank);
-  return `<div class="wrank${t.cls}">${t.tag ? `<em>${t.tag}</em>` : ''}世界 <b>${rank}</b> 位 <span>／ ${total}か国・${rankOrderLabel(prompt)}</span></div>`;
+  return `<div class="wrank${t.cls}">${t.tag ? `<em>${t.tag}</em>` : ''}世界 <b>${rank}</b> 位 <span>／ ${total}か国</span></div>`;
 }
 function renderReveal() {
   const r = state.reveal, F = META.fields[r.prompt.key];
@@ -358,7 +351,7 @@ function renderReveal() {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
     d.style.animationDelay = (i * 0.25) + 's';
-    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>読み：${c.official_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : ''))}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.missing ? '（データなし＝0として比較）' : ''}</div>${wrankHtml(row.world_rank, row.world_total, r.prompt)}`;
+    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>読み：${c.official_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : ''))}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.missing ? '（データなし＝0として比較）' : ''}</div>${wrankHtml(row.world_rank, row.world_total)}`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
   });
@@ -396,7 +389,7 @@ function renderHistory() {
     for (const r of h.rows) {
       const c = META.countries[r.card];
       const card = el('div', 'hcard' + (r.winner ? ' win' : ''));
-      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? ico('crown', 'sm') + ' ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who${wrankTier(r.world_rank).cls ? ' hot' + wrankTier(r.world_rank).cls : ''}">世界 ${r.world_rank} 位／${r.world_total}か国・${rankOrderLabel(h.prompt)}</div>` : ''}<div class="who">${escapeHtml(r.name)}</div>`;
+      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? ico('crown', 'sm') + ' ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who${wrankTier(r.world_rank).cls ? ' hot' + wrankTier(r.world_rank).cls : ''}">世界 ${r.world_rank} 位／${r.world_total}か国</div>` : ''}<div class="who">${escapeHtml(r.name)}</div>`;
       card.style.cursor = 'pointer'; card.onclick = () => showCountry(r.card);
       cards.appendChild(card);
     }
