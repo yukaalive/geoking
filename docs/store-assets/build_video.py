@@ -56,7 +56,7 @@ def lerp_expr(keys, idx):
     for (t0, *a), (t1, *b) in reversed(list(zip(keys, keys[1:]))):
         expr = f"if(lt(t,{t1}),{a[idx-1]}+({b[idx-1]}-{a[idx-1]})*(t-{t0})/({t1}-{t0}),{expr})"
     return expr
-HAND_SCALE = 1.6; HAND_TIP = (round(55 * HAND_SCALE), round(6 * HAND_SCALE))   # hand.png を拡大した後の指先の位置
+HAND_SCALE = 1.0; HAND_TIP = (110, 12)   # hand.png(260px, Chrome headless で SVG→透過PNG) の指先の位置
 parts = []
 for g in SEGS:
     name, src, s, e, cap = g['name'], g['src'], g['s'], g['e'], g['cap']
@@ -77,7 +77,7 @@ for g in SEGS:
         for i, tp in enumerate(g.get('taps', [])):
             inputs += ['-i', 'ring.png']
             x, y = [k for k in keys if k[0] <= tp][-1][1:]
-            chain.append(f"[{last}][{2 + i}:v]overlay=x={x - 70}:y={y - 70}:enable='between(t,{tp},{tp + 0.3})'[r{i}]"); last = f'r{i}'
+            chain.append(f"[{last}][{2 + i}:v]overlay=x={x - 140}:y={y - 140}:enable='between(t,{tp},{tp + 0.3})'[r{i}]"); last = f'r{i}'
     run([*inputs, '-filter_complex', ';'.join(chain), '-map', f'[{last}]', *ENC, out]); parts.append((name, out))
 
 # ---- タイトルカード
