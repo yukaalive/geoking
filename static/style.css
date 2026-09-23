@@ -176,14 +176,24 @@ body.composing #chatForm button{white-space:nowrap}
 /* ---------- 結果 */
 .final li{padding:9px 0;border-bottom:2px dashed var(--line-soft);font-size:16px;font-weight:700}
 .final li:first-child{font-size:22px}
-.history .hround{margin:10px 0 16px}
-.history .hprompt{font-weight:900;margin-bottom:6px}
-.history .hcards{display:flex;gap:8px;flex-wrap:wrap}
-.history .hcard{border:2px solid var(--ink);border-radius:10px;padding:6px;width:122px;text-align:center;font-size:12px;font-weight:700;background:var(--card);cursor:pointer;box-shadow:var(--shadow-sm)}
+/* 最終結果の一覧: 横軸＝プレイヤー（固定）、縦軸＝ラウンド。狭い画面は横スクロール */
+.history .htablewrap{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.history .htable{display:grid;gap:6px;align-items:stretch;min-width:max-content}
+.history .hth{font-weight:900;font-size:13px;padding:6px 8px;border-radius:8px;background:var(--ink);color:var(--card);display:flex;align-items:center;gap:4px;justify-content:center;text-align:center;position:sticky;top:0}
+.history .hth.me{background:var(--primary);color:var(--primary-ink)}
+.history .hth small{font-weight:700;font-size:10px;margin-left:2px}
+.history .hth.corner{background:transparent;color:var(--muted);font-size:12px}
+.history .hth.row{background:var(--bg);color:var(--ink);border:2px dashed var(--line-soft);flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;font-size:12px;line-height:1.35;position:sticky;left:0;z-index:1}
+.history .hth.row b{font-family:var(--font-head);font-weight:400;font-size:14px;color:var(--primary)}
+.history .hcard{border:2px solid var(--ink);border-radius:10px;padding:6px;text-align:center;font-size:12px;font-weight:700;background:var(--card);cursor:pointer;box-shadow:var(--shadow-sm)}
 .history .hcard.win{background:var(--accent)}
+.history .hcard.empty{display:flex;align-items:center;justify-content:center;color:var(--muted);border-style:dashed;box-shadow:none;cursor:default;background:transparent}
 .history .hcard img{width:100%;aspect-ratio:3/2;object-fit:contain;border:1.5px solid var(--ink);border-radius:6px;background:#fff}
+.history .hcard .cn{line-height:1.3;margin-top:3px}
 .history .hcard .who{color:var(--muted);font-size:11px}.history .hcard.win .who{color:#3b3a2a}
-.history .hcard .val{font-weight:900}
+.history .hcard .val{font-weight:900;margin-top:2px}
+.history .hcard.rest{display:flex;flex-direction:column;gap:6px;cursor:default}
+.history .hcard .restcard{cursor:pointer}
 
 /* ---------- モーダル（カード裏面＋地図） */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:800;z-index:50}

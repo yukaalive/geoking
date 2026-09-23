@@ -392,37 +392,45 @@ function renderEnd() {
 
 function renderHistory() {
   const box = $('#historyList'); box.innerHTML = '';
-  for (const h of (state.history || [])) {
+  const history = state.history || [], left = state.leftover || {};
+  // 横軸はプレイヤーで固定（観戦者は除く）。途中で抜けた人も履歴にいれば列を作る
+  const cols = [];
+  const addCol = (pid, name) => { if (pid && !cols.find(c => c.pid === pid)) cols.push({ pid, name }); };
+  for (const p of state.players) if (!p.spectator) addCol(p.pid, p.name);
+  for (const h of history) for (const r of h.rows) addCol(r.pid, r.name);
+  if (!cols.length) return;
+  const wrap = el('div', 'htablewrap');
+  const table = el('div', 'htable'); table.style.gridTemplateColumns = `minmax(110px,150px) repeat(${cols.length}, minmax(120px, 1fr))`;
+  // 見出し行
+  table.appendChild(el('div', 'hth corner', 'お題'));
+  for (const c of cols) table.appendChild(el('div', 'hth' + (c.pid === pid ? ' me' : ''), `${ico('person', 'sm')} ${escapeHtml(c.name)}${c.pid === pid ? '<small>（あなた）</small>' : ''}`));
+  const cardHtml = (id, extra = '') => `<img src="${flagUrl(id, 160)}" alt=""><div class="cn">${META.countries[id].name_official}</div>${extra}`;
+  for (const h of history) {
     const F = META.fields[h.prompt.key];
-    const d = el('div', 'hround');
-    d.appendChild(el('div', 'hprompt', `第${h.round}ラウンド：${escapeHtml(h.prompt.text)}`));
-    const cards = el('div', 'hcards');
-    for (const r of h.rows) {
-      const c = META.countries[r.card];
+    table.appendChild(el('div', 'hth row', `<b>第${h.round}R</b>${escapeHtml(h.prompt.text)}`));
+    for (const c of cols) {
+      const r = h.rows.find(x => x.pid === c.pid);
+      if (!r) { table.appendChild(el('div', 'hcard empty', '—')); continue; }
       const card = el('div', 'hcard' + (r.winner ? ' win' : ''));
-      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? ico('crown', 'sm') + ' ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who${wrankTier(r.world_rank).cls ? ' hot' + wrankTier(r.world_rank).cls : ''}">世界 ${r.world_rank} 位／${r.world_total}か国</div>` : ''}<div class="who">${escapeHtml(r.name)}</div>`;
-      card.style.cursor = 'pointer'; card.onclick = () => showCountry(r.card);
-      cards.appendChild(card);
+      const t = r.world_rank ? wrankTier(r.world_rank).cls : '';
+      card.innerHTML = cardHtml(r.card, `<div class="val">${r.winner ? ico('crown', 'sm') + ' ' : ''}${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who${t ? ' hot' + t : ''}">世界 ${r.world_rank} 位／${r.world_total}か国</div>` : ''}`);
+      card.onclick = () => showCountry(r.card);
+      table.appendChild(card);
     }
-    d.appendChild(cards); box.appendChild(d);
   }
   // 使わなかった手札（各プレイヤーに1枚以上残る）
-  const left = state.leftover || {};
   if (Object.keys(left).length) {
-    const d = el('div', 'hround');
-    d.appendChild(el('div', 'hprompt', '使わなかったカード'));
-    const cards = el('div', 'hcards');
-    for (const p of state.players) {
-      for (const id of (left[p.pid] || [])) {
-        const c = META.countries[id];
-        const card = el('div', 'hcard rest');
-        card.innerHTML = `<img src="${flagUrl(id, 160)}" alt=""><div>${c.name_official}</div><div class="who">${escapeHtml(p.name)}</div>`;
-        card.style.cursor = 'pointer'; card.onclick = () => showCountry(id);
-        cards.appendChild(card);
-      }
+    table.appendChild(el('div', 'hth row', '<b>残り</b>使わなかったカード'));
+    for (const c of cols) {
+      const ids = left[c.pid] || [];
+      if (!ids.length) { table.appendChild(el('div', 'hcard empty', '—')); continue; }
+      const cell = el('div', 'hcard rest');
+      cell.innerHTML = ids.map(id => `<div class="restcard" data-id="${id}">${cardHtml(id)}</div>`).join('');
+      cell.querySelectorAll('.restcard').forEach(x => x.onclick = () => showCountry(x.dataset.id));
+      table.appendChild(cell);
     }
-    d.appendChild(cards); box.appendChild(d);
   }
+  wrap.appendChild(table); box.appendChild(wrap);
 }
 
 // ---------- タイマー
