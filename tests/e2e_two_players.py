@@ -91,6 +91,9 @@ async def main():
                 best = max(vals) if pr['dir'] == 'max' else min(vals)
                 assert all((r['value'] == best) == r['winner'] for r in rows), rows
             assert next(r for r in rows if r['pid'] == pidA)['card'] == sa['hand'][0], 'pick change not applied'
+            for r in rows:
+                if not r['missing']:
+                    assert 1 <= r['world_rank'] <= r['world_total'] <= 197, r
             print(f"R{rnd} {pr['text']:<22} " + ' | '.join(f"{r['name']}:{r['card']}={r['value']}{'👑' if r['winner'] else ''}" for r in rows))
             assert len(ra['hand']) == 5 - rnd, 'card not removed from hand'
             await asyncio.sleep(0.8)  # 連投制限（0.7秒）を待つ

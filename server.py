@@ -14,6 +14,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE, 'data', 'countries.json'), encoding='utf-8') as f:
     COUNTRIES = json.load(f)
 COUNTRY_BY_ID = {c['id']: c for c in COUNTRIES}
+# お題ごとの世界順位計算用: 指標 → データがある国の値一覧
+WORLD_VALUES = {p['key']: [c[p['key']] for c in COUNTRIES if c.get(p['key']) is not None] for p in PROMPTS}
 # ボット名（アメリカでよくある名前）
 BOT_NAMES = ['エミリー', 'マイケル', 'オリビア', 'ジェームズ', 'ソフィア', 'ノア', 'エマ', 'リアム', 'アヴァ', 'イーサン',
              'ミア', 'ジェイコブ', 'イザベラ', 'メイソン', 'シャーロット', 'ルーカス', 'アメリア', 'ベンジャミン', 'ハーパー', 'ローガン',
@@ -152,7 +154,12 @@ class Room:
                 continue
             c = COUNTRY_BY_ID[p.pick]
             v = c.get(key)
-            rows.append({'pid': pid, 'name': p.name, 'card': p.pick, 'value': 0 if v is None else v, 'missing': v is None})   # データなしは 0 扱い
+            wr = None
+            if v is not None:   # 世界順位: データがある国の中で、自分より良い値の国の数 + 1
+                better = sum(1 for x in WORLD_VALUES[key] if (x > v if direction == 'max' else x < v))
+                wr = better + 1
+            rows.append({'pid': pid, 'name': p.name, 'card': p.pick, 'value': 0 if v is None else v, 'missing': v is None,
+                         'world_rank': wr, 'world_total': len(WORLD_VALUES[key])})
         valid = sorted(rows, key=lambda r: r['value'], reverse=(direction == 'max'))
         best = valid[0]['value'] if valid else None
         rank, prev = 0, object()
