@@ -162,15 +162,33 @@ function leaveToHome(message) {
 $('#startBtn').onclick = () => send({ type: 'start' });
 $('#rematchBtn').onclick = () => send({ type: 'start' });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
-$('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) { send({ type: 'chat', text: t }); sfx.send(); } $('#chatInput').value = ''; updateChatPreview(); };
-// 入力中の文字を大きく表示（何が入っているか見やすく）
-function updateChatPreview() {
-  const v = $('#chatInput').value, pv = $('#chatPreview');
-  if (!v) { pv.classList.add('hidden'); return; }
-  pv.classList.remove('hidden');
-  pv.innerHTML = `<span>${escapeHtml(v)}</span><small>${v.length}/80</small>`;
-}
-$('#chatInput').addEventListener('input', updateChatPreview);
+$('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) { send({ type: 'chat', text: t }); sfx.send(); } $('#chatInput').value = ''; };
+// スマホ：キーボードが出ると入力欄が隠れるので、入力中はキーボードの真上に固定表示する
+(function mobileComposer() {
+  const form = $('#chatForm'), input = $('#chatInput');
+  const isTouch = () => matchMedia('(pointer:coarse)').matches || matchMedia('(max-width:900px)').matches;
+  const place = () => {
+    if (!document.body.classList.contains('composing')) return;
+    const vv = window.visualViewport;
+    const h = form.offsetHeight;
+    // visualViewport＝キーボードを除いた見えている範囲。その下端に合わせる
+    form.style.top = vv ? (vv.offsetTop + vv.height - h) + 'px' : `calc(100% - ${h}px)`;
+  };
+  input.addEventListener('focus', () => {
+    if (!isTouch()) return;
+    document.body.classList.add('composing');
+    place(); setTimeout(place, 50); setTimeout(place, 300); setTimeout(place, 600);   // キーボードが出きるまで数回合わせる
+  });
+  // 送信ボタンを押してもフォーカスを外さない（外れると欄が元の位置に戻ってタップが空振りする）
+  form.querySelector('button').addEventListener('pointerdown', (e) => e.preventDefault());
+  form.querySelector('button').addEventListener('mousedown', (e) => e.preventDefault());
+  input.addEventListener('blur', () => setTimeout(() => {
+    if (document.activeElement === input) return;
+    document.body.classList.remove('composing'); form.style.top = '';
+  }, 150));
+  if (window.visualViewport) { visualViewport.addEventListener('resize', place); visualViewport.addEventListener('scroll', place); }
+  window.addEventListener('resize', place);
+})();
 
 $('#copyLink').onclick = async () => {
   const url = `${API || location.origin}/static/index.html?room=${state.room}`;
