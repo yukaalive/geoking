@@ -37,27 +37,26 @@ SFX = {
  'reveal':  lambda b, a: (noise(b, a, 0, .18), tone(b, a, 'triangle', 300, .05, .12, .12, 600)),
  'win':     lambda b, a: [tone(b, a, 'triangle', f, i * .09, .22, .2) for i, f in enumerate([523, 659, 784, 1047])],
  'lose':    lambda b, a: (noise(b, a, 0, .6, .16, 1400, .6, 300), tone(b, a, 'sine', 330, 0, .5, .06, 220)),
+ 'open':    lambda b, a: tone(b, a, 'sine', 700, 0, .06, .07, 900),
  'champion':lambda b, a: [tone(b, a, 'triangle', f, i * .12, .3, .2) for i, f in enumerate([523, 659, 784, 1047, 784, 1047, 1319])],
 }
-# ---------- タイムライン（動画の秒）。build_video.py の区間: intro4.0 s0 3.0 s1 6.0 s2 3.5 s3 11.5 s4 11.5 s5 15.88 outro4.5
-# 各区間の実際の長さから開始位置を計算（build_video.py の出力 seg/*.mp4 を測る）
-import subprocess as _sp, re as _re
-def _dur(path):
-    out = _sp.run([FF, '-hide_banner', '-i', path], capture_output=True, text=True).stderr
-    h, m, s_ = _re.search(r'Duration: (\d+):(\d+):([\d.]+)', out).groups(); return int(h) * 3600 + int(m) * 60 + float(s_)
-ORDER = ['intro', 's0', 's1', 's2', 's3', 's4', 's5', 'outro']
-OFF = {}; _t = 0.0
-for _k in ORDER: OFF[_k] = _t; _t += _dur(f'seg/{_k}.mp4')
-TOTAL = _t
+# ---------- タイムライン（build_video.py が出す seg/timeline.json: 名前 -> [開始秒, 長さ]）
+import json as _json
+TL = _json.load(open('seg/timeline.json')); OFF = {k: v[0] for k, v in TL.items()}
+TOTAL = max(v[0] + v[1] for v in TL.values())
 print('offsets', {k: round(v, 2) for k, v in OFF.items()}, 'total', round(TOTAL, 2))
-EVENTS = [   # 動画のコマを見て合わせた（build_video.py を撮り直したら再確認）
+# 効果音（動画のコマを見て合わせた。撮り直したら再確認）
+EVENTS = [
  ('tap', OFF['s0'] + 2.2), ('enter', OFF['s0'] + 2.45),
  ('joined', OFF['s1'] + 0.1), ('chat', OFF['s1'] + 1.5),
  ('tap', OFF['s2'] + 0.15), ('start', OFF['s2'] + 0.4),
- ('select', OFF['s3'] + 0.5), ('confirm', OFF['s3'] + 2.9), ('reveal', OFF['s3'] + 3.3), ('lose', OFF['s3'] + 3.7), ('chat', OFF['s3'] + 6.3),
- ('select', OFF['s4'] + 1.5), ('confirm', OFF['s4'] + 3.0), ('reveal', OFF['s4'] + 3.3), ('win', OFF['s4'] + 3.7), ('chat', OFF['s4'] + 6.3),
+ ('select', OFF['s3'] + 9.0), ('confirm', OFF['s3'] + 10.6), ('reveal', OFF['s3'] + 11.5), ('win', OFF['s3'] + 11.9),
  ('champion', OFF['s5'] + 1.3),
+ ('tap', OFF['z1'] + 0.1), ('select', OFF['z2'] + 0.2), ('open', OFF['z2'] + 0.35), ('tap', OFF['z4'] + 0.1),
 ]
+# ナレーション: 区間名 -> (音声ファイル, 区間先頭からの秒)
+VOICE = {'intro': ('intro', 0.25), 's0': ('s0', 0.25), 's1': ('s1', 0.25), 's2': ('s2', 0.25),
+         's3': ('s3a', 0.3), 's3b': ('s3b', OFF['s3'] + 12.1 - OFF['s3']), 's5': ('s5', 0.3), 'z1': ('z', 0.3), 'outro': ('outro', 0.25)}
 N = int(TOTAL * SR)
 sfx = np.zeros(N)
 for name, at in EVENTS: SFX[name](sfx, at)
@@ -70,8 +69,9 @@ def read_wav(path):
         if w.getnchannels() == 2: d = d.reshape(-1, 2).mean(axis=1)
         return d
 voice = np.zeros(N)
-for k, off in OFF.items():
-    v = read_wav(f'voice/{k}.wav'); s = int((off + 0.25) * SR); e = min(s + len(v), N); voice[s:e] += v[:e - s]
+for seg, (clip, rel) in VOICE.items():
+    base = OFF[seg] if seg in OFF else OFF['s3']
+    v = read_wav(f'voice/{clip}.wav'); st = int((base + rel) * SR); en = min(st + len(v), N); voice[st:en] += v[:en - st]
 voice *= 1.0
 
 # ---------- BGM（mp3→wav、声のあるところは自動で下げる）
