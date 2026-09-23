@@ -247,6 +247,25 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .rev .wrank b{font-family:var(--font-head);font-size:16px}
 .rev .wrank span{color:var(--muted);font-weight:700}
 .rev.win .wrank{background:#fff}
+.rev .wrank em{display:block;font-style:normal;font-family:var(--font-head);font-size:13px;letter-spacing:.04em;margin:-2px 0 2px}
+.rev .wrank em .ico{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+/* トップ10：淡い緑 */
+.rev .wrank.t3{background:#dff2e6;border-color:var(--primary);color:var(--primary)}
+.rev .wrank.t3 em{color:var(--primary)}
+/* トップ3：シルバー＋赤縁 */
+.rev .wrank.t2{background:linear-gradient(135deg,#f6f6f6,#d9dde3);border-color:var(--accent-2);padding:4px 12px;font-size:13px;box-shadow:2px 2px 0 var(--accent-2)}
+.rev .wrank.t2 b{font-size:20px;color:var(--accent-2)}
+.rev .wrank.t2 em{color:var(--accent-2);font-size:14px}
+/* 世界1位：ゴールドで輝く */
+.rev .wrank.t1{background:linear-gradient(135deg,#ffe58a,var(--accent) 60%,#ffd25e);border-color:var(--ink);padding:6px 14px;font-size:14px;box-shadow:3px 3px 0 var(--ink);animation:wrankPop .6s cubic-bezier(.2,1.6,.4,1) both,wrankGlow 1.6s ease-in-out 1s infinite}
+.rev .wrank.t1 b{font-size:24px}
+.rev .wrank.t1 em{font-size:16px}
+.rev .wrank.t1 span{color:#5a4a10}
+@keyframes wrankPop{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes wrankGlow{0%,100%{box-shadow:3px 3px 0 var(--ink),0 0 0 0 rgba(244,197,66,0)}50%{box-shadow:3px 3px 0 var(--ink),0 0 0 8px rgba(244,197,66,.45)}}
+.history .who.hot{font-weight:900;color:var(--primary)}
+.history .who.hot.t2{color:var(--accent-2)}
+.history .who.hot.t1{color:#8a6400;background:var(--accent);border-radius:6px;padding:0 4px;display:inline-block}
 
 /* ---------- 図鑑 */
 .zukanlink{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:8px 14px;border:2px solid var(--ink);border-radius:12px;background:var(--accent);color:var(--ink);text-decoration:none;font-weight:900;box-shadow:var(--shadow-sm)}
