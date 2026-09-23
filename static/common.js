@@ -70,6 +70,7 @@ function worldMapSvg(id, zoom = false) {
 }
 
 // ---------- 国データの小窓（カード裏面）: 全指標＋世界順位＋地図
+// 表示するのはお題（prompts.py）で使う指標だけ。お題にない指標は一覧から自動で外れる
 const COUNTRY_GROUPS = [
   ['基本', ['area', 'population', 'density', 'gdp', 'gdp_pc', 'eez', 'name_len', 'kana_rank', 'lat', 'lng', 'borders', 'languages', 'military']],
   ['気候・自然', ['temp', 'precip', 'forest_pct', 'agri_pct', 'co2_pc']],
@@ -81,7 +82,10 @@ function showCountry(id) {
   const c = META.countries[id]; if (!c) return;
   const F = META.fields;
   let info = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${c.name_official}</h2><div class="muted">読み：${c.official_kana}<br>${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}<br>首都: ${c.capital || '—'}${c.landlocked ? '（内陸国）' : ''}</div></div></div><div class="dl">`;
-  for (const [title, keys] of COUNTRY_GROUPS) {
+  const used = new Set(META.prompts.map(p => p.key));
+  for (const [title, allKeys] of COUNTRY_GROUPS) {
+    const keys = allKeys.filter(k => used.has(k) && F[k]);
+    if (!keys.length) continue;
     info += `<div class="sec">${title}</div>`;
     for (const k of keys) {
       const wr = NO_RANK_KEYS.has(k) ? null : worldRank(id, k);
