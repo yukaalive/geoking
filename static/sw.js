@@ -1,7 +1,7 @@
 /* 地理王 Service Worker: 画面の部品（HTML/CSS/JS/アイコン/地図）をキャッシュしてアプリのように素早く開く。
    API と WebSocket は常にネットワーク。 */
-const VERSION = 'geoking-v1';
-const SHELL = ['/static/index.html', '/static/style.css', '/static/app.js', '/static/icons.svg', '/static/worldmap.json', '/static/manifest.json',
+const VERSION = 'geoking-v2';
+const SHELL = ['/static/index.html', '/static/style.css', '/static/common.js', '/static/sfx.js', '/static/app.js', '/static/zukan.html', '/static/zukan.js', '/static/icons.svg', '/static/worldmap.json', '/static/manifest.json',
                '/static/icons/icon-192.png', '/static/icons/icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

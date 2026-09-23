@@ -19,7 +19,7 @@ function renderFlags() {
   for (const c of list) {
     const card = el('div', 'zcard');
     card.innerHTML = `<img src="${flagUrl(c.id, 160)}" alt="" loading="lazy"><div class="nm">${escapeHtml(c.name)}</div>`;
-    card.onclick = () => showCountry(c.id);
+    card.onclick = () => { sfx.select(); showCountry(c.id); };
     grid.appendChild(card);
   }
 }
@@ -43,7 +43,7 @@ function renderRank() {
     const shown = desc ? wr.rank : (wr.total - wr.rank + 1);
     const li = el('li');
     li.innerHTML = `<span class="rk${shown <= 3 ? ' top' : ''}">${shown}</span><img src="${flagUrl(c.id, 80)}" alt="" loading="lazy"><span class="nm">${escapeHtml(c.name)}<small>${escapeHtml(c.name_official)}${pr.key === 'kana_rank' ? '　読み：' + escapeHtml(c.name_kana) : (pr.key === 'name_len' ? '　読み：' + escapeHtml(c.official_kana) : '')}</small></span><span class="val">${fmtValue(c[pr.key], F.fmt)}</span>`;
-    li.onclick = () => showCountry(c.id);
+    li.onclick = () => { sfx.select(); showCountry(c.id); };
     ol.appendChild(li);
   });
 }
@@ -74,7 +74,8 @@ function renderRank() {
   ['#q', '#region', '#sort'].forEach(s => $(s).addEventListener('input', renderFlags));
   ['#promptSel', '#rankRegion'].forEach(s => $(s).addEventListener('change', renderRank));
   $('#rankFlip').onclick = () => { rankDesc = !rankDesc; renderRank(); };
-  $('#modal').onclick = (e) => { if (e.target.id === 'modal') $('#modal').classList.add('hidden'); };
+  $('#modal').onclick = (e) => { if (e.target.id === 'modal') { $('#modal').classList.add('hidden'); sfx.close(); } };
+  $('#q').addEventListener('input', () => sfx.tap());   // 検索の入力中もカチカチ
   const q = new URLSearchParams(location.search);
   if (q.get('prompt')) { ps.value = q.get('prompt'); showTab('rank'); }
   else showTab(location.hash === '#rank' ? 'rank' : 'flags');
