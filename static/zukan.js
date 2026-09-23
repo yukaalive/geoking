@@ -41,7 +41,7 @@ function renderRank() {
   list.forEach((c, i) => {
     const shown = worldRank(c.id, pr.key, desc ? 'max' : 'min').rank;
     const li = el('li');
-    li.innerHTML = `<span class="rk${shown <= 3 ? ' top' : ''}">${shown}</span><img src="${flagUrl(c.id, 80)}" alt="" loading="lazy"><span class="nm">${escapeHtml(c.name)}<small>${escapeHtml(c.name_official)}${pr.key === 'kana_rank' ? '　読み：' + escapeHtml(c.name_kana) : (pr.key === 'name_len' ? '　読み：' + escapeHtml(c.official_kana) : '')}</small></span><span class="val">${fmtValue(c[pr.key], F.fmt)}</span>`;
+    li.innerHTML = `<span class="rk${shown <= 3 ? ' medal' : ''}">${shown}</span><img src="${flagUrl(c.id, 80)}" alt="" loading="lazy"><span class="nm">${escapeHtml(c.name)}<small>${escapeHtml(c.name_official)}${pr.key === 'kana_rank' ? '　読み：' + escapeHtml(c.name_kana) : (pr.key === 'name_len' ? '　読み：' + escapeHtml(c.official_kana) : '')}</small></span><span class="val">${fmtValue(c[pr.key], F.fmt)}</span>`;
     li.onclick = () => { sfx.select(); showCountry(c.id); };
     ol.appendChild(li);
   });

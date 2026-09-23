@@ -325,7 +325,7 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .rank-list li{display:flex;align-items:center;gap:12px;padding:8px 6px;border-bottom:2px dashed var(--line-soft);cursor:pointer}
 .rank-list li:hover{background:var(--card)}
 .rank-list .rk{font-family:var(--font-head);width:44px;text-align:right;font-size:18px}
-.rank-list .rk.top{color:var(--primary)}
+.rank-list .rk.medal{color:var(--primary)}
 .rank-list img{width:56px;height:38px;object-fit:contain;border:1.5px solid var(--ink);border-radius:4px;background:#fff}
 .rank-list .nm{flex:1;font-weight:800}.rank-list .nm small{display:block;font-weight:600;color:var(--muted);font-size:11px}
 .rank-list .val{font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
