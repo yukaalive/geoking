@@ -49,14 +49,13 @@ print('offsets', {k: round(v, 2) for k, v in OFF.items()}, 'total', round(TOTAL,
 EVENTS = [
  ('tap', OFF['s0'] + 2.2), ('enter', OFF['s0'] + 2.45),
  ('joined', OFF['s1'] + 0.1), ('chat', OFF['s1'] + 1.5),
- ('tap', OFF['s2'] + 0.15), ('start', OFF['s2'] + 0.4),
- ('select', OFF['s3'] + 9.0), ('confirm', OFF['s3'] + 10.6), ('reveal', OFF['s3'] + 11.5), ('win', OFF['s3'] + 11.9),
- ('champion', OFF['s5'] + 1.3),
+ ('tap', OFF['s2'] + 1.0), ('start', OFF['s2'] + 1.3),
+ ('select', OFF['s3b'] + 0.7), ('confirm', OFF['s3b'] + 2.2), ('reveal', OFF['s3b'] + 3.2), ('win', OFF['s3b'] + 3.6),
+ ('champion', OFF['s5a'] + 0.3),
  ('tap', OFF['z1'] + 0.1), ('select', OFF['z2'] + 0.2), ('open', OFF['z2'] + 0.35), ('tap', OFF['z4'] + 0.1),
 ]
-# ナレーション: 区間名 -> (音声ファイル, 区間先頭からの秒)
-VOICE = {'intro': ('intro', 0.25), 's0': ('s0', 0.25), 's1': ('s1', 0.25), 's2': ('s2', 0.25),
-         's3': ('s3a', 0.3), 's3b': ('s3b', OFF['s3'] + 12.1 - OFF['s3']), 's5': ('s5', 0.3), 'z1': ('z', 0.3), 'outro': ('outro', 0.25)}
+VOICE = {'intro': ('intro', 0.25), 's0': ('s0', 0.25), 's1': ('s1', 0.25),
+         's3a': ('s3a', 0.3), 's3b': ('s3b', 3.4), 's5a': ('s5', 0.3), 'z1': ('z1', 0.3), 'z4': ('z4', 0.4), 'outro': ('outro', 0.25)}
 N = int(TOTAL * SR)
 sfx = np.zeros(N)
 for name, at in EVENTS: SFX[name](sfx, at)
@@ -70,7 +69,7 @@ def read_wav(path):
         return d
 voice = np.zeros(N)
 for seg, (clip, rel) in VOICE.items():
-    base = OFF[seg] if seg in OFF else OFF['s3']
+    base = OFF[seg]
     v = read_wav(f'voice/{clip}.wav'); st = int((base + rel) * SR); en = min(st + len(v), N); voice[st:en] += v[:en - st]
 voice *= 1.0
 

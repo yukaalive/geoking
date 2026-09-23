@@ -29,28 +29,56 @@ def cfr(src):
         run(['-i', src, '-vf', 'fps=30', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'fast', '-crf', '18', '-an', out])
     return out
 
-# ---- ゲーム画面の区間: (名前, 元動画, 開始, 終了, 見出し, 速度, 下の切り取りpx)
+# ---- ゲーム画面の区間: dict(name, src, s, e, cap, speed, bcrop, hand=[(秒,x,y)...], taps=[秒...])
+# 手カーソル用: 元画面(1206x2622)の座標 → 出力座標。カード中心（ラウンド4の手札の並び）
+def P(xr, yr): return (round(110.5 + xr * 0.7122), round(170 + (yr - 165) * 0.7122))
+VN, HU, LB, SS = P(315, 1546), P(891, 1546), P(315, 2058), P(891, 2058)
+CAP3 = 'お題に合う国旗を勘で1枚！\n答え合わせ'
+CAPZ = '図鑑モード\n197の国旗とお題別ランキング'
 SEGS = [
- ('s0', 'raw.mp4',   6.5,   9.5, '名前を入れて\n部屋を作る', 1.0, 0),
- ('s1', 'raw.mp4',  24.0,  30.0, '友だちが入室！\nチャットが画面を流れる', 1.0, 0),
- ('s2', 'raw.mp4',  55.0,  58.5, 'ひとりならボットを追加\nゲームスタート', 1.0, 0),
- ('s3', 'raw.mp4', 140.5, 158.5, 'お題に合う国旗を勘で1枚！\nめくって答え合わせ', 1.0, 0),
- ('s5', 'raw.mp4', 229.0, 252.0, '7ラウンドで一番勝った人が\n地理王！', 1.7, 0),
- ('z1', 'zukan.mp4', 77.3,  81.0, '図鑑モード\n197の国旗とお題別ランキング', 1.0, 250),
- ('z2', 'zukan.mp4', 91.3,  94.3, '図鑑モード\n197の国旗とお題別ランキング', 1.0, 250),
- ('z3', 'zukan.mp4', 105.0, 109.5, '図鑑モード\n197の国旗とお題別ランキング', 1.0, 250),
- ('z4', 'rank.mp4',  18.5,  24.5, '図鑑モード\n197の国旗とお題別ランキング', 1.2, 250),
+ dict(name='s0', src='raw.mp4', s=6.5, e=9.5, cap='名前を入れて\n部屋を作る'),
+ dict(name='s1', src='raw.mp4', s=24.0, e=30.0, cap='友だちが入室！\nチャットが画面を流れる'),
+ dict(name='s2', src='raw.mp4', s=54.3, e=55.9, cap='ひとりならボットを追加\nゲームスタート'),
+ dict(name='s3a', src='raw.mp4', s=140.5, e=147.0, cap=CAP3,
+      hand=[(0.4, *VN), (1.3, *VN), (2.2, *HU), (3.0, *HU), (3.9, *LB), (4.6, *LB), (5.4, *SS), (6.5, *SS)]),
+ dict(name='s3b', src='raw.mp4', s=148.8, e=158.0, cap=CAP3,
+      hand=[(0.0, *SS), (0.7, *SS), (1.4, SS[0] + 18, SS[1] + 14), (2.1, *SS), (2.7, *SS)], taps=[0.6, 2.1]),
+ dict(name='s5a', src='raw.mp4', s=232.3, e=235.3, cap='7ラウンドで一番勝った人が\n地理王！'),
+ dict(name='s5b', src='raw.mp4', s=250.0, e=255.5, cap='7ラウンドで一番勝った人が\n地理王！', speed=1.5),
+ dict(name='z1', src='zukan.mp4', s=77.3, e=81.0, cap=CAPZ, bcrop=250),
+ dict(name='z2', src='zukan.mp4', s=91.3, e=94.3, cap=CAPZ, bcrop=250),
+ dict(name='z3', src='zukan.mp4', s=105.0, e=109.5, cap=CAPZ, bcrop=250),
+ dict(name='z4', src='rank.mp4', s=18.5, e=24.5, cap=CAPZ, speed=1.2, bcrop=250),
 ]
+def lerp_expr(keys, idx):
+    """キーフレーム [(t,x,y)] を t で線形補間する ffmpeg 式（idx=1:x, 2:y）"""
+    expr = str(keys[-1][idx])
+    for (t0, *a), (t1, *b) in reversed(list(zip(keys, keys[1:]))):
+        expr = f"if(lt(t,{t1}),{a[idx-1]}+({b[idx-1]}-{a[idx-1]})*(t-{t0})/({t1}-{t0}),{expr})"
+    return expr
+HAND_SCALE = 1.6; HAND_TIP = (round(55 * HAND_SCALE), round(6 * HAND_SCALE))   # hand.png を拡大した後の指先の位置
 parts = []
-for name, src, s, e, cap, speed, bcrop in SEGS:
+for g in SEGS:
+    name, src, s, e, cap = g['name'], g['src'], g['s'], g['e'], g['cap']
+    speed, bcrop = g.get('speed', 1.0), g.get('bcrop', 0)
     out = f'seg/{name}.mp4'
     ch = 2622 - 165 - bcrop
     # 端末のステータスバー(上165px)を切り、高さ1750に縮小して中央に置く。上に見出し帯
-    vf = (f"setpts=(PTS-STARTPTS)/{speed},fps=30,crop=1206:{ch}:0:165,scale=-2:{H-BAND},"
-          f"pad={W}:{H}:(ow-iw)/2:{BAND}:color={BG},"
-          f"drawbox=0:0:{W}:{BAND}:color={GREEN}:t=fill,"
-          f"drawtext=fontfile={F_BODY}:textfile={tf('c_'+name, cap)}:fontcolor=white:fontsize=52:line_spacing=10:text_align=C:x=(w-text_w)/2:y=({BAND}-text_h)/2")
-    run(['-ss', str(s), '-t', str(e - s), '-i', cfr(src), '-vf', vf, *ENC, out]); parts.append((name, out))
+    main = (f"[0:v]setpts=(PTS-STARTPTS)/{speed},fps=30,crop=1206:{ch}:0:165,scale=-2:{H-BAND},"
+            f"pad={W}:{H}:(ow-iw)/2:{BAND}:color={BG},"
+            f"drawbox=0:0:{W}:{BAND}:color={GREEN}:t=fill,"
+            f"drawtext=fontfile={F_BODY}:textfile={tf('c_'+name, cap)}:fontcolor=white:fontsize=52:line_spacing=10:text_align=C:x=(w-text_w)/2:y=({BAND}-text_h)/2[m]")
+    inputs = ['-ss', str(s), '-t', str(e - s), '-i', cfr(src)]
+    chain = [main]; last = 'm'
+    if g.get('hand'):
+        keys = g['hand']; inputs += ['-i', 'hand.png']
+        chain.append(f"[1:v]scale=iw*{HAND_SCALE}:-1[hd]")
+        chain.append(f"[{last}][hd]overlay=eval=frame:x='{lerp_expr(keys, 1)}-{HAND_TIP[0]}':y='{lerp_expr(keys, 2)}-{HAND_TIP[1]}':enable='between(t,{keys[0][0]},{keys[-1][0]})'[h]"); last = 'h'
+        for i, tp in enumerate(g.get('taps', [])):
+            inputs += ['-i', 'ring.png']
+            x, y = [k for k in keys if k[0] <= tp][-1][1:]
+            chain.append(f"[{last}][{2 + i}:v]overlay=x={x - 70}:y={y - 70}:enable='between(t,{tp},{tp + 0.3})'[r{i}]"); last = f'r{i}'
+    run([*inputs, '-filter_complex', ';'.join(chain), '-map', f'[{last}]', *ENC, out]); parts.append((name, out))
 
 # ---- タイトルカード
 def card(name, d, lines):
