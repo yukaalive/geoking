@@ -1,10 +1,7 @@
-/* 図鑑: 国旗一覧（検索・地域・覚えたチェック）とランキング閲覧 */
+/* 図鑑: 国旗一覧（検索・地域・並び替え）とランキング閲覧 */
 const REGION_JA = { Africa: 'アフリカ', Americas: 'アメリカ大陸', Asia: 'アジア', Europe: 'ヨーロッパ', Oceania: 'オセアニア', Antarctic: '南極' };
-const LEARN_KEY = 'geoking_learned';
-let learned = new Set(JSON.parse(localStorage.getItem(LEARN_KEY) || '[]'));
 let rankDesc = true;   // ランキングの向き（お題の向きが既定）
 
-function saveLearned() { localStorage.setItem(LEARN_KEY, JSON.stringify([...learned])); }
 function norm(s) { return (s || '').toString().toLowerCase().replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60)); }  // カタカナ→ひらがな
 
 // ---------- 国旗一覧
@@ -12,21 +9,16 @@ function renderFlags() {
   const q = norm($('#q').value.trim());
   const region = $('#region').value;
   const sort = $('#sort').value;
-  const only = $('#onlyUnlearned').checked;
   let list = Object.values(META.countries);
   if (region) list = list.filter(c => c.region === region);
-  if (only) list = list.filter(c => !learned.has(c.id));
   if (q) list = list.filter(c => [c.name, c.name_official, c.name_kana, c.official_kana, c.name_en, c.capital].some(x => norm(x).includes(q)));
   if (sort === 'kana') list.sort((a, b) => a.kana_rank - b.kana_rank);
   else list.sort((a, b) => (b[sort] || 0) - (a[sort] || 0));
-  $('#flagCount').textContent = `${list.length} か国（覚えた: ${learned.size} / ${Object.keys(META.countries).length}）`;
+  $('#flagCount').textContent = `${list.length} か国`;
   const grid = $('#flagGrid'); grid.innerHTML = '';
   for (const c of list) {
-    const card = el('div', 'zcard' + (learned.has(c.id) ? ' learned' : ''));
+    const card = el('div', 'zcard');
     card.innerHTML = `<img src="${flagUrl(c.id, 160)}" alt="" loading="lazy"><div class="nm">${escapeHtml(c.name)}</div>`;
-    const b = el('button', 'learn', ico('check', 'sm')); b.title = '覚えたらチェック';
-    b.onclick = (e) => { e.stopPropagation(); if (learned.has(c.id)) learned.delete(c.id); else learned.add(c.id); saveLearned(); renderFlags(); };
-    card.appendChild(b);
     card.onclick = () => showCountry(c.id);
     grid.appendChild(card);
   }
@@ -49,7 +41,7 @@ function renderRank() {
   list.forEach((c, i) => {
     const wr = worldRank(c.id, pr.key);
     const shown = desc ? wr.rank : (wr.total - wr.rank + 1);
-    const li = el('li', learned.has(c.id) ? 'learned' : '');
+    const li = el('li');
     li.innerHTML = `<span class="rk${shown <= 3 ? ' top' : ''}">${shown}</span><img src="${flagUrl(c.id, 80)}" alt="" loading="lazy"><span class="nm">${escapeHtml(c.name)}<small>${escapeHtml(c.name_official)}${pr.key === 'kana_rank' ? '　読み：' + escapeHtml(c.name_kana) : (pr.key === 'name_len' ? '　読み：' + escapeHtml(c.official_kana) : '')}</small></span><span class="val">${fmtValue(c[pr.key], F.fmt)}</span>`;
     li.onclick = () => showCountry(c.id);
     ol.appendChild(li);
@@ -79,7 +71,7 @@ function renderRank() {
     if (which === 'rank') renderRank(); else renderFlags();
   };
   $('#tabFlags').onclick = () => showTab('flags'); $('#tabRank').onclick = () => showTab('rank');
-  ['#q', '#region', '#sort', '#onlyUnlearned'].forEach(s => $(s).addEventListener('input', renderFlags));
+  ['#q', '#region', '#sort'].forEach(s => $(s).addEventListener('input', renderFlags));
   ['#promptSel', '#rankRegion'].forEach(s => $(s).addEventListener('change', renderRank));
   $('#rankFlip').onclick = () => { rankDesc = !rankDesc; renderRank(); };
   $('#modal').onclick = (e) => { if (e.target.id === 'modal') $('#modal').classList.add('hidden'); };
