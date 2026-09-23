@@ -385,6 +385,13 @@ function renderOthersHands() {
   }
 }
 
+// お題の向き（「小さい順」「多い順」など）を世界順位の説明に使う
+function rankOrderLabel(prompt) {
+  const m = prompt.text.match(/(大きい|小さい|多い|少ない|高い|低い|長い|短い|早い|遅い|広い|近い)/);
+  if (m) return m[1] + '順';
+  if (/北/.test(prompt.text)) return '北から'; if (/南/.test(prompt.text)) return '南から'; if (/東/.test(prompt.text)) return '東から'; if (/西/.test(prompt.text)) return '西から';
+  return prompt.dir === 'max' ? '大きい順' : '小さい順';
+}
 function renderReveal() {
   const r = state.reveal, F = META.fields[r.prompt.key];
   const box = $('#revealRows'); box.innerHTML = '';
@@ -392,7 +399,7 @@ function renderReveal() {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
     d.style.animationDelay = (i * 0.25) + 's';
-    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>読み：${c.official_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : ''))}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.missing ? '（データなし＝0として比較）' : ''}</div>${row.world_rank ? `<div class="wrank">世界 <b>${row.world_rank}</b> 位 <span>／ ${row.world_total}か国中</span></div>` : ''}`;
+    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>読み：${c.official_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : ''))}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.missing ? '（データなし＝0として比較）' : ''}</div>${row.world_rank ? `<div class="wrank">世界 <b>${row.world_rank}</b> 位 <span>／ ${row.world_total}か国・${rankOrderLabel(r.prompt)}</span></div>` : ''}`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
   });
@@ -430,7 +437,7 @@ function renderHistory() {
     for (const r of h.rows) {
       const c = META.countries[r.card];
       const card = el('div', 'hcard' + (r.winner ? ' win' : ''));
-      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? ico('crown', 'sm') + ' ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who">世界 ${r.world_rank} 位／${r.world_total}か国</div>` : ''}<div class="who">${escapeHtml(r.name)}</div>`;
+      card.innerHTML = `<img src="${flagUrl(r.card, 160)}" alt=""><div>${r.winner ? ico('crown', 'sm') + ' ' : ''}${c.name_official}</div><div class="val">${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who">世界 ${r.world_rank} 位／${r.world_total}か国・${rankOrderLabel(h.prompt)}</div>` : ''}<div class="who">${escapeHtml(r.name)}</div>`;
       card.style.cursor = 'pointer'; card.onclick = () => showCountry(r.card);
       cards.appendChild(card);
     }
