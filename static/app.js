@@ -2,6 +2,7 @@
 // サーバーの基点。ブラウザ版は同じサーバー（空文字）。アプリ版は index.html で window.GEOKING_SERVER に本番URLを入れる
 
 // 効果音・振動は sfx.js（図鑑と共用）
+trackVisit('game');   // 利用ログ（開始・5分ごと・離脱）
 
 
 let ws = null, state = null, pendingAction = null;

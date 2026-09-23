@@ -50,6 +50,7 @@ function renderRank() {
 
 // ---------- 起動
 (async function init() {
+  trackVisit('zukan');   // 利用ログ（開始・5分ごと・離脱）
   META = await (await fetch(API + '/api/meta')).json();
   // 地域の選択肢
   for (const sel of [$('#region'), $('#rankRegion')]) {

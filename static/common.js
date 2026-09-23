@@ -95,3 +95,24 @@ function showCountry(id) {
   loadWorld().then(() => { const box = $('#modalBody .mmap'); if (box) box.innerHTML = `<div class="muted small" style="margin-bottom:4px">世界の中の位置</div>` + worldMapSvg(id) + `<div class="muted small" style="margin:10px 0 4px">周辺を拡大</div>` + worldMapSvg(id, true) + `<div class="muted small" style="margin-top:6px">${c.lat >= 0 ? '北緯' : '南緯'} ${Math.abs(c.lat).toFixed(1)}°　${c.lng >= 0 ? '東経' : '西経'} ${Math.abs(c.lng).toFixed(1)}°</div>`; });
 }
 if ($('#modalClose')) $('#modalClose').onclick = () => { $('#modal').classList.add('hidden'); if (typeof sfx !== 'undefined') sfx.close(); };
+
+// ---------- 利用ログ（ざっくり）: 開いた時・5分ごと・離れた時に、画面の種類とニックネーム・滞在秒数をサーバーへ送る
+function trackVisit(mode) {
+  const id = Math.random().toString(36).slice(2, 10), t0 = Date.now();
+  const post = (event) => {
+    const body = JSON.stringify({ id, mode, event, name: localStorage.getItem('geoking_name') || '', sec: Math.round((Date.now() - t0) / 1000) });
+    try {
+      if (event === 'leave' && navigator.sendBeacon) navigator.sendBeacon(API + '/api/visit', new Blob([body], { type: 'application/json' }));
+      else fetch(API + '/api/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
+    } catch {}
+  };
+  post('start');
+  setInterval(() => { if (document.visibilityState !== 'hidden') post('ping'); }, 5 * 60 * 1000);
+  let hidden = false;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { if (!hidden) { hidden = true; post('leave'); } }
+    else hidden = false;
+  });
+  window.addEventListener('pagehide', () => { if (!hidden) { hidden = true; post('leave'); } });
+  window.addEventListener('beforeunload', () => { if (!hidden) { hidden = true; post('leave'); } });
+}

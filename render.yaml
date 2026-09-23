@@ -6,3 +6,6 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python3 server.py
     healthCheckPath: /healthz
+    envVars:
+      - key: ADMIN_KEY        # 利用ログ一覧 /admin/visits?key=… を開くための合言葉。Render の Environment で値を設定
+        sync: false

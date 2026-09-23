@@ -3,6 +3,9 @@
     python3 server.py  →  http://localhost:8080
 """
 import asyncio, json, logging, os, random, secrets, string, time, uuid
+import hmac
+import html
+from datetime import datetime, timezone, timedelta
 from aiohttp import web, WSMsgType
 from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS
 from moderation import check_name, check_chat
@@ -656,6 +659,63 @@ async def healthz(request):
     return web.json_response({'ok': True, 'rooms': len(rooms)})
 
 
+# 利用ログ（ざっくり）: 対戦画面・図鑑を「誰が」「何分」見たかを運用ログに残す。
+# クライアントが開いた時・5分ごと・離れた時に POST してくる。保存はせずログ出力のみ
+VISIT_MODES = {'game': '対戦', 'zukan': '図鑑'}
+async def api_visit(request):
+    try:
+        data = await request.json()
+    except Exception:
+        return web.json_response({'ok': False}, status=400)
+    if not isinstance(data, dict):
+        return web.json_response({'ok': False}, status=400)
+    mode = VISIT_MODES.get(str(data.get('mode') or ''), None)
+    event = str(data.get('event') or '')
+    if not mode or event not in ('start', 'ping', 'leave'):
+        return web.json_response({'ok': False}, status=400)
+    name = ''.join(ch for ch in str(data.get('name') or '') if ch.isprintable()).strip()[:20] or '(名前なし)'
+    vid = ''.join(ch for ch in str(data.get('id') or '') if ch.isalnum())[:12]
+    sec = to_int(data.get('sec'), 0, 24 * 3600, 0)
+    label = {'start': '開始', 'ping': '滞在中', 'leave': '離脱'}[event]
+    log.info('visit %s %s name=%s 滞在=%d分%02d秒 id=%s', mode, label, name, sec // 60, sec % 60, vid)
+    # 管理者ページ用にメモリにも残す（サーバー再起動で消える。長期の記録は Render のログ）
+    v = VISITS.get(vid)
+    if v is None:
+        if len(VISITS) >= 3000:
+            del VISITS[next(iter(VISITS))]
+        v = VISITS[vid] = {'mode': mode, 'name': name, 'start': time.time(), 'sec': 0, 'state': '開始'}
+    if name != '(名前なし)':
+        v['name'] = name
+    v['sec'] = max(v['sec'], sec)
+    v['state'] = '離脱' if event == 'leave' else '滞在中'
+    return web.json_response({'ok': True})
+
+
+VISITS = {}   # 訪問id -> {mode, name, start, sec, state}
+ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
+
+
+async def admin_visits(request):
+    """管理者用の利用一覧。環境変数 ADMIN_KEY を設定し、/admin/visits?key=そのキー で開く。"""
+    key = request.query.get('key', '')
+    if not ADMIN_KEY or not hmac.compare_digest(key, ADMIN_KEY):
+        return web.Response(status=403, text='forbidden')
+    rows = sorted(VISITS.values(), key=lambda v: v['start'], reverse=True)
+    jst = timezone(timedelta(hours=9))
+    total_game = sum(v['sec'] for v in rows if v['mode'] == '対戦'); total_zukan = sum(v['sec'] for v in rows if v['mode'] == '図鑑')
+    names = len({v['name'] for v in rows})
+    def fmt(sec): return f"{sec // 60}分{sec % 60:02d}秒"
+    body = ''.join(
+        f"<tr><td>{datetime.fromtimestamp(v['start'], jst).strftime('%m/%d %H:%M')}</td><td>{v['mode']}</td><td>{html.escape(v['name'])}</td><td>{fmt(v['sec'])}</td><td>{v['state']}</td></tr>"
+        for v in rows)
+    page = f"""<!DOCTYPE html><html lang=ja><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content=noindex><title>利用ログ - 地理王</title>
+<style>body{{font-family:system-ui,sans-serif;margin:16px;background:#f7f1df;color:#1c2b22}}table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{border-bottom:1px solid #ccc;padding:6px 8px;text-align:left;white-space:nowrap}}th{{background:#1f6f4a;color:#fff}}p{{font-size:14px}}</style></head>
+<body><h1>利用ログ（直近・サーバー起動後）</h1>
+<p>訪問 {len(rows)} 件／名前 {names} 種類／対戦 合計 {fmt(total_game)}／図鑑 合計 {fmt(total_zukan)}。サーバーが再起動（無料プランのスリープ）すると消えます。長期の記録は Render のログ（visit で検索）を参照。</p>
+<table><tr><th>開始（日本時間）</th><th>画面</th><th>名前</th><th>滞在</th><th>状態</th></tr>{body}</table></body></html>"""
+    return web.Response(text=page, content_type='text/html', headers={'Cache-Control': 'no-store'})
+
+
 @web.middleware
 async def security_headers(request, handler):
     if request.method == 'OPTIONS' and request.path.startswith('/api/'):
@@ -690,6 +750,8 @@ def make_app():
     app.router.add_get('/manifest.json', manifest)
     app.router.add_get('/sw.js', service_worker)
     app.router.add_get('/api/meta', api_meta)
+    app.router.add_post('/api/visit', api_visit)
+    app.router.add_get('/admin/visits', admin_visits)
     app.router.add_get('/api/rooms', api_rooms)
     app.router.add_get('/api/room/{code}', api_room)
     app.router.add_get('/ws', ws_handler)
