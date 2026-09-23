@@ -27,4 +27,5 @@ Web側を更新したら `npm run sync` を実行して再ビルドします。�
 - iOS 27 は UIScene ライフサイクルが必須。`AppDelegate.swift` 内に `SceneDelegate` を追加し、`Info.plist` に `UIApplicationSceneManifest` を設定済み。デプロイターゲットは 15.0
 - シミュレーター向けビルド例:
   `xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -destination 'id=<UDID>' CODE_SIGNING_ALLOWED=NO build`
+- Android リリース AAB: `cd android && JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`。Play は targetSdk 36 以上が必須（variables.gradle）。アップロードごとに app/build.gradle の versionCode を +1
 - Android デバッグビルド: `cd android && ./gradlew assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk`
