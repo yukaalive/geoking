@@ -3,10 +3,28 @@
   "appName": "地理王",
   "webDir": "www",
   "backgroundColor": "#f7f1df",
-  "ios": { "contentInset": "never", "scheme": "地理王" },
-  "android": { "allowMixedContent": false },
+  "ios": {
+    "contentInset": "never",
+    "scheme": "地理王"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 800, "backgroundColor": "#f7f1df", "showSpinner": false },
-    "StatusBar": { "style": "LIGHT", "backgroundColor": "#fffdf6" }
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 4000,
+      "backgroundColor": "#f7f1df",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#fffdf6"
+    }
+  },
+  "server": {
+    "url": "https://geoking-vlgh.onrender.com/static/index.html",
+    "cleartext": false,
+    "errorPath": "offline.html"
   }
 }

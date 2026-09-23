@@ -5,8 +5,9 @@
 (async () => {
   const Cap = window.Capacitor;
   if (!Cap || !Cap.isNativePlatform || !Cap.isNativePlatform()) return;
-  const { Haptics, Share, App, StatusBar } = Cap.Plugins;
+  const { Haptics, Share, App, StatusBar, SplashScreen } = Cap.Plugins;
   document.body.classList.add('native');
+  if (SplashScreen) SplashScreen.hide({ fadeOutDuration: 250 }).catch(() => {});   // 本番ページが表示できた時点でスプラッシュを消す
   if (Haptics) {
     navigator.vibrate = (pattern) => {   // 既存の sfx.vibrate がそのまま使える
       const total = Array.isArray(pattern) ? pattern.reduce((a, b) => a + b, 0) : pattern;
@@ -17,7 +18,7 @@
   }
   if (Share) {
     const btn = document.getElementById('copyLink');
-    if (btn) btn.onclick = () => Share.share({ title: '地理王で対戦しよう', text: `部屋コード ${state ? state.room : ''}`, url: `${window.GEOKING_SERVER}/static/index.html?room=${state ? state.room : ''}` }).catch(() => {});
+    if (btn) btn.onclick = () => Share.share({ title: '地理王で対戦しよう', text: `部屋コード ${state ? state.room : ''}`, url: `${window.GEOKING_SERVER || location.origin}/static/index.html?room=${state ? state.room : ''}` }).catch(() => {});
   }
   if (App) App.addListener('backButton', () => { if (!state) App.exitApp(); });
   if (StatusBar) StatusBar.setStyle({ style: 'LIGHT' }).catch(() => {});
