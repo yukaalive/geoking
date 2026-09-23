@@ -209,11 +209,13 @@ class Room:
         return f"{host.name}の部屋" if host else '部屋'
 
     def reset_to_lobby(self):
-        if self.reveal_task:
-            self.reveal_task.cancel()
-        self.phase, self.round, self.reveal, self.next_at = 'lobby', 0, None, None
+        for task in (self.reveal_task, self.timer_task):
+            if task:
+                task.cancel()
+        self.phase, self.round, self.reveal, self.next_at, self.deadline = 'lobby', 0, None, None, None
+        self.history, self.prompts = [], []
         for p in self.players.values():
-            p.hand, p.pick, p.score, p.won = [], None, 0, []
+            p.hand, p.pick, p.selecting, p.score, p.won, p.spectator = [], None, None, 0, [], False
         self.history = []
 
     def remove_player(self, pid):
@@ -564,7 +566,11 @@ async def ws_handler(request):
         if t == 'to_lobby':
             if not is_host:
                 return
+            was_playing = room.phase in ('pick', 'reveal')
             room.reset_to_lobby()
+            if was_playing:
+                room.chat.append({'name': 'システム', 'text': 'ホストがゲームを中断してロビーに戻りました', 'ts': time.time()})
+                log.info('room %s host returned to lobby mid-game', room.code)
             return await broadcast(room)
 
     async for msg in ws:

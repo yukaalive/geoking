@@ -206,6 +206,7 @@ function renderPrefs() {
 }
 $('#soundBtn').onclick = () => { sfx.toggle('sound'); renderPrefs(); toast(sfx.prefs.sound ? '効果音: オン' : '効果音: オフ'); };
 $('#vibeBtn').onclick = () => { sfx.toggle('vibe'); renderPrefs(); toast(sfx.prefs.vibe ? '振動: オン' : '振動: オフ'); };
+$('#lobbyBtn').onclick = () => { if (confirm('ゲームを中断してロビーに戻りますか？\n（得点はリセットされ、設定を変えて再開できます）')) send({ type: 'to_lobby' }); };
 $('#leaveBtn').onclick = () => { if (confirm('この部屋から退出しますか？')) send({ type: 'leave' }); };
 function leaveToHome(message) {
   stopTimer(); prevKey = ''; prevChatLen = 0; prevRoom = null; prevPlayers = null;
@@ -261,6 +262,7 @@ function render() {
   const isHost = state.host === pid;
   document.body.classList.toggle('host', isHost); document.body.classList.toggle('guest', !isHost);
   $('#roomInfo').classList.remove('hidden'); $('#roomCode').textContent = state.room; $('#roomTitle').textContent = state.title || '';
+  $('#lobbyBtn').classList.toggle('hidden', !(isHost && (state.phase === 'pick' || state.phase === 'reveal')));
 
   if (state.phase === 'lobby') { renderLobby(); show('lobby'); }
   else if (state.phase === 'pick' || state.phase === 'reveal') { renderGame(); show('game'); }

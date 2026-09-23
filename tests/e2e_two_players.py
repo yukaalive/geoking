@@ -141,6 +141,19 @@ async def main():
         await a.send_json({'type': 'start'})
         st = await recv_state(a, lambda d: d['phase'] == 'pick' and d['round'] == 1)
         assert all(p['score'] == 0 for p in st['players'])
-        print('OK: full flow, title, late join, leave, token auth, impersonation blocked, reconnect, rematch')
+        # ゲーム中にホストがロビーへ戻る（非ホストは無効）
+        await b2.send_json({'type': 'to_lobby'})
+        try:
+            await recv_state(b2, lambda d: d['phase'] == 'lobby', timeout=1); raise SystemExit('non-host returned to lobby!')
+        except asyncio.TimeoutError: pass
+        await a.send_json({'type': 'to_lobby'})
+        st = await recv_state(a, lambda d: d['phase'] == 'lobby')
+        assert st['round'] == 0 and st['hand'] == [] and all(p['score'] == 0 and p['hand_count'] == 0 for p in st['players'])
+        assert any('中断' in c['text'] for c in st['chat'])
+        await a.send_json({'type': 'settings', 'settings': {'title': '設定し直した部屋'}})
+        st = await recv_state(a, lambda d: d['title'] == '設定し直した部屋')
+        await a.send_json({'type': 'start'})
+        await recv_state(a, lambda d: d['phase'] == 'pick' and d['round'] == 1)
+        print('OK: full flow, title, late join, leave, token auth, impersonation blocked, reconnect, rematch, back-to-lobby')
 
 asyncio.run(main())

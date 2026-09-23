@@ -19,7 +19,7 @@
 <body>
 <header class="top">
   <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span>GeoKing</span></div>
-  <div id="roomInfo" class="roominfo hidden"><span id="roomTitle" class="roomtitle"></span> <span class="muted small">コード</span> <b id="roomCode"></b> <button id="copyLink" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#copy"/></svg> 招待リンクをコピー</button> <button id="leaveBtn" class="mini danger"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#door"/></svg> 退出</button></div>
+  <div id="roomInfo" class="roominfo hidden"><span id="roomTitle" class="roomtitle"></span> <span class="muted small">コード</span> <b id="roomCode"></b> <button id="copyLink" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#copy"/></svg> 招待リンクをコピー</button> <button id="lobbyBtn" class="mini hostonly hidden"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#refresh"/></svg> ロビーへ</button> <button id="leaveBtn" class="mini danger"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#door"/></svg> 退出</button></div>
   <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音"></button><button id="vibeBtn" class="mini pref" title="振動"></button></div>
 </header>
 
@@ -66,7 +66,7 @@
         <div class="row hostonly">
           <button id="addBotBtn"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#bot"/></svg> ボットを追加</button>
         </div>
-        <p class="muted small">部屋コード <b id="lobbyCode"></b> を友だちに伝えるか、招待リンクを共有してください。ゲームが始まったあとでも途中参加できます。</p>
+        <p class="muted small">部屋コード <b id="lobbyCode"></b> を友だちに伝えるか、招待リンクを共有してください。ゲームが始まったあとでも途中参加できます。ゲーム中でもホストは右上の「ロビーへ」で中断して設定を変えられます。</p>
       </div>
       <div class="card">
         <h2>部屋の設定 <span class="muted small guestonly">（ホストのみ変更できます）</span></h2>
