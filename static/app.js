@@ -83,6 +83,8 @@ function fmtValue(v, fmt) {
     case 'usd': return n >= 1e12 ? (n / 1e12).toFixed(2) + '兆ドル' : n >= 1e8 ? (n / 1e8).toFixed(0) + '億ドル' : (n / 1e6).toFixed(0) + '百万ドル';
     case 'usd_small': return n.toLocaleString('ja-JP', { maximumFractionDigits: 0 }) + ' ドル';
     case 'chars': return n + ' 文字';
+    case 'density': return n.toLocaleString('ja-JP', { maximumFractionDigits: 1 }) + ' 人/km²';
+    case 'kana_rank': return `五十音順 ${n} 番目`;
     case 'lat': return (n >= 0 ? '北緯 ' : '南緯 ') + Math.abs(n).toFixed(1) + '°';
     case 'lng': return (n >= 0 ? '東経 ' : '西経 ') + Math.abs(n).toFixed(1) + '°';
     case 'deg': return n.toFixed(1) + '°';
@@ -108,7 +110,7 @@ function showCountry(id) {
   const c = META.countries[id]; if (!c) return;
   const F = META.fields;
   const groups = [
-    ['基本', ['area', 'population', 'gdp', 'gdp_pc', 'name_len', 'lat', 'lng', 'borders', 'languages', 'military']],
+    ['基本', ['area', 'population', 'density', 'gdp', 'gdp_pc', 'eez', 'name_len', 'kana_rank', 'lat', 'lng', 'borders', 'languages', 'military']],
     ['気候・自然', ['temp', 'precip', 'forest_pct', 'agri_pct', 'co2_pc']],
     ['宗教', ['rel_chr', 'rel_mus', 'rel_bud', 'rel_hin', 'rel_non', 'rel_folk', 'rel_jew', 'rel_div']],
     ['社会・暮らし', ['life_exp', 'age65_pct', 'fertility', 'urban_pct', 'internet_pct', 'tourists', 'physicians', 'elec_pct']],
@@ -390,7 +392,7 @@ function renderReveal() {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
     d.style.animationDelay = (i * 0.25) + 's';
-    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${c.name_official !== c.name ? `<small>${c.name}</small>` : ''}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.value == null ? '（データなし＝敗北）' : ''}</div>`;
+    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? row.rank + '位' : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(row.name)}${row.pid === pid ? '（あなた）' : ''}</div><div class="country">${c.name_official}${r.prompt.key === 'kana_rank' ? `<small>読み：${c.name_kana}</small>` : (c.name_official !== c.name ? `<small>${c.name}</small>` : '')}</div><div class="val">${fmtValue(row.value, F.fmt)}</div><div class="rank">${F.label}${row.value == null ? '（データなし＝敗北）' : ''}</div>`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
   });

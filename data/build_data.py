@@ -41,6 +41,27 @@ NAME_COMMON_OVERRIDES = {
     'AE': 'アラブ首長国連邦',
 }
 
+# 排他的経済水域 (km²)。Wikipedia "Exclusive economic zone" の主権国合計（内陸国は 0）。raw/eez_by_cca2.json
+EEZ_OVERRIDES = {'NU': 316584}   # ニウエ（表に無いため概算）
+
+# 五十音順用の読み（カタカナ以外を含む国名）
+KANA_OVERRIDES = {
+    'AE': 'あらぶしゅちょうこくれんぽう', 'CD': 'こんごみんしゅきょうわこく', 'CF': 'ちゅうおうあふりか', 'CG': 'こんごきょうわこく',
+    'CK': 'くっくしょとう', 'CN': 'ちゅうごく', 'DM': 'どみにかこく', 'DO': 'どみにかきょうわこく', 'GQ': 'せきどうぎにあ',
+    'JP': 'にほん', 'KN': 'せんときっつ・ねーヴぃすれんぽう', 'KP': 'きたちょうせん', 'KR': 'かんこく', 'MH': 'まーしゃるしょとう',
+    'MK': 'きたまけどにあ', 'SB': 'そろもんしょとう', 'SS': 'みなみすーだん', 'TL': 'ひがしてぃもーる', 'ZA': 'みなみあふりか',
+}
+
+def to_hira(text):
+    """カタカナ→ひらがな（五十音順の比較用。長音・中黒は除く）"""
+    out = ''
+    for ch in text:
+        o = ord(ch)
+        if 0x30A1 <= o <= 0x30F6: out += chr(o - 0x60)
+        elif ch in 'ー・': continue
+        else: out += ch
+    return out.replace('ヴ', 'ゔ').replace('ゔ', 'う')
+
 def load(name):
     with open(os.path.join(RAW, name), encoding='utf-8') as f:
         return json.load(f)
@@ -105,11 +126,20 @@ def main():
         rec['rel_div'] = round(100 - max(v for k, v in rec.items() if k.startswith('rel_')), 1)
         out.append(rec)
 
+    # ---- 追加指標: EEZ・人口密度・五十音順
+    eez = load('eez_by_cca2.json') if os.path.exists(os.path.join(RAW, 'eez_by_cca2.json')) else {}
+    for r in out:
+        code = r['id'].upper()
+        r['eez'] = 0 if r['landlocked'] else EEZ_OVERRIDES.get(code, eez.get(r['id']))
+        r['density'] = round(r['population'] / r['area'], 1) if r.get('population') and r.get('area') else None
+        r['name_kana'] = KANA_OVERRIDES.get(code, to_hira(r['name']))
+    for rank, r in enumerate(sorted(out, key=lambda x: x['name_kana']), 1):
+        r['kana_rank'] = rank
     out.sort(key=lambda r: r['id'])
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, indent=0)
     print('countries:', len(out))
-    missing = {k: [r['id'] for r in out if r.get(k) is None] for k in list(WB_INDICATORS.values()) + ['temp']}
+    missing = {k: [r['id'] for r in out if r.get(k) is None] for k in list(WB_INDICATORS.values()) + ['temp', 'eez', 'density']}
     for k, v in missing.items():
         if v: print(f'  missing {k} ({len(v)}): {" ".join(v)}')
     norel = [r['id'] for r in out if r['id'].upper() not in RELIGION]

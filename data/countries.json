@@ -58,7 +58,11 @@
 "physicians": "2023"
 },
 "abs_lat": 42.5,
-"rel_div": 11
+"rel_div": 11,
+"eez": 0,
+"density": 177.1,
+"name_kana": "あんどら",
+"kana_rank": 13
 },
 {
 "id": "ae",
@@ -122,7 +126,11 @@
 "physicians": "2023"
 },
 "abs_lat": 24,
-"rel_div": 23
+"rel_div": 23,
+"eez": 57847.0,
+"density": 137.7,
+"name_kana": "あらぶしゅちょうこくれんぽう",
+"kana_rank": 6
 },
 {
 "id": "af",
@@ -185,7 +193,11 @@
 "physicians": "2023"
 },
 "abs_lat": 33,
-"rel_div": 0.3
+"rel_div": 0.3,
+"eez": 0,
+"density": 67.2,
+"name_kana": "あふがにすたん",
+"kana_rank": 4
 },
 {
 "id": "ag",
@@ -248,7 +260,11 @@
 "physicians": "2017"
 },
 "abs_lat": 17.05,
-"rel_div": 7
+"rel_div": 7,
+"eez": 111568.0,
+"density": 213.1,
+"name_kana": "あんてぃぐあばぶだ",
+"kana_rank": 12
 },
 {
 "id": "al",
@@ -312,7 +328,11 @@
 "physicians": "2020"
 },
 "abs_lat": 41,
-"rel_div": 41
+"rel_div": 41,
+"eez": 0.0,
+"density": 81.7,
+"name_kana": "あるばにあ",
+"kana_rank": 9
 },
 {
 "id": "am",
@@ -376,7 +396,11 @@
 "physicians": "2022"
 },
 "abs_lat": 40,
-"rel_div": 2
+"rel_div": 2,
+"eez": 0,
+"density": 103.8,
+"name_kana": "あるめにあ",
+"kana_rank": 10
 },
 {
 "id": "ao",
@@ -440,7 +464,11 @@
 "physicians": "2022"
 },
 "abs_lat": 12.5,
-"rel_div": 10
+"rel_div": 10,
+"eez": 495866.0,
+"density": 31.3,
+"name_kana": "あんごら",
+"kana_rank": 11
 },
 {
 "id": "ar",
@@ -504,7 +532,11 @@
 "physicians": "2023"
 },
 "abs_lat": 34,
-"rel_div": 15
+"rel_div": 15,
+"eez": 1075192.0,
+"density": 16.5,
+"name_kana": "あるぜんちん",
+"kana_rank": 8
 },
 {
 "id": "at",
@@ -568,7 +600,11 @@
 "physicians": "2023"
 },
 "abs_lat": 47.33333333,
-"rel_div": 32
+"rel_div": 32,
+"eez": 0,
+"density": 109.8,
+"name_kana": "おすとりあ",
+"kana_rank": 34
 },
 {
 "id": "au",
@@ -632,7 +668,11 @@
 "physicians": "2022"
 },
 "abs_lat": 27,
-"rel_div": 53
+"rel_div": 53,
+"eez": 8993463.0,
+"density": 3.6,
+"name_kana": "おすとらりあ",
+"kana_rank": 33
 },
 {
 "id": "az",
@@ -696,7 +736,11 @@
 "physicians": "2022"
 },
 "abs_lat": 40.5,
-"rel_div": 3
+"rel_div": 3,
+"eez": 0,
+"density": 118.3,
+"name_kana": "あぜるばいじゃん",
+"kana_rank": 3
 },
 {
 "id": "ba",
@@ -760,7 +804,11 @@
 "physicians": "2019"
 },
 "abs_lat": 44,
-"rel_div": 49
+"rel_div": 49,
+"eez": 13.0,
+"density": 61.3,
+"name_kana": "ぼすにあへるつぇごびな",
+"kana_rank": 160
 },
 {
 "id": "bb",
@@ -823,7 +871,11 @@
 "physicians": "2022"
 },
 "abs_lat": 13.16666666,
-"rel_div": 5
+"rel_div": 5,
+"eez": 185074.0,
+"density": 657.3,
+"name_kana": "ばるばどす",
+"kana_rank": 133
 },
 {
 "id": "bd",
@@ -887,7 +939,11 @@
 "physicians": "2023"
 },
 "abs_lat": 24,
-"rel_div": 9
+"rel_div": 9,
+"eez": 112166.0,
+"density": 1190.5,
+"name_kana": "ばんぐらでしゅ",
+"kana_rank": 135
 },
 {
 "id": "be",
@@ -951,7 +1007,11 @@
 "physicians": "2022"
 },
 "abs_lat": 50.83333333,
-"rel_div": 40
+"rel_div": 40,
+"eez": 3531.0,
+"density": 391.2,
+"name_kana": "べるぎ",
+"kana_rank": 157
 },
 {
 "id": "bf",
@@ -1015,7 +1075,11 @@
 "physicians": "2022"
 },
 "abs_lat": 13,
-"rel_div": 38
+"rel_div": 38,
+"eez": 0,
+"density": 88.2,
+"name_kana": "ぶるきなふぁそ",
+"kana_rank": 149
 },
 {
 "id": "bg",
@@ -1079,7 +1143,11 @@
 "physicians": "2022"
 },
 "abs_lat": 43,
-"rel_div": 18
+"rel_div": 18,
+"eez": 34745.0,
+"density": 58.0,
+"name_kana": "ぶるがりあ",
+"kana_rank": 148
 },
 {
 "id": "bh",
@@ -1143,7 +1211,11 @@
 "physicians": "2020"
 },
 "abs_lat": 26,
-"rel_div": 30
+"rel_div": 30,
+"eez": 7516.0,
+"density": 2092.0,
+"name_kana": "ばれん",
+"kana_rank": 134
 },
 {
 "id": "bi",
@@ -1207,7 +1279,11 @@
 "physicians": "2022"
 },
 "abs_lat": 3.5,
-"rel_div": 9
+"rel_div": 9,
+"eez": 0,
+"density": 517.0,
+"name_kana": "ぶるんじ",
+"kana_rank": 151
 },
 {
 "id": "bj",
@@ -1271,7 +1347,11 @@
 "physicians": "2023"
 },
 "abs_lat": 9.5,
-"rel_div": 47
+"rel_div": 47,
+"eez": 35493.0,
+"density": 131.5,
+"name_kana": "べなん",
+"kana_rank": 153
 },
 {
 "id": "bn",
@@ -1335,7 +1415,11 @@
 "physicians": "2021"
 },
 "abs_lat": 4.5,
-"rel_div": 18
+"rel_div": 18,
+"eez": 43038.0,
+"density": 80.9,
+"name_kana": "ぶるねい",
+"kana_rank": 150
 },
 {
 "id": "bo",
@@ -1399,7 +1483,11 @@
 "physicians": "2021"
 },
 "abs_lat": 17,
-"rel_div": 6
+"rel_div": 6,
+"eez": 0,
+"density": 11.5,
+"name_kana": "ぼりびあ",
+"kana_rank": 162
 },
 {
 "id": "br",
@@ -1463,7 +1551,11 @@
 "physicians": "2023"
 },
 "abs_lat": 10,
-"rel_div": 12
+"rel_div": 12,
+"eez": 3677664.0,
+"density": 25.0,
+"name_kana": "ぶらじる",
+"kana_rank": 147
 },
 {
 "id": "bs",
@@ -1526,7 +1618,11 @@
 "physicians": "2017"
 },
 "abs_lat": 24.25,
-"rel_div": 4
+"rel_div": 4,
+"eez": 619785.0,
+"density": 28.9,
+"name_kana": "ばはま",
+"kana_rank": 132
 },
 {
 "id": "bt",
@@ -1589,7 +1685,11 @@
 "physicians": "2022"
 },
 "abs_lat": 27.5,
-"rel_div": 25
+"rel_div": 25,
+"eez": 0,
+"density": 20.8,
+"name_kana": "ぶたん",
+"kana_rank": 146
 },
 {
 "id": "bw",
@@ -1653,7 +1753,11 @@
 "physicians": "2023"
 },
 "abs_lat": 22,
-"rel_div": 21
+"rel_div": 21,
+"eez": 0,
+"density": 4.4,
+"name_kana": "ぼつわな",
+"kana_rank": 161
 },
 {
 "id": "by",
@@ -1717,7 +1821,11 @@
 "physicians": "2023"
 },
 "abs_lat": 53,
-"rel_div": 29
+"rel_div": 29,
+"eez": 0,
+"density": 43.8,
+"name_kana": "べらるし",
+"kana_rank": 155
 },
 {
 "id": "bz",
@@ -1781,7 +1889,11 @@
 "physicians": "2018"
 },
 "abs_lat": 17.25,
-"rel_div": 13
+"rel_div": 13,
+"eez": 34312.0,
+"density": 18.4,
+"name_kana": "べりず",
+"kana_rank": 156
 },
 {
 "id": "ca",
@@ -1845,7 +1957,11 @@
 "physicians": "2023"
 },
 "abs_lat": 60,
-"rel_div": 47
+"rel_div": 47,
+"eez": 5765430.0,
+"density": 4.2,
+"name_kana": "かなだ",
+"kana_rank": 39
 },
 {
 "id": "cd",
@@ -1909,7 +2025,11 @@
 "physicians": "2022"
 },
 "abs_lat": 0,
-"rel_div": 4
+"rel_div": 4,
+"eez": 13373.0,
+"density": 48.1,
+"name_kana": "こんごみんしゅきょうわこく",
+"kana_rank": 69
 },
 {
 "id": "cf",
@@ -1973,7 +2093,11 @@
 "physicians": "2023"
 },
 "abs_lat": 7,
-"rel_div": 11
+"rel_div": 11,
+"eez": 0,
+"density": 8.8,
+"name_kana": "ちゅうおうあふりか",
+"kana_rank": 104
 },
 {
 "id": "cg",
@@ -2037,7 +2161,11 @@
 "physicians": "2022"
 },
 "abs_lat": 1,
-"rel_div": 14
+"rel_div": 14,
+"eez": 33807.0,
+"density": 19.0,
+"name_kana": "こんごきょうわこく",
+"kana_rank": 68
 },
 {
 "id": "ch",
@@ -2101,7 +2229,11 @@
 "physicians": "2022"
 },
 "abs_lat": 47,
-"rel_div": 28
+"rel_div": 28,
+"eez": 0,
+"density": 220.2,
+"name_kana": "すいす",
+"kana_rank": 82
 },
 {
 "id": "ci",
@@ -2165,7 +2297,11 @@
 "physicians": "2023"
 },
 "abs_lat": 8,
-"rel_div": 56
+"rel_div": 56,
+"eez": 171760.0,
+"density": 101.4,
+"name_kana": "ことじぼわる",
+"kana_rank": 65
 },
 {
 "id": "ck",
@@ -2212,7 +2348,11 @@
 "physicians": null,
 "_years": {},
 "abs_lat": 21.23333333,
-"rel_div": 6
+"rel_div": 6,
+"eez": 1969553.0,
+"density": 63.6,
+"name_kana": "くっくしょとう",
+"kana_rank": 58
 },
 {
 "id": "cl",
@@ -2276,7 +2416,11 @@
 "physicians": "2023"
 },
 "abs_lat": 30,
-"rel_div": 16
+"rel_div": 16,
+"eez": 3668775.0,
+"density": 26.3,
+"name_kana": "ちり",
+"kana_rank": 107
 },
 {
 "id": "cm",
@@ -2340,7 +2484,11 @@
 "physicians": "2022"
 },
 "abs_lat": 6,
-"rel_div": 30
+"rel_div": 30,
+"eez": 15143.0,
+"density": 62.8,
+"name_kana": "かめるん",
+"kana_rank": 41
 },
 {
 "id": "cn",
@@ -2404,7 +2552,11 @@
 "physicians": "2022"
 },
 "abs_lat": 35,
-"rel_div": 48
+"rel_div": 48,
+"eez": 1302395.0,
+"density": 144.9,
+"name_kana": "ちゅうごく",
+"kana_rank": 105
 },
 {
 "id": "co",
@@ -2468,7 +2620,11 @@
 "physicians": "2023"
 },
 "abs_lat": 4,
-"rel_div": 8
+"rel_div": 8,
+"eez": 728836.0,
+"density": 46.8,
+"name_kana": "ころんびあ",
+"kana_rank": 67
 },
 {
 "id": "cr",
@@ -2532,7 +2688,11 @@
 "physicians": "2022"
 },
 "abs_lat": 10,
-"rel_div": 9
+"rel_div": 9,
+"eez": 599063.0,
+"density": 100.8,
+"name_kana": "こすたりか",
+"kana_rank": 63
 },
 {
 "id": "cu",
@@ -2596,7 +2756,11 @@
 "physicians": "2021"
 },
 "abs_lat": 21.5,
-"rel_div": 41
+"rel_div": 41,
+"eez": 352259.0,
+"density": 99.5,
+"name_kana": "きゅば",
+"kana_rank": 51
 },
 {
 "id": "cv",
@@ -2660,7 +2824,11 @@
 "physicians": "2023"
 },
 "abs_lat": 16,
-"rel_div": 11
+"rel_div": 11,
+"eez": 801936.0,
+"density": 130.8,
+"name_kana": "かぼべるで",
+"kana_rank": 40
 },
 {
 "id": "cy",
@@ -2724,7 +2892,11 @@
 "physicians": "2022"
 },
 "abs_lat": 35,
-"rel_div": 27
+"rel_div": 27,
+"eez": 98450.0,
+"density": 148.2,
+"name_kana": "きぷろす",
+"kana_rank": 50
 },
 {
 "id": "cz",
@@ -2788,7 +2960,11 @@
 "physicians": "2022"
 },
 "abs_lat": 49.75,
-"rel_div": 24
+"rel_div": 24,
+"eez": 0,
+"density": 138.0,
+"name_kana": "ちぇこ",
+"kana_rank": 102
 },
 {
 "id": "de",
@@ -2852,7 +3028,11 @@
 "physicians": "2022"
 },
 "abs_lat": 51,
-"rel_div": 32
+"rel_div": 32,
+"eez": 56831.0,
+"density": 233.8,
+"name_kana": "どいつ",
+"kana_rank": 115
 },
 {
 "id": "dj",
@@ -2916,7 +3096,11 @@
 "physicians": "2022"
 },
 "abs_lat": 11.5,
-"rel_div": 3
+"rel_div": 3,
+"eez": 7223.0,
+"density": 51.0,
+"name_kana": "じぶち",
+"kana_rank": 78
 },
 {
 "id": "dk",
@@ -2980,7 +3164,11 @@
 "physicians": "2021"
 },
 "abs_lat": 56,
-"rel_div": 17
+"rel_div": 17,
+"eez": 2639412.0,
+"density": 139.4,
+"name_kana": "でんまく",
+"kana_rank": 109
 },
 {
 "id": "dm",
@@ -3043,7 +3231,11 @@
 "physicians": "2018"
 },
 "abs_lat": 15.41666666,
-"rel_div": 6
+"rel_div": 6,
+"eez": 28552.0,
+"density": 87.7,
+"name_kana": "どみにかこく",
+"kana_rank": 117
 },
 {
 "id": "do",
@@ -3107,7 +3299,11 @@
 "physicians": "2023"
 },
 "abs_lat": 19,
-"rel_div": 12
+"rel_div": 12,
+"eez": 363805.0,
+"density": 236.7,
+"name_kana": "どみにかきょうわこく",
+"kana_rank": 116
 },
 {
 "id": "dz",
@@ -3171,7 +3367,11 @@
 "physicians": "2022"
 },
 "abs_lat": 28,
-"rel_div": 1
+"rel_div": 1,
+"eez": 131193.0,
+"density": 19.9,
+"name_kana": "あるじぇりあ",
+"kana_rank": 7
 },
 {
 "id": "ec",
@@ -3235,7 +3435,11 @@
 "physicians": "2020"
 },
 "abs_lat": 2,
-"rel_div": 6
+"rel_div": 6,
+"eez": 1096394.0,
+"density": 66.1,
+"name_kana": "えくあどる",
+"kana_rank": 26
 },
 {
 "id": "ee",
@@ -3299,7 +3503,11 @@
 "physicians": "2022"
 },
 "abs_lat": 59,
-"rel_div": 40
+"rel_div": 40,
+"eez": 36451.0,
+"density": 30.2,
+"name_kana": "えすとにあ",
+"kana_rank": 28
 },
 {
 "id": "eg",
@@ -3363,7 +3571,11 @@
 "physicians": "2020"
 },
 "abs_lat": 27,
-"rel_div": 10
+"rel_div": 10,
+"eez": 251043.0,
+"density": 118.1,
+"name_kana": "えじぷと",
+"kana_rank": 27
 },
 {
 "id": "er",
@@ -3427,7 +3639,11 @@
 "physicians": "2022"
 },
 "abs_lat": 15,
-"rel_div": 37
+"rel_div": 37,
+"eez": 78355.0,
+"density": 30.7,
+"name_kana": "えりとりあ",
+"kana_rank": 31
 },
 {
 "id": "es",
@@ -3491,7 +3707,11 @@
 "physicians": "2022"
 },
 "abs_lat": 40,
-"rel_div": 21
+"rel_div": 21,
+"eez": 1007778.0,
+"density": 97.5,
+"name_kana": "すぺいん",
+"kana_rank": 85
 },
 {
 "id": "et",
@@ -3555,7 +3775,11 @@
 "physicians": "2023"
 },
 "abs_lat": 8,
-"rel_div": 37
+"rel_div": 37,
+"eez": 0,
+"density": 122.7,
+"name_kana": "えちおぴあ",
+"kana_rank": 30
 },
 {
 "id": "fi",
@@ -3619,7 +3843,11 @@
 "physicians": "2021"
 },
 "abs_lat": 64,
-"rel_div": 19
+"rel_div": 19,
+"eez": 81553.0,
+"density": 16.7,
+"name_kana": "ふぃんらんど",
+"kana_rank": 144
 },
 {
 "id": "fj",
@@ -3683,7 +3911,11 @@
 "physicians": "2015"
 },
 "abs_lat": 18,
-"rel_div": 36
+"rel_div": 36,
+"eez": 1302114.0,
+"density": 51.1,
+"name_kana": "ふぃじ",
+"kana_rank": 142
 },
 {
 "id": "fm",
@@ -3745,7 +3977,11 @@
 "physicians": "2020"
 },
 "abs_lat": 6.91666666,
-"rel_div": 4
+"rel_div": 4,
+"eez": 3007718.0,
+"density": 161.9,
+"name_kana": "みくろねしあ",
+"kana_rank": 171
 },
 {
 "id": "fr",
@@ -3809,7 +4045,11 @@
 "physicians": "2022"
 },
 "abs_lat": 46,
-"rel_div": 37
+"rel_div": 37,
+"eez": 10061267.0,
+"density": 124.6,
+"name_kana": "ふらんす",
+"kana_rank": 145
 },
 {
 "id": "ga",
@@ -3873,7 +4113,11 @@
 "physicians": "2022"
 },
 "abs_lat": 1,
-"rel_div": 23
+"rel_div": 23,
+"eez": 201759.0,
+"density": 9.7,
+"name_kana": "がぼん",
+"kana_rank": 46
 },
 {
 "id": "gb",
@@ -3937,7 +4181,11 @@
 "physicians": "2023"
 },
 "abs_lat": 54,
-"rel_div": 36
+"rel_div": 36,
+"eez": 5882272.0,
+"density": 286.1,
+"name_kana": "いぎりす",
+"kana_rank": 15
 },
 {
 "id": "gd",
@@ -4000,7 +4248,11 @@
 "physicians": "2018"
 },
 "abs_lat": 12.11666666,
-"rel_div": 3
+"rel_div": 3,
+"eez": 25571.0,
+"density": 341.0,
+"name_kana": "ぐれなだ",
+"kana_rank": 61
 },
 {
 "id": "ge",
@@ -4064,7 +4316,11 @@
 "physicians": "2023"
 },
 "abs_lat": 42,
-"rel_div": 11
+"rel_div": 11,
+"eez": 22944.0,
+"density": 56.5,
+"name_kana": "じょじあ",
+"kana_rank": 80
 },
 {
 "id": "gh",
@@ -4128,7 +4384,11 @@
 "physicians": "2023"
 },
 "abs_lat": 8,
-"rel_div": 29
+"rel_div": 29,
+"eez": 227500.0,
+"density": 147.0,
+"name_kana": "がな",
+"kana_rank": 45
 },
 {
 "id": "gm",
@@ -4192,7 +4452,11 @@
 "physicians": "2023"
 },
 "abs_lat": 13.46666666,
-"rel_div": 5
+"rel_div": 5,
+"eez": 23097.0,
+"density": 264.0,
+"name_kana": "がんびあ",
+"kana_rank": 47
 },
 {
 "id": "gn",
@@ -4256,7 +4520,11 @@
 "physicians": "2022"
 },
 "abs_lat": 11,
-"rel_div": 16
+"rel_div": 16,
+"eez": 102163.0,
+"density": 61.4,
+"name_kana": "ぎにあ",
+"kana_rank": 54
 },
 {
 "id": "gq",
@@ -4319,7 +4587,11 @@
 "physicians": "2022"
 },
 "abs_lat": 2,
-"rel_div": 11
+"rel_div": 11,
+"eez": 304133.0,
+"density": 69.1,
+"name_kana": "せきどうぎにあ",
+"kana_rank": 90
 },
 {
 "id": "gr",
@@ -4383,7 +4655,11 @@
 "physicians": "2022"
 },
 "abs_lat": 39,
-"rel_div": 12
+"rel_div": 12,
+"eez": 482936.0,
+"density": 78.9,
+"name_kana": "ぎりしゃ",
+"kana_rank": 56
 },
 {
 "id": "gt",
@@ -4447,7 +4723,11 @@
 "physicians": "2020"
 },
 "abs_lat": 15.5,
-"rel_div": 5
+"rel_div": 5,
+"eez": 110695.0,
+"density": 171.6,
+"name_kana": "ぐあてまら",
+"kana_rank": 60
 },
 {
 "id": "gw",
@@ -4511,7 +4791,11 @@
 "physicians": "2022"
 },
 "abs_lat": 12,
-"rel_div": 55
+"rel_div": 55,
+"eez": 106870.0,
+"density": 62.3,
+"name_kana": "ぎにあびさう",
+"kana_rank": 55
 },
 {
 "id": "gy",
@@ -4575,7 +4859,11 @@
 "physicians": "2020"
 },
 "abs_lat": 5,
-"rel_div": 34
+"rel_div": 34,
+"eez": 138672.0,
+"density": 3.9,
+"name_kana": "がいあな",
+"kana_rank": 44
 },
 {
 "id": "hn",
@@ -4639,7 +4927,11 @@
 "physicians": "2020"
 },
 "abs_lat": 15,
-"rel_div": 12
+"rel_div": 12,
+"eez": 210711.0,
+"density": 97.8,
+"name_kana": "ほんじゅらす",
+"kana_rank": 159
 },
 {
 "id": "hr",
@@ -4703,7 +4995,11 @@
 "physicians": "2022"
 },
 "abs_lat": 45.16666666,
-"rel_div": 7
+"rel_div": 7,
+"eez": 55257.0,
+"density": 68.5,
+"name_kana": "くろあちあ",
+"kana_rank": 59
 },
 {
 "id": "ht",
@@ -4767,7 +5063,11 @@
 "physicians": "2022"
 },
 "abs_lat": 19,
-"rel_div": 13
+"rel_div": 13,
+"eez": 117375.0,
+"density": 429.0,
+"name_kana": "はいち",
+"kana_rank": 128
 },
 {
 "id": "hu",
@@ -4831,7 +5131,11 @@
 "physicians": "2022"
 },
 "abs_lat": 47,
-"rel_div": 19
+"rel_div": 19,
+"eez": 0,
+"density": 102.3,
+"name_kana": "はんがり",
+"kana_rank": 129
 },
 {
 "id": "id",
@@ -4895,7 +5199,11 @@
 "physicians": "2023"
 },
 "abs_lat": 5,
-"rel_div": 13
+"rel_div": 13,
+"eez": 6019205.0,
+"density": 150.0,
+"name_kana": "いんどねしあ",
+"kana_rank": 21
 },
 {
 "id": "ie",
@@ -4959,7 +5267,11 @@
 "physicians": "2023"
 },
 "abs_lat": 53,
-"rel_div": 8
+"rel_div": 8,
+"eez": 428004.0,
+"density": 78.0,
+"name_kana": "あいるらんど",
+"kana_rank": 2
 },
 {
 "id": "il",
@@ -5023,7 +5335,11 @@
 "physicians": "2023"
 },
 "abs_lat": 31.47,
-"rel_div": 24
+"rel_div": 24,
+"eez": 25955.0,
+"density": 487.4,
+"name_kana": "いすらえる",
+"kana_rank": 16
 },
 {
 "id": "in",
@@ -5087,7 +5403,11 @@
 "physicians": "2020"
 },
 "abs_lat": 20,
-"rel_div": 20
+"rel_div": 20,
+"eez": 2323948.0,
+"density": 445.3,
+"name_kana": "いんど",
+"kana_rank": 20
 },
 {
 "id": "iq",
@@ -5151,7 +5471,11 @@
 "physicians": "2022"
 },
 "abs_lat": 33,
-"rel_div": 1
+"rel_div": 1,
+"eez": 1370.0,
+"density": 107.3,
+"name_kana": "いらく",
+"kana_rank": 18
 },
 {
 "id": "ir",
@@ -5215,7 +5539,11 @@
 "physicians": "2023"
 },
 "abs_lat": 32,
-"rel_div": 0.5
+"rel_div": 0.5,
+"eez": 215613.0,
+"density": 56.1,
+"name_kana": "いらん",
+"kana_rank": 19
 },
 {
 "id": "is",
@@ -5279,7 +5607,11 @@
 "physicians": "2023"
 },
 "abs_lat": 65,
-"rel_div": 5
+"rel_div": 5,
+"eez": 808771.0,
+"density": 3.8,
+"name_kana": "あいすらんど",
+"kana_rank": 1
 },
 {
 "id": "it",
@@ -5343,7 +5675,11 @@
 "physicians": "2022"
 },
 "abs_lat": 42.83333333,
-"rel_div": 17
+"rel_div": 17,
+"eez": 536446.0,
+"density": 195.5,
+"name_kana": "いたりあ",
+"kana_rank": 17
 },
 {
 "id": "jm",
@@ -5407,7 +5743,11 @@
 "physicians": "2023"
 },
 "abs_lat": 18.25,
-"rel_div": 23
+"rel_div": 23,
+"eez": 272156.0,
+"density": 258.1,
+"name_kana": "じゃまいか",
+"kana_rank": 79
 },
 {
 "id": "jo",
@@ -5471,7 +5811,11 @@
 "physicians": "2022"
 },
 "abs_lat": 31,
-"rel_div": 3
+"rel_div": 3,
+"eez": 97.0,
+"density": 129.0,
+"name_kana": "よるだん",
+"kana_rank": 185
 },
 {
 "id": "jp",
@@ -5535,7 +5879,11 @@
 "physicians": "2022"
 },
 "abs_lat": 36,
-"rel_div": 43
+"rel_div": 43,
+"eez": 4281860.0,
+"density": 326.4,
+"name_kana": "にほん",
+"kana_rank": 124
 },
 {
 "id": "ke",
@@ -5599,7 +5947,11 @@
 "physicians": "2023"
 },
 "abs_lat": 1,
-"rel_div": 15
+"rel_div": 15,
+"eez": 124028.0,
+"density": 99.1,
+"name_kana": "けにあ",
+"kana_rank": 62
 },
 {
 "id": "kg",
@@ -5663,7 +6015,11 @@
 "physicians": "2023"
 },
 "abs_lat": 41,
-"rel_div": 12
+"rel_div": 12,
+"eez": 0,
+"density": 36.7,
+"name_kana": "きるぎす",
+"kana_rank": 53
 },
 {
 "id": "kh",
@@ -5727,7 +6083,11 @@
 "physicians": "2019"
 },
 "abs_lat": 13,
-"rel_div": 3
+"rel_div": 3,
+"eez": 48697.0,
+"density": 98.6,
+"name_kana": "かんぼじあ",
+"kana_rank": 43
 },
 {
 "id": "ki",
@@ -5789,7 +6149,11 @@
 "physicians": "2013"
 },
 "abs_lat": 1.41666666,
-"rel_div": 3
+"rel_div": 3,
+"eez": 3440220.0,
+"density": 168.3,
+"name_kana": "きりばす",
+"kana_rank": 52
 },
 {
 "id": "km",
@@ -5852,7 +6216,11 @@
 "physicians": "2022"
 },
 "abs_lat": 12.16666666,
-"rel_div": 2
+"rel_div": 2,
+"eez": 164476.0,
+"density": 474.1,
+"name_kana": "こもろ",
+"kana_rank": 66
 },
 {
 "id": "kn",
@@ -5915,7 +6283,11 @@
 "physicians": "2018"
 },
 "abs_lat": 17.33333333,
-"rel_div": 5
+"rel_div": 5,
+"eez": 9502.0,
+"density": 179.8,
+"name_kana": "せんときっつ・ねーヴぃすれんぽう",
+"kana_rank": 94
 },
 {
 "id": "kp",
@@ -5976,7 +6348,11 @@
 "physicians": "2017"
 },
 "abs_lat": 40,
-"rel_div": 29
+"rel_div": 29,
+"eez": 114379.0,
+"density": 220.4,
+"name_kana": "きたちょうせん",
+"kana_rank": 48
 },
 {
 "id": "kr",
@@ -6040,7 +6416,11 @@
 "physicians": "2022"
 },
 "abs_lat": 37,
-"rel_div": 54
+"rel_div": 54,
+"eez": 430281.0,
+"density": 515.8,
+"name_kana": "かんこく",
+"kana_rank": 42
 },
 {
 "id": "kw",
@@ -6104,7 +6484,11 @@
 "physicians": "2020"
 },
 "abs_lat": 29.5,
-"rel_div": 26
+"rel_div": 26,
+"eez": 10775.0,
+"density": 273.1,
+"name_kana": "くうぇと",
+"kana_rank": 57
 },
 {
 "id": "kz",
@@ -6168,7 +6552,11 @@
 "physicians": "2023"
 },
 "abs_lat": 48,
-"rel_div": 30
+"rel_div": 30,
+"eez": 0,
+"density": 7.6,
+"name_kana": "かざふすたん",
+"kana_rank": 37
 },
 {
 "id": "la",
@@ -6232,7 +6620,11 @@
 "physicians": "2022"
 },
 "abs_lat": 18,
-"rel_div": 34
+"rel_div": 34,
+"eez": 0,
+"density": 33.2,
+"name_kana": "らおす",
+"kana_rank": 186
 },
 {
 "id": "lb",
@@ -6296,7 +6688,11 @@
 "physicians": "2020"
 },
 "abs_lat": 33.83333333,
-"rel_div": 39
+"rel_div": 39,
+"eez": 18857.0,
+"density": 559.6,
+"name_kana": "ればのん",
+"kana_rank": 196
 },
 {
 "id": "lc",
@@ -6359,7 +6755,11 @@
 "physicians": "2020"
 },
 "abs_lat": 13.88333333,
-"rel_div": 8
+"rel_div": 8,
+"eez": 15413.0,
+"density": 292.4,
+"name_kana": "せんとるしあ",
+"kana_rank": 96
 },
 {
 "id": "li",
@@ -6419,7 +6819,11 @@
 "elec_pct": "2024"
 },
 "abs_lat": 47.26666666,
-"rel_div": 8
+"rel_div": 8,
+"eez": 0,
+"density": 256.4,
+"name_kana": "りひてんしゅたいん",
+"kana_rank": 189
 },
 {
 "id": "lk",
@@ -6483,7 +6887,11 @@
 "physicians": "2023"
 },
 "abs_lat": 7,
-"rel_div": 31
+"rel_div": 31,
+"eez": 533559.0,
+"density": 331.6,
+"name_kana": "すりらんか",
+"kana_rank": 87
 },
 {
 "id": "lr",
@@ -6546,7 +6954,11 @@
 "physicians": "2022"
 },
 "abs_lat": 6.5,
-"rel_div": 14
+"rel_div": 14,
+"eez": 251781.0,
+"density": 51.5,
+"name_kana": "りべりあ",
+"kana_rank": 191
 },
 {
 "id": "ls",
@@ -6610,7 +7022,11 @@
 "physicians": "2022"
 },
 "abs_lat": 29.5,
-"rel_div": 3
+"rel_div": 3,
+"eez": 0,
+"density": 77.9,
+"name_kana": "れそと",
+"kana_rank": 195
 },
 {
 "id": "lt",
@@ -6674,7 +7090,11 @@
 "physicians": "2022"
 },
 "abs_lat": 56,
-"rel_div": 10
+"rel_div": 10,
+"eez": 6864.0,
+"density": 44.2,
+"name_kana": "りとあにあ",
+"kana_rank": 188
 },
 {
 "id": "lu",
@@ -6738,7 +7158,11 @@
 "physicians": "2017"
 },
 "abs_lat": 49.75,
-"rel_div": 30
+"rel_div": 30,
+"eez": 0,
+"density": 265.6,
+"name_kana": "るくせんぶるく",
+"kana_rank": 192
 },
 {
 "id": "lv",
@@ -6802,7 +7226,11 @@
 "physicians": "2022"
 },
 "abs_lat": 57,
-"rel_div": 44
+"rel_div": 44,
+"eez": 28322.0,
+"density": 28.6,
+"name_kana": "らとびあ",
+"kana_rank": 187
 },
 {
 "id": "ly",
@@ -6866,7 +7294,11 @@
 "physicians": "2017"
 },
 "abs_lat": 25,
-"rel_div": 3
+"rel_div": 3,
+"eez": 357386.0,
+"density": 4.2,
+"name_kana": "りびあ",
+"kana_rank": 190
 },
 {
 "id": "ma",
@@ -6930,7 +7362,11 @@
 "physicians": "2021"
 },
 "abs_lat": 32,
-"rel_div": 1
+"rel_div": 1,
+"eez": 280452.0,
+"density": 86.1,
+"name_kana": "もろっこ",
+"kana_rank": 182
 },
 {
 "id": "mc",
@@ -6990,7 +7426,11 @@
 "physicians": "2020"
 },
 "abs_lat": 43.73333333,
-"rel_div": 14
+"rel_div": 14,
+"eez": 288.0,
+"density": 18980.7,
+"name_kana": "もなこ",
+"kana_rank": 177
 },
 {
 "id": "md",
@@ -7054,7 +7494,11 @@
 "physicians": "2023"
 },
 "abs_lat": 47,
-"rel_div": 3
+"rel_div": 3,
+"eez": 0,
+"density": 69.7,
+"name_kana": "もるどば",
+"kana_rank": 181
 },
 {
 "id": "me",
@@ -7116,7 +7560,11 @@
 "physicians": "2023"
 },
 "abs_lat": 42.5,
-"rel_div": 22
+"rel_div": 22,
+"eez": 6383.0,
+"density": 45.1,
+"name_kana": "もんてねぐろ",
+"kana_rank": 184
 },
 {
 "id": "mg",
@@ -7180,7 +7628,11 @@
 "physicians": "2022"
 },
 "abs_lat": 20,
-"rel_div": 15
+"rel_div": 15,
+"eez": 1239791.0,
+"density": 55.8,
+"name_kana": "まだがすかる",
+"kana_rank": 165
 },
 {
 "id": "mh",
@@ -7242,7 +7694,11 @@
 "physicians": "2012"
 },
 "abs_lat": 9,
-"rel_div": 3
+"rel_div": 3,
+"eez": 2002220.0,
+"density": 200.5,
+"name_kana": "まーしゃるしょとう",
+"kana_rank": 170
 },
 {
 "id": "mk",
@@ -7306,7 +7762,11 @@
 "physicians": "2022"
 },
 "abs_lat": 41.83333333,
-"rel_div": 40
+"rel_div": 40,
+"eez": 0,
+"density": 70.8,
+"name_kana": "きたまけどにあ",
+"kana_rank": 49
 },
 {
 "id": "ml",
@@ -7370,7 +7830,11 @@
 "physicians": "2023"
 },
 "abs_lat": 17,
-"rel_div": 6
+"rel_div": 6,
+"eez": 0,
+"density": 20.3,
+"name_kana": "まり",
+"kana_rank": 167
 },
 {
 "id": "mm",
@@ -7434,7 +7898,11 @@
 "physicians": "2019"
 },
 "abs_lat": 22,
-"rel_div": 20
+"rel_div": 20,
+"eez": 497460.0,
+"density": 81.1,
+"name_kana": "みゃんま",
+"kana_rank": 174
 },
 {
 "id": "mn",
@@ -7498,7 +7966,11 @@
 "physicians": "2022"
 },
 "abs_lat": 46,
-"rel_div": 45
+"rel_div": 45,
+"eez": 0,
+"density": 2.3,
+"name_kana": "もんごる",
+"kana_rank": 183
 },
 {
 "id": "mr",
@@ -7562,7 +8034,11 @@
 "physicians": "2022"
 },
 "abs_lat": 20,
-"rel_div": 1
+"rel_div": 1,
+"eez": 173180.0,
+"density": 5.2,
+"name_kana": "もりたにあ",
+"kana_rank": 179
 },
 {
 "id": "mt",
@@ -7626,7 +8102,11 @@
 "physicians": "2022"
 },
 "abs_lat": 35.83333333,
-"rel_div": 3
+"rel_div": 3,
+"eez": 52923.0,
+"density": 1834.5,
+"name_kana": "まるた",
+"kana_rank": 168
 },
 {
 "id": "mu",
@@ -7690,7 +8170,11 @@
 "physicians": "2022"
 },
 "abs_lat": 20.28333333,
-"rel_div": 52
+"rel_div": 52,
+"eez": 1925860.0,
+"density": 609.7,
+"name_kana": "もりしゃす",
+"kana_rank": 178
 },
 {
 "id": "mv",
@@ -7753,7 +8237,11 @@
 "physicians": "2019"
 },
 "abs_lat": 3.25,
-"rel_div": 1.6
+"rel_div": 1.6,
+"eez": 923833.0,
+"density": 1765.6,
+"name_kana": "もるでぃぶ",
+"kana_rank": 180
 },
 {
 "id": "mw",
@@ -7817,7 +8305,11 @@
 "physicians": "2022"
 },
 "abs_lat": 13.5,
-"rel_div": 17
+"rel_div": 17,
+"eez": 0,
+"density": 187.5,
+"name_kana": "まらうい",
+"kana_rank": 166
 },
 {
 "id": "mx",
@@ -7881,7 +8373,11 @@
 "physicians": "2022"
 },
 "abs_lat": 23,
-"rel_div": 6
+"rel_div": 6,
+"eez": 3187013.0,
+"density": 67.2,
+"name_kana": "めきしこ",
+"kana_rank": 175
 },
 {
 "id": "my",
@@ -7945,7 +8441,11 @@
 "physicians": "2023"
 },
 "abs_lat": 2.5,
-"rel_div": 37
+"rel_div": 37,
+"eez": 517876.0,
+"density": 108.8,
+"name_kana": "まれしあ",
+"kana_rank": 169
 },
 {
 "id": "mz",
@@ -8009,7 +8509,11 @@
 "physicians": "2022"
 },
 "abs_lat": 18.25,
-"rel_div": 44
+"rel_div": 44,
+"eez": 566292.0,
+"density": 44.5,
+"name_kana": "もざんびく",
+"kana_rank": 176
 },
 {
 "id": "na",
@@ -8073,7 +8577,11 @@
 "physicians": "2022"
 },
 "abs_lat": 22,
-"rel_div": 3
+"rel_div": 3,
+"eez": 562212.0,
+"density": 3.7,
+"name_kana": "なみびあ",
+"kana_rank": 120
 },
 {
 "id": "ne",
@@ -8137,7 +8645,11 @@
 "physicians": "2023"
 },
 "abs_lat": 16,
-"rel_div": 2
+"rel_div": 2,
+"eez": 0,
+"density": 22.0,
+"name_kana": "にじぇる",
+"kana_rank": 123
 },
 {
 "id": "ng",
@@ -8201,7 +8713,11 @@
 "physicians": "2023"
 },
 "abs_lat": 10,
-"rel_div": 50
+"rel_div": 50,
+"eez": 179048.0,
+"density": 257.1,
+"name_kana": "ないじぇりあ",
+"kana_rank": 118
 },
 {
 "id": "ni",
@@ -8265,7 +8781,11 @@
 "physicians": "2018"
 },
 "abs_lat": 13,
-"rel_div": 15
+"rel_div": 15,
+"eez": 213813.0,
+"density": 53.7,
+"name_kana": "にからぐあ",
+"kana_rank": 122
 },
 {
 "id": "nl",
@@ -8329,7 +8849,11 @@
 "physicians": "2022"
 },
 "abs_lat": 52.5,
-"rel_div": 50
+"rel_div": 50,
+"eez": 144842.0,
+"density": 432.2,
+"name_kana": "おらんだ",
+"kana_rank": 36
 },
 {
 "id": "no",
@@ -8393,7 +8917,11 @@
 "physicians": "2023"
 },
 "abs_lat": 62,
-"rel_div": 16
+"rel_div": 16,
+"eez": 2024551.0,
+"density": 17.3,
+"name_kana": "のるうぇ",
+"kana_rank": 127
 },
 {
 "id": "np",
@@ -8457,7 +8985,11 @@
 "physicians": "2023"
 },
 "abs_lat": 28,
-"rel_div": 19
+"rel_div": 19,
+"eez": 0,
+"density": 201.2,
+"name_kana": "ねぱる",
+"kana_rank": 126
 },
 {
 "id": "nr",
@@ -8518,7 +9050,11 @@
 "physicians": "2015"
 },
 "abs_lat": 0.53333333,
-"rel_div": 21
+"rel_div": 21,
+"eez": 309261.0,
+"density": 572.6,
+"name_kana": "なうる",
+"kana_rank": 119
 },
 {
 "id": "nu",
@@ -8565,7 +9101,11 @@
 "physicians": null,
 "_years": {},
 "abs_lat": 19.03333333,
-"rel_div": 4
+"rel_div": 4,
+"eez": 316584,
+"density": 6.5,
+"name_kana": "にうえ",
+"kana_rank": 121
 },
 {
 "id": "nz",
@@ -8629,7 +9169,11 @@
 "physicians": "2022"
 },
 "abs_lat": 41,
-"rel_div": 57
+"rel_div": 57,
+"eez": 6712792.0,
+"density": 19.7,
+"name_kana": "にゅじらんど",
+"kana_rank": 125
 },
 {
 "id": "om",
@@ -8693,7 +9237,11 @@
 "physicians": "2022"
 },
 "abs_lat": 21,
-"rel_div": 14
+"rel_div": 14,
+"eez": 556490.0,
+"density": 17.8,
+"name_kana": "おまん",
+"kana_rank": 35
 },
 {
 "id": "pa",
@@ -8757,7 +9305,11 @@
 "physicians": "2022"
 },
 "abs_lat": 9,
-"rel_div": 7
+"rel_div": 7,
+"eez": 331318.0,
+"density": 60.6,
+"name_kana": "ぱなま",
+"kana_rank": 137
 },
 {
 "id": "pe",
@@ -8821,7 +9373,11 @@
 "physicians": "2023"
 },
 "abs_lat": 10,
-"rel_div": 5
+"rel_div": 5,
+"eez": 870789.0,
+"density": 26.9,
+"name_kana": "ぺる",
+"kana_rank": 158
 },
 {
 "id": "pg",
@@ -8885,7 +9441,11 @@
 "physicians": "2023"
 },
 "abs_lat": 6,
-"rel_div": 1
+"rel_div": 1,
+"eez": 2402238.0,
+"density": 23.3,
+"name_kana": "ぱぷあにゅぎにあ",
+"kana_rank": 138
 },
 {
 "id": "ph",
@@ -8949,7 +9509,11 @@
 "physicians": "2021"
 },
 "abs_lat": 13,
-"rel_div": 8
+"rel_div": 8,
+"eez": 1964764.0,
+"density": 341.1,
+"name_kana": "ふぃりぴん",
+"kana_rank": 143
 },
 {
 "id": "pk",
@@ -9013,7 +9577,11 @@
 "physicians": "2021"
 },
 "abs_lat": 30,
-"rel_div": 4
+"rel_div": 4,
+"eez": 224361.0,
+"density": 289.4,
+"name_kana": "ぱきすたん",
+"kana_rank": 136
 },
 {
 "id": "pl",
@@ -9077,7 +9645,11 @@
 "physicians": "2023"
 },
 "abs_lat": 52,
-"rel_div": 6
+"rel_div": 6,
+"eez": 30666.0,
+"density": 116.5,
+"name_kana": "ぽらんど",
+"kana_rank": 163
 },
 {
 "id": "pt",
@@ -9141,7 +9713,11 @@
 "physicians": "2022"
 },
 "abs_lat": 39.5,
-"rel_div": 9
+"rel_div": 9,
+"eez": 1728718.0,
+"density": 117.3,
+"name_kana": "ぽるとがる",
+"kana_rank": 164
 },
 {
 "id": "pw",
@@ -9203,7 +9779,11 @@
 "physicians": "2023"
 },
 "abs_lat": 7.5,
-"rel_div": 13
+"rel_div": 13,
+"eez": 616431.0,
+"density": 38.5,
+"name_kana": "ぱらお",
+"kana_rank": 139
 },
 {
 "id": "py",
@@ -9267,7 +9847,11 @@
 "physicians": "2022"
 },
 "abs_lat": 23,
-"rel_div": 3
+"rel_div": 3,
+"eez": 0,
+"density": 17.2,
+"name_kana": "ぱらぐあい",
+"kana_rank": 140
 },
 {
 "id": "qa",
@@ -9331,7 +9915,11 @@
 "physicians": "2023"
 },
 "abs_lat": 25.5,
-"rel_div": 32
+"rel_div": 32,
+"eez": 31489.0,
+"density": 256.5,
+"name_kana": "かたる",
+"kana_rank": 38
 },
 {
 "id": "ro",
@@ -9395,7 +9983,11 @@
 "physicians": "2022"
 },
 "abs_lat": 46,
-"rel_div": 1
+"rel_div": 1,
+"eez": 29606.0,
+"density": 79.8,
+"name_kana": "るまにあ",
+"kana_rank": 193
 },
 {
 "id": "rs",
@@ -9457,7 +10049,11 @@
 "physicians": "2022"
 },
 "abs_lat": 44,
-"rel_div": 8
+"rel_div": 8,
+"eez": 0,
+"density": 74.1,
+"name_kana": "せるびあ",
+"kana_rank": 93
 },
 {
 "id": "ru",
@@ -9521,7 +10117,11 @@
 "physicians": "2022"
 },
 "abs_lat": 60,
-"rel_div": 27
+"rel_div": 27,
+"eez": 7730566.0,
+"density": 8.4,
+"name_kana": "ろしあ",
+"kana_rank": 197
 },
 {
 "id": "rw",
@@ -9585,7 +10185,11 @@
 "physicians": "2022"
 },
 "abs_lat": 2,
-"rel_div": 7
+"rel_div": 7,
+"eez": 0,
+"density": 553.2,
+"name_kana": "るわんだ",
+"kana_rank": 194
 },
 {
 "id": "sa",
@@ -9649,7 +10253,11 @@
 "physicians": "2023"
 },
 "abs_lat": 25,
-"rel_div": 7
+"rel_div": 7,
+"eez": 224157.0,
+"density": 17.2,
+"name_kana": "さうじあらびあ",
+"kana_rank": 70
 },
 {
 "id": "sb",
@@ -9712,7 +10320,11 @@
 "physicians": "2023"
 },
 "abs_lat": 8,
-"rel_div": 3
+"rel_div": 3,
+"eez": 1602781.0,
+"density": 29.0,
+"name_kana": "そろもんしょとう",
+"kana_rank": 98
 },
 {
 "id": "sc",
@@ -9776,7 +10388,11 @@
 "physicians": "2022"
 },
 "abs_lat": 4.58333333,
-"rel_div": 6
+"rel_div": 6,
+"eez": 1341524.0,
+"density": 271.5,
+"name_kana": "せしぇる",
+"kana_rank": 91
 },
 {
 "id": "sd",
@@ -9840,7 +10456,11 @@
 "physicians": "2017"
 },
 "abs_lat": 15,
-"rel_div": 9
+"rel_div": 9,
+"eez": 82560.0,
+"density": 27.4,
+"name_kana": "すだん",
+"kana_rank": 84
 },
 {
 "id": "se",
@@ -9904,7 +10524,11 @@
 "physicians": "2021"
 },
 "abs_lat": 62,
-"rel_div": 36
+"rel_div": 36,
+"eez": 155386.0,
+"density": 23.5,
+"name_kana": "すうぇでん",
+"kana_rank": 83
 },
 {
 "id": "sg",
@@ -9968,7 +10592,11 @@
 "physicians": "2022"
 },
 "abs_lat": 1.36666666,
-"rel_div": 66
+"rel_div": 66,
+"eez": 675.0,
+"density": 8607.3,
+"name_kana": "しんがぽる",
+"kana_rank": 77
 },
 {
 "id": "si",
@@ -10032,7 +10660,11 @@
 "physicians": "2022"
 },
 "abs_lat": 46.11666666,
-"rel_div": 22
+"rel_div": 22,
+"eez": 214.0,
+"density": 105.1,
+"name_kana": "すろべにあ",
+"kana_rank": 89
 },
 {
 "id": "sk",
@@ -10096,7 +10728,11 @@
 "physicians": "2022"
 },
 "abs_lat": 48.66666666,
-"rel_div": 15
+"rel_div": 15,
+"eez": 0,
+"density": 110.4,
+"name_kana": "すろばきあ",
+"kana_rank": 88
 },
 {
 "id": "sl",
@@ -10160,7 +10796,11 @@
 "physicians": "2022"
 },
 "abs_lat": 8.5,
-"rel_div": 22
+"rel_div": 22,
+"eez": 160584.0,
+"density": 122.9,
+"name_kana": "しえられおね",
+"kana_rank": 75
 },
 {
 "id": "sm",
@@ -10221,7 +10861,11 @@
 "physicians": "2023"
 },
 "abs_lat": 43.76666666,
-"rel_div": 8
+"rel_div": 8,
+"eez": 0,
+"density": 559.2,
+"name_kana": "さんまりの",
+"kana_rank": 73
 },
 {
 "id": "sn",
@@ -10285,7 +10929,11 @@
 "physicians": "2023"
 },
 "abs_lat": 14,
-"rel_div": 4
+"rel_div": 4,
+"eez": 221818.0,
+"density": 96.2,
+"name_kana": "せねがる",
+"kana_rank": 92
 },
 {
 "id": "so",
@@ -10348,7 +10996,11 @@
 "physicians": "2014"
 },
 "abs_lat": 10,
-"rel_div": 0.2
+"rel_div": 0.2,
+"eez": 821444.0,
+"density": 30.8,
+"name_kana": "そまりあ",
+"kana_rank": 97
 },
 {
 "id": "sr",
@@ -10411,7 +11063,11 @@
 "physicians": "2023"
 },
 "abs_lat": 4,
-"rel_div": 48
+"rel_div": 48,
+"eez": 133668.0,
+"density": 3.9,
+"name_kana": "すりなむ",
+"kana_rank": 86
 },
 {
 "id": "ss",
@@ -10473,7 +11129,11 @@
 "physicians": "2022"
 },
 "abs_lat": 7,
-"rel_div": 40
+"rel_div": 40,
+"eez": 0,
+"density": 19.7,
+"name_kana": "みなみすーだん",
+"kana_rank": 173
 },
 {
 "id": "st",
@@ -10536,7 +11196,11 @@
 "physicians": "2022"
 },
 "abs_lat": 1,
-"rel_div": 18
+"rel_div": 18,
+"eez": 34534.0,
+"density": 249.2,
+"name_kana": "さんとめぷりんしぺ",
+"kana_rank": 72
 },
 {
 "id": "sv",
@@ -10600,7 +11264,11 @@
 "physicians": "2023"
 },
 "abs_lat": 13.83333333,
-"rel_div": 12
+"rel_div": 12,
+"eez": 95099.0,
+"density": 302.5,
+"name_kana": "えるさるばどる",
+"kana_rank": 32
 },
 {
 "id": "sy",
@@ -10664,7 +11332,11 @@
 "physicians": "2021"
 },
 "abs_lat": 35,
-"rel_div": 7
+"rel_div": 7,
+"eez": 10269.0,
+"density": 138.4,
+"name_kana": "しりあ",
+"kana_rank": 76
 },
 {
 "id": "sz",
@@ -10728,7 +11400,11 @@
 "physicians": "2023"
 },
 "abs_lat": 26.5,
-"rel_div": 12
+"rel_div": 12,
+"eez": 0,
+"density": 72.3,
+"name_kana": "えすわてぃに",
+"kana_rank": 29
 },
 {
 "id": "td",
@@ -10792,7 +11468,11 @@
 "physicians": "2023"
 },
 "abs_lat": 15,
-"rel_div": 45
+"rel_div": 45,
+"eez": 0,
+"density": 16.4,
+"name_kana": "ちゃど",
+"kana_rank": 103
 },
 {
 "id": "tg",
@@ -10856,7 +11536,11 @@
 "physicians": "2022"
 },
 "abs_lat": 8,
-"rel_div": 56
+"rel_div": 56,
+"eez": 15447.0,
+"density": 151.3,
+"name_kana": "とご",
+"kana_rank": 110
 },
 {
 "id": "th",
@@ -10920,7 +11604,11 @@
 "physicians": "2021"
 },
 "abs_lat": 15,
-"rel_div": 7
+"rel_div": 7,
+"eez": 298561.0,
+"density": 139.6,
+"name_kana": "たい",
+"kana_rank": 99
 },
 {
 "id": "tj",
@@ -10984,7 +11672,11 @@
 "physicians": "2023"
 },
 "abs_lat": 39,
-"rel_div": 3
+"rel_div": 3,
+"eez": 0,
+"density": 75.4,
+"name_kana": "たじきすたん",
+"kana_rank": 100
 },
 {
 "id": "tl",
@@ -11048,7 +11740,11 @@
 "physicians": "2020"
 },
 "abs_lat": 8.83333333,
-"rel_div": 1
+"rel_div": 1,
+"eez": 77473.0,
+"density": 95.4,
+"name_kana": "ひがしてぃもーる",
+"kana_rank": 141
 },
 {
 "id": "tm",
@@ -11112,7 +11808,11 @@
 "physicians": "2023"
 },
 "abs_lat": 40,
-"rel_div": 7
+"rel_div": 7,
+"eez": 0,
+"density": 15.6,
+"name_kana": "とるくめにすたん",
+"kana_rank": 112
 },
 {
 "id": "tn",
@@ -11176,7 +11876,11 @@
 "physicians": "2021"
 },
 "abs_lat": 34,
-"rel_div": 1
+"rel_div": 1,
+"eez": 99701.0,
+"density": 75.5,
+"name_kana": "ちゅにじあ",
+"kana_rank": 106
 },
 {
 "id": "to",
@@ -11238,7 +11942,11 @@
 "physicians": "2021"
 },
 "abs_lat": 20,
-"rel_div": 1
+"rel_div": 1,
+"eez": 666052.0,
+"density": 138.9,
+"name_kana": "とんが",
+"kana_rank": 114
 },
 {
 "id": "tr",
@@ -11302,7 +12010,11 @@
 "physicians": "2022"
 },
 "abs_lat": 39,
-"rel_div": 2
+"rel_div": 2,
+"eez": 262233.0,
+"density": 109.6,
+"name_kana": "とるこ",
+"kana_rank": 113
 },
 {
 "id": "tt",
@@ -11366,7 +12078,11 @@
 "physicians": "2021"
 },
 "abs_lat": 11,
-"rel_div": 34
+"rel_div": 34,
+"eez": 76562.0,
+"density": 266.6,
+"name_kana": "とりにだどとばご",
+"kana_rank": 111
 },
 {
 "id": "tv",
@@ -11428,7 +12144,11 @@
 "physicians": "2020"
 },
 "abs_lat": 8,
-"rel_div": 3
+"rel_div": 3,
+"eez": 753133.0,
+"density": 365.1,
+"name_kana": "つばる",
+"kana_rank": 108
 },
 {
 "id": "tz",
@@ -11492,7 +12212,11 @@
 "physicians": "2022"
 },
 "abs_lat": 6,
-"rel_div": 37
+"rel_div": 37,
+"eez": 241567.0,
+"density": 74.6,
+"name_kana": "たんざにあ",
+"kana_rank": 101
 },
 {
 "id": "ua",
@@ -11556,7 +12280,11 @@
 "physicians": "2023"
 },
 "abs_lat": 49,
-"rel_div": 16
+"rel_div": 16,
+"eez": 136198.0,
+"density": 64.6,
+"name_kana": "うくらいな",
+"kana_rank": 23
 },
 {
 "id": "ug",
@@ -11620,7 +12348,11 @@
 "physicians": "2022"
 },
 "abs_lat": 1,
-"rel_div": 14
+"rel_div": 14,
+"eez": 0,
+"density": 212.7,
+"name_kana": "うがんだ",
+"kana_rank": 22
 },
 {
 "id": "us",
@@ -11684,7 +12416,11 @@
 "physicians": "2022"
 },
 "abs_lat": 38,
-"rel_div": 29
+"rel_div": 29,
+"eez": 12167100.0,
+"density": 36.5,
+"name_kana": "あめりか",
+"kana_rank": 5
 },
 {
 "id": "uy",
@@ -11748,7 +12484,11 @@
 "physicians": "2022"
 },
 "abs_lat": 33,
-"rel_div": 42
+"rel_div": 42,
+"eez": 184506.0,
+"density": 18.7,
+"name_kana": "うるぐあい",
+"kana_rank": 25
 },
 {
 "id": "uz",
@@ -11812,7 +12552,11 @@
 "physicians": "2021"
 },
 "abs_lat": 41,
-"rel_div": 3
+"rel_div": 3,
+"eez": 0,
+"density": 82.8,
+"name_kana": "うずべきすたん",
+"kana_rank": 24
 },
 {
 "id": "va",
@@ -11859,7 +12603,11 @@
 "physicians": null,
 "_years": {},
 "abs_lat": 41.9,
-"rel_div": 0
+"rel_div": 0,
+"eez": 0,
+"density": 1818.2,
+"name_kana": "ばちかん",
+"kana_rank": 130
 },
 {
 "id": "vc",
@@ -11922,7 +12670,11 @@
 "physicians": "2012"
 },
 "abs_lat": 13.25,
-"rel_div": 12
+"rel_div": 12,
+"eez": 36244.0,
+"density": 256.9,
+"name_kana": "せんとびんせんとぐれなでぃん",
+"kana_rank": 95
 },
 {
 "id": "ve",
@@ -11986,7 +12738,11 @@
 "physicians": "2017"
 },
 "abs_lat": 8,
-"rel_div": 11
+"rel_div": 11,
+"eez": 473659.0,
+"density": 31.1,
+"name_kana": "べねずえら",
+"kana_rank": 154
 },
 {
 "id": "vn",
@@ -12050,7 +12806,11 @@
 "physicians": "2021"
 },
 "abs_lat": 16.16666666,
-"rel_div": 55
+"rel_div": 55,
+"eez": 752197.0,
+"density": 306.7,
+"name_kana": "べとなむ",
+"kana_rank": 152
 },
 {
 "id": "vu",
@@ -12113,7 +12873,11 @@
 "physicians": "2019"
 },
 "abs_lat": 16,
-"rel_div": 7
+"rel_div": 7,
+"eez": 625850.0,
+"density": 27.5,
+"name_kana": "ばぬあつ",
+"kana_rank": 131
 },
 {
 "id": "ws",
@@ -12176,7 +12940,11 @@
 "physicians": "2021"
 },
 "abs_lat": 13.58333333,
-"rel_div": 3
+"rel_div": 3,
+"eez": 130480.0,
+"density": 77.2,
+"name_kana": "さもあ",
+"kana_rank": 71
 },
 {
 "id": "xk",
@@ -12234,7 +13002,11 @@
 "elec_pct": "1999"
 },
 "abs_lat": 42.666667,
-"rel_div": 6
+"rel_div": 6,
+"eez": 0,
+"density": 144.6,
+"name_kana": "こそぼ",
+"kana_rank": 64
 },
 {
 "id": "ye",
@@ -12298,7 +13070,11 @@
 "physicians": "2023"
 },
 "abs_lat": 15,
-"rel_div": 1
+"rel_div": 1,
+"eez": 527384.0,
+"density": 79.1,
+"name_kana": "いえめん",
+"kana_rank": 14
 },
 {
 "id": "za",
@@ -12362,7 +13138,11 @@
 "physicians": "2022"
 },
 "abs_lat": 29,
-"rel_div": 19
+"rel_div": 19,
+"eez": 1547576.0,
+"density": 53.0,
+"name_kana": "みなみあふりか",
+"kana_rank": 172
 },
 {
 "id": "zm",
@@ -12426,7 +13206,11 @@
 "physicians": "2022"
 },
 "abs_lat": 15,
-"rel_div": 3
+"rel_div": 3,
+"eez": 0,
+"density": 29.1,
+"name_kana": "ざんびあ",
+"kana_rank": 74
 },
 {
 "id": "zw",
@@ -12490,6 +13274,10 @@
 "physicians": "2023"
 },
 "abs_lat": 20,
-"rel_div": 13
+"rel_div": 13,
+"eez": 0,
+"density": 43.4,
+"name_kana": "じんばぶえ",
+"kana_rank": 81
 }
 ]
