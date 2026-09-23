@@ -13,7 +13,7 @@ async def main():
                 st = d['state'] if 'state' in d else d
                 my = st.get('you', my)
                 if st['phase'] == 'lobby' and not greeted:
-                    greeted = True; await asyncio.sleep(1.5); await ws.send_json({'type': 'chat', 'text': 'よろしく〜！国旗ぜんぜん分からないけど頑張る'})
+                    greeted = True; await asyncio.sleep(1.5); await ws.send_json({'type': 'chat', 'text': 'はなこ、よろしく〜！国旗ぜんぜん分からないけど頑張る'})
                 if st['phase'] == 'pick' and picked_round != st['round'] and st.get('hand'):
                     picked_round = st['round']
                     hand = list(st['hand'])
@@ -21,7 +21,8 @@ async def main():
                         await asyncio.sleep(random.uniform(2.5, 4.5))
                         c1 = random.choice(hand); await ws.send_json({'type': 'selecting', 'card': c1})
                         await asyncio.sleep(random.uniform(1.5, 3))
-                        c2 = random.choice(hand); await ws.send_json({'type': 'pick', 'card': c2})
+                        c2 = 'jp' if (rnd == 1 and 'jp' in hand) else random.choice(hand)   # 1問目は日本を出す（撮影用）
+                        await ws.send_json({'type': 'pick', 'card': c2})
                         if rnd == 2: await asyncio.sleep(1); await ws.send_json({'type': 'chat', 'text': 'これ難しい…勘で出した！'})
                     asyncio.ensure_future(think())
                 key = (st['phase'], st['round'])

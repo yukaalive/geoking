@@ -42,6 +42,9 @@ CHAT_INTERVAL = 0.7    # 秒。連投制限
 # チャットは moderation.check_chat（NGワード・連絡先・URL・連打）を通過したものだけ流れる
 REPORTS_TO_MUTE = 2   # 異なる2人から通報されたら、その部屋ではチャット禁止
 REVEAL_SECONDS = 8     # 結果表示の秒数。経過後は自動で次のラウンドへ
+if os.environ.get('GEOKING_DEMO'):   # 撮影用デモ: 操作に時間がかかるので制限時間と結果表示を長く
+    DEFAULT_SETTINGS['timer'] = 120
+    REVEAL_SECONDS = 25
 
 rooms = {}  # code -> Room
 
@@ -120,10 +123,21 @@ class Room:
         self.prompts = random.sample(pool, s['rounds'])
         deck = [c['id'] for c in COUNTRIES]
         random.shuffle(deck)
-        for pid in self.order:
+        # 撮影用デモ（環境変数 GEOKING_DEMO="お題id:国コード,国コード,…"）: 1問目のお題と各プレイヤーの手札に入れる国を固定。本番では未設定
+        demo = os.environ.get('GEOKING_DEMO', '')
+        fixed = []
+        if demo and ':' in demo:
+            pid_, cards_ = demo.split(':', 1)
+            if pid_ in PROMPT_BY_ID:
+                self.prompts = [PROMPT_BY_ID[pid_]] + [p for p in self.prompts if p['id'] != pid_][:s['rounds'] - 1]
+            fixed = [c for c in cards_.split(',') if c in deck]
+            for c in fixed: deck.remove(c)
+        for i, pid in enumerate(self.order):
             p = self.players[pid]
             p.spectator = False
             p.hand = [deck.pop() for _ in range(s['hand_size'])]
+            if i < len(fixed):
+                p.hand[random.randrange(len(p.hand))] = fixed[i]
             p.score, p.won, p.pick = 0, [], None
         self.deck = deck   # 途中参加者に配る残り山札
         self.history = []

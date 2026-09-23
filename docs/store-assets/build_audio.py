@@ -47,15 +47,18 @@ TOTAL = max(v[0] + v[1] for v in TL.values())
 print('offsets', {k: round(v, 2) for k, v in OFF.items()}, 'total', round(TOTAL, 2))
 # 効果音（動画のコマを見て合わせた。撮り直したら再確認）
 EVENTS = [
- ('tap', OFF['s0'] + 2.2), ('enter', OFF['s0'] + 2.45),
- ('joined', OFF['s1'] + 0.1), ('chat', OFF['s1'] + 1.5),
- ('tap', OFF['s2'] + 1.0), ('start', OFF['s2'] + 1.3),
- ('select', OFF['s3b'] + 0.7), ('confirm', OFF['s3b'] + 2.2), ('reveal', OFF['s3b'] + 3.2), ('win', OFF['s3b'] + 3.6),
+ ('tap', OFF['s0'] + 2.2), ('enter', OFF['s0'] + 2.5),
+ ('joined', OFF['s1'] + 1.0), ('chat', OFF['s1'] + 1.5),
+ ('tap', OFF['s2'] + 0.9), ('start', OFF['s2'] + 1.1),
+ ('select', OFF['s3b'] + 0.5), ('confirm', OFF['s3b'] + 1.7), ('reveal', OFF['s3b'] + 2.1), ('win', OFF['s3b'] + 2.5),
  ('champion', OFF['s5a'] + 0.3),
  ('tap', OFF['z1'] + 0.1), ('select', OFF['z2'] + 0.2), ('open', OFF['z2'] + 0.35), ('tap', OFF['z4'] + 0.1),
 ]
-VOICE = {'intro': ('intro', 0.25), 's0': ('s0', 0.25), 's1': ('s1', 0.25),
-         's3a': ('s3a', 0.3), 's3b': ('s3b', 3.4), 's5a': ('s5', 0.3), 'z1': ('z1', 0.3), 'z4': ('z4', 0.4), 'outro': ('outro', 0.25)}
+# ナレーション: 区間名 -> [(音声ファイル, 区間先頭からの秒), ...]
+VOICE = {'intro': [('intro', 0.25)], 's0': [('s0', 0.25)], 's1': [('s1', 0.25)],
+         's3a': [('s3a1', 0.3), ('s3a2', 3.85)],   # 「お題は…」→1秒あけて「うーん…」
+         's3b': [('s3b', 2.3)], 's3c': [('s3c', 0.3)], 's5a': [('s5', 0.3)],
+         'z1': [('z1', 0.3)], 'z4': [('z4', 0.4)], 'outro': [('outro', 0.25)]}
 N = int(TOTAL * SR)
 sfx = np.zeros(N)
 for name, at in EVENTS: SFX[name](sfx, at)
@@ -68,9 +71,9 @@ def read_wav(path):
         if w.getnchannels() == 2: d = d.reshape(-1, 2).mean(axis=1)
         return d
 voice = np.zeros(N)
-for seg, (clip, rel) in VOICE.items():
-    base = OFF[seg]
-    v = read_wav(f'voice/{clip}.wav'); st = int((base + rel) * SR); en = min(st + len(v), N); voice[st:en] += v[:en - st]
+for seg, clips in VOICE.items():
+    for clip, rel in clips:
+        v = read_wav(f'voice/{clip}.wav'); st = int((OFF[seg] + rel) * SR); en = min(st + len(v), N); voice[st:en] += v[:en - st]
 voice *= 1.0
 
 # ---------- BGM（mp3→wav、声のあるところは自動で下げる）

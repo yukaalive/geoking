@@ -32,19 +32,20 @@ def cfr(src):
 # ---- ゲーム画面の区間: dict(name, src, s, e, cap, speed, bcrop, hand=[(秒,x,y)...], taps=[秒...])
 # 手カーソル用: 元画面(1206x2622)の座標 → 出力座標。カード中心（ラウンド4の手札の並び）
 def P(xr, yr): return (round(110.5 + xr * 0.7122), round(170 + (yr - 165) * 0.7122))
-VN, HU, LB, SS = P(315, 1546), P(891, 1546), P(315, 2058), P(891, 2058)
+TL, TR, BL, BR = P(315, 1525), P(891, 1525), P(315, 2035), P(891, 2035)   # パラオ・ブータン・ペルー・南スーダン
 CAP3 = 'お題に合う国旗を勘で1枚！\n答え合わせ'
 CAPZ = '図鑑モード\n197の国旗とお題別ランキング'
 SEGS = [
- dict(name='s0', src='raw.mp4', s=6.5, e=9.5, cap='名前を入れて\n部屋を作る'),
+ dict(name='s0', src='raw.mp4', s=7.5, e=10.5, cap='名前を入れて\n部屋を作る'),
  dict(name='s1', src='raw.mp4', s=24.0, e=30.0, cap='友だちが入室！\nチャットが画面を流れる'),
- dict(name='s2', src='raw.mp4', s=54.3, e=55.9, cap='ひとりならボットを追加\nゲームスタート'),
- dict(name='s3a', src='raw.mp4', s=140.5, e=147.0, cap=CAP3,
-      hand=[(0.4, *VN), (1.3, *VN), (2.2, *HU), (3.0, *HU), (3.9, *LB), (4.6, *LB), (5.4, *SS), (6.5, *SS)]),
- dict(name='s3b', src='raw.mp4', s=148.8, e=158.0, cap=CAP3,
-      hand=[(0.0, *SS), (0.7, *SS), (1.4, SS[0] + 18, SS[1] + 14), (2.1, *SS), (2.7, *SS)], taps=[0.6, 2.1]),
- dict(name='s5a', src='raw.mp4', s=232.3, e=235.3, cap='7ラウンドで一番勝った人が\n地理王！'),
- dict(name='s5b', src='raw.mp4', s=250.0, e=255.5, cap='7ラウンドで一番勝った人が\n地理王！', speed=1.5),
+ dict(name='s2', src='raw.mp4', s=36.0, e=37.6, cap='ゲームスタート'),
+ dict(name='s3a', src='raw.mp4', s=38.5, e=46.5, cap=CAP3,
+      hand=[(3.6, *TL), (4.3, *TL), (5.0, *TR), (5.6, *TR), (6.2, *BL), (6.7, *BL), (7.3, *BR), (8.0, *BR)]),
+ dict(name='s3b', src='raw.mp4', s=55.0, e=59.5, cap=CAP3,
+      hand=[(0.0, *BR), (0.6, *BR), (1.2, BR[0] + 18, BR[1] + 14), (1.8, *BR), (2.2, *BR)], taps=[0.5, 1.7]),
+ dict(name='s3c', src='raw.mp4', s=63.0, e=68.0, cap=CAP3),
+ dict(name='s5a', src='raw.mp4', s=366.0, e=369.0, cap='7ラウンドで一番勝った人が\n地理王！'),
+ dict(name='s5b', src='raw.mp4', s=383.5, e=389.0, cap='7ラウンドで一番勝った人が\n地理王！', speed=1.5),
  dict(name='z1', src='zukan.mp4', s=77.3, e=81.0, cap=CAPZ, bcrop=250),
  dict(name='z2', src='zukan.mp4', s=91.3, e=94.3, cap=CAPZ, bcrop=250),
  dict(name='z3', src='zukan.mp4', s=105.0, e=109.5, cap=CAPZ, bcrop=250),
