@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>結果画面の大きさ</title>
+<style>body{font:13px/1.4 -apple-system,sans-serif;margin:8px}table{border-collapse:collapse}td,th{border:1px solid #999;padding:2px 4px;text-align:right;overflow-wrap:anywhere}</style></head>
+<body><p id="msg">測っています…（1分ほど）</p><table id="out"></table><p>長い文字を入れた結果:</p><table id="worst"></table>
+<!-- iOS シミュレーターの Safari などコンソールが使えないブラウザで、result_size_check.js の結果を画面に出す -->
+<script>
+(async () => {
+  try {
+    const res = await eval(await (await fetch('/dev/tests/result_size_check.js', { cache: 'no-store' })).text());
+    const table = (rows) => { const keys = Object.keys(rows[0]); return '<tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>' + rows.map(r => '<tr>' + keys.map(k => `<td>${r[k]}</td>`).join('') + '</tr>').join(''); };
+    document.getElementById('out').innerHTML = table(res.sizes);
+    const bad = res.worst.filter(r => r.はみ出し !== 'なし' || r.ページ幅 > r.幅).map(({ 列, カードの高さ, ...r }) => r);   // はみ出したものだけ出す（狭い画面に収まるよう列を減らす）
+    document.getElementById('worst').innerHTML = table(bad.length ? bad : [{ はみ出し: `なし（${res.worst.length} 件を確認）` }]);
+    document.getElementById('msg').textContent = `この画面の幅: ${innerWidth}px`;
+  } catch (e) { document.getElementById('msg').textContent = 'エラー: ' + e; }
+})();
+</script></body></html>

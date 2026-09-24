@@ -11,7 +11,7 @@
 ## 確認の道具（`tests/`）
 
 - 確認用サーバーは `.claude/launch.json` の `geoking-check`（PORT=8090, GEOKING_DEV=1）。8080 番は別のセッションの古いサーバーのことがある。
-- ブラウザで使うもの（`/dev/tests/…` から読み込む。読み込み方はスキルに書いてある）: `layout_snapshot.js`（変更前後の比較）、`layout_check.js`（横はみ出し）、`contrast_check.js`（文字の見やすさ。ダークモードも）、`app_frame_check.js`（アプリ内フレームの開き方・戻り方）
+- ブラウザで使うもの（`/dev/tests/…` から読み込む。読み込み方はスキルに書いてある）: `layout_snapshot.js`（変更前後の比較）、`layout_check.js`（横はみ出し）、`contrast_check.js`（文字の見やすさ。ダークモードも）、`app_frame_check.js`（アプリ内フレームの開き方・戻り方）、`result_size_check.js`（結果画面のカード・国旗の大きさを幅ごとに。iPhone はシミュレーターの Safari で `/dev/tests/result_size.html`）
 - サーバーのテスト: `GEOKING_WS=ws://localhost:8090/ws python3 tests/e2e_two_players.py` と `tests/e2e_solo_bot.py`
 
 ## そのほか

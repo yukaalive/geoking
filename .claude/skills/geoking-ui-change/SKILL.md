@@ -40,6 +40,7 @@ window.__r = null; layoutSnapshot('before').then(r => window.__r = r);
 - **アプリ（Capacitor）は同じ Web ページを読み込んでいる。** 図鑑・クイズ・プライバシーポリシーはホームの上に重ねた iframe の中で開く。iframe の中では `env(safe-area-inset-*)` が 0 になり、native.js もフレームの中で動き、sessionStorage は外側と共有される。画面移動や native.js / sfx.js を触ったら、フレームの中と外の両方で考える。
 - **対戦画面は、サーバーから状態が届くたびに `render()` で全部描き直す**（チャット1件、誰かのつなぎ直し、言語切り替え、ページの読み直しでも届く）。登場の動き・紙吹雪・音は「初めて見る内容のときだけ」出すこと。2026-09-24、結果の最中にチャットが届くと結果のめくる動きと紙吹雪がもう一度出て「結果が2回出る」と言われた（`revealKeyOf` / `geoking_revealed` で見せ済みを覚えて直した）。動きを足したら、その画面の最中にチャットを送る・`ws.close()` でつなぎ直す、を試す。
 - 文言を変えたら日本語・英語の両方（i18n.js）を直し、長さが変わって折り返しやはみ出しが起きないかを見る。
+- **「iPhone と Android で大きさが違う」と言われたら、まず画面の幅の違いを疑う。** ユーザーの Android は幅 約412px、iPhone は 390〜402px。`minmax(180px,1fr)` のような並びは幅 406px を境に1列↔2列が変わり、2026-09-25 には iPhone だけ結果の国旗が2倍の大きさになっていた。どちらも同じ WebKit/Blink の計算で、端末の違いではなかった。
 
 ## 4. 変えたあとに確かめる
 
@@ -51,6 +52,7 @@ window.__r = null; layoutSnapshot('before').then(r => window.__r = r);
 | 色・背景・文字色（ダークモードも） | `tests/contrast_check.js`（ライトとダークの両方で。ダークは `resize_window` の `colorScheme:'dark'` にしてから） |
 | 画面移動・native.js・sfx.js・図鑑/クイズ/プライバシーの開き方や戻り方 | `tests/app_frame_check.js` |
 | server.py | `GEOKING_WS=ws://localhost:8090/ws python3 tests/e2e_two_players.py` と `tests/e2e_solo_bot.py` |
+| 結果（答え合わせ）画面のカード・国旗の大きさや並び | `tests/result_size_check.js`（幅ごとの列の数・国旗の大きさ・長い国名や数値のはみ出し）。iPhone（WebKit）はシミュレーターの Safari で `/dev/tests/result_size.html` を開く |
 
 読み込み方（ほかのスクリプトも同じ）:
 

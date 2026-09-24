@@ -23,7 +23,7 @@
   const record = (w) => {
     const out = {};
     w.scrollTo(0, 0);   // スクロールした位置で測ると、上に固定したヘッダーなどの位置がずれて見える
-    for (const e of w.document.querySelectorAll('#roomTitle, #lobbyCode')) e.textContent = 'ROOM';   // 部屋名は作るたびに変わる（同名があると「2」が付く）ので固定してから測る
+    for (const e of w.document.querySelectorAll('#lobbyCode')) e.textContent = 'ROOM';   // 部屋名は作るたびに変わる（同名があると「2」が付く）ので固定してから測る
     const skipRoots = [...w.document.querySelectorAll(SKIP)];
     for (const el of w.document.querySelectorAll('body *')) {
       if (skipRoots.some(s => s.contains(el)) || ['SCRIPT', 'STYLE', 'use', 'path', 'rect', 'circle', 'g'].includes(el.tagName)) continue;
