@@ -87,7 +87,8 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .herotext h1 .ico{width:.7em;height:.7em;vertical-align:-.02em;margin-right:.1em}
 .herotext p{font-weight:900;font-size:18px;margin:0 0 4px;color:var(--primary)}
 .herotext label{margin-top:14px}
-.herotext .join input{width:120px}
+.herotext{min-width:0}.herotext .join{flex:1 1 250px;min-width:0;max-width:340px}.herotext .join input{flex:1;min-width:0;width:auto;padding-left:10px;padding-right:10px}.herotext .join button{white-space:nowrap}
+.join input::placeholder{font-family:var(--font-body);font-size:12px;letter-spacing:0;text-transform:none}   /* ヒント文字が切れないよう小さく */
 .big-cta{background:var(--primary);color:var(--primary-ink);padding:12px 24px;font-size:17px;border-radius:14px;box-shadow:var(--shadow)}
 .ghost-cta{padding:12px 16px;border-radius:14px}
 .scene{position:relative;height:300px}

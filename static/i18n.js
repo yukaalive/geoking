@@ -76,7 +76,7 @@ const I18N = {
   },
   en: {
     app_title: 'GeoKing', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
-    create_room: 'Create room', code_ph: "Your friend's room name", join: 'Join', room_label: 'Room', enter_room_name: 'Enter the room name', learn_zukan: 'Study mode', public_rooms: 'Open public rooms', refresh: 'Refresh',
+    create_room: 'Create room', code_ph: "Friend's room name", join: 'Join', room_label: 'Room', enter_room_name: 'Enter the room name', learn_zukan: 'Study mode', public_rooms: 'Open public rooms', refresh: 'Refresh',
     loading: 'Loading…', public_rooms_note: 'Jump into a room someone else made. To list your own room, turn on "Public room" in the lobby.',
     demo_prompt: 'PROMPT', demo_q: 'Largest area?', demo_win: 'Brazil 8.51M km²', c_br: 'Brazil', c_jp: 'Japan', c_mn: 'Mongolia', c_mt: 'Malta',
     v_br: '8.51M km²', v_jp: '378K km²', v_mn: '1.56M km²', v_mt: '316 km²',
