@@ -53,6 +53,13 @@ const sfx = (() => {
 })();
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });   // 最初のタップで音を許可
 document.addEventListener('click', (e) => {
+  // 画面移動のリンク（図鑑・クイズ・対戦へ戻る など）: 音を鳴らしてから移動する（すぐ移動すると音が途切れる）
+  const a = e.target.closest('a.zukanlink, a.ztab-link, a.mini, .foot a[href]');
+  if (a && a.href && !a.target && !e.metaKey && !e.ctrlKey && !e.shiftKey && a.getAttribute('href') !== '#') {
+    e.preventDefault(); sfx.confirm();
+    setTimeout(() => { location.href = a.href; }, 160);
+    return;
+  }
   const b = e.target.closest('button, .who, a.muted');
   if (!b || b.closest('.flagcard') || b.id === 'soundBtn') return;
   sfx.tap();
