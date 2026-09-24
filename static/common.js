@@ -118,7 +118,7 @@ function showCountry(id) {
   const c = META.countries[id]; if (!c) return;
   const F = META.fields;
   const sub = LANG === 'en' ? `${c.name_official_en !== c.name_en ? c.name_en + '<br>' : ''}${c.name} ／ ${c.subregion}` : `${t('reading')}${c.official_kana}<br>${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}`;
-  let info = `<div style="display:flex;gap:14px;align-items:flex-start"><img src="${flagUrl(id)}" alt=""><div><h2 style="margin:0">${coff(c)}</h2><div class="muted">${sub}<br>${t('capital')}: ${c.capital || '—'}${c.landlocked ? t('landlocked') : ''}</div></div></div><div class="dl">`;
+  let info = `<div class="chead"><img class="cflag" src="${flagUrl(id)}" alt=""><h2>${coff(c)}</h2><div class="muted csub">${sub}<br>${t('capital')}: ${c.capital || '—'}${c.landlocked ? t('landlocked') : ''}</div></div><div class="dl">`;
   const used = new Set(META.prompts.map(p => p.key));
   for (const [title, allKeys] of COUNTRY_GROUPS) {
     const keys = allKeys.filter(k => (used.has(k) || EXTRA_KEYS.has(k)) && F[k]);
