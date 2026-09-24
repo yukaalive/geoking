@@ -818,7 +818,7 @@ async def security_headers(request, handler):
     if request.path.startswith('/static/') and request.path.rsplit('.', 1)[-1] in ('html', 'css', 'js', 'json', 'svg'):
         resp.headers.setdefault('Cache-Control', 'no-cache')
     resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
-    resp.headers.setdefault('X-Frame-Options', 'DENY')
+    resp.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')   # アプリ内フレーム（同じサイト）で図鑑・クイズを開けるように
     resp.headers.setdefault('Referrer-Policy', 'no-referrer')
     return resp
 

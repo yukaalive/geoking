@@ -23,8 +23,11 @@
     }
   },
   "server": {
-    "url": "https://geoking-vlgh.onrender.com/static/index.html",
+    "url": "https://geoking-vlgh.onrender.com/",
     "cleartext": false,
-    "errorPath": "offline.html"
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "geoking-vlgh.onrender.com"
+    ]
   }
 }

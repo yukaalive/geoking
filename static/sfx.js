@@ -57,7 +57,7 @@ document.addEventListener('click', (e) => {
   const a = e.target.closest('a.zukanlink, a.ztab-link, a.mini, .foot a[href]');
   if (a && a.href && !a.target && !e.metaKey && !e.ctrlKey && !e.shiftKey && a.getAttribute('href') !== '#') {
     e.preventDefault(); sfx.confirm();
-    setTimeout(() => { location.href = a.href; }, 160);
+    setTimeout(() => { (window.navigateTo || ((u) => { location.href = u; }))(a.href); }, 160);
     return;
   }
   const b = e.target.closest('button, .who, a.muted');
@@ -76,3 +76,12 @@ function renderPrefs() {
 }
 if ($('#soundBtn')) $('#soundBtn').onclick = () => { sfx.setSound(!sfx.prefs.sound); renderPrefs(); toast(sfx.prefs.sound ? t('sound_on') : t('sound_off')); };
 renderPrefs();
+
+// アプリ内フレーム（native.js が図鑑・クイズを重ねて表示している）の中: 対戦画面へのリンクはフレームを閉じる
+if (window.top !== window) {
+  window.navigateTo = (u) => {
+    const path = new URL(u, location.href).pathname;
+    if (path === '/' || path.endsWith('/index.html')) window.parent.postMessage('geoking:close', '*');
+    else location.href = u;
+  };
+}
