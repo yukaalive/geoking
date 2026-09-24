@@ -407,6 +407,7 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .quizlink{background:var(--card)}
 
 /* アプリ内で図鑑・クイズを重ねて表示するフレーム */
-.appframe{position:fixed;inset:0;z-index:100;background:var(--bg)}
+.appframe{position:fixed;inset:0;z-index:100;box-sizing:border-box;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(var(--card) 50%,var(--bg) 50%)}   /* フレーム内のページは画面上下の余白(充電表示など)を知れないので、外側で空ける */
 .appframe iframe{width:100%;height:100%;border:0;display:block}
 body.framed{overflow:hidden}
+.inframe .top{padding-top:10px}.inframe main{padding-bottom:16px}

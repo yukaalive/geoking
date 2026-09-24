@@ -1,6 +1,8 @@
 /* 地理王 共通処理（対戦画面 app.js と 図鑑 zukan.js で共用）
    - API 基点、DOM ヘルパー、値の表示形式、国データの小窓（データ＋世界順位＋地図） */
 const API = (window.GEOKING_SERVER || '').replace(/\/$/, '');
+// アプリ内フレームに表示されているとき: 画面上下の余白(充電表示など)は外側のフレームが空けるので、ページ側では空けない
+if (window.self !== window.top) document.documentElement.classList.add('inframe');
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 let META = null;          // countries, fields, categories, prompts（/api/meta）
