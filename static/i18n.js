@@ -67,6 +67,12 @@ const I18N = {
     all_regions: 'すべての地域', countries_n: '{n} か国', r_Africa: 'アフリカ', r_Americas: 'アメリカ大陸', r_Asia: 'アジア', r_Europe: 'ヨーロッパ', r_Oceania: 'オセアニア', r_Antarctic: '南極',
     rank_info: '{prompt}　{dir}並べています。{missing}{region}', dir_desc: '大きい方から', dir_asc: '小さい方から', excluded_missing: 'データなし {n} か国は除外。', only_region: '（{r}のみ）',
     zukan_title: '図鑑 - 地理王',
+    // クイズ
+    quiz: 'クイズ', quiz_title: '国旗クイズ - 地理王', quiz_heading: 'ひとりで国旗クイズ', quiz_lead: '10問・4択。全197か国から出ます。', solo_quiz: 'ひとりで国旗クイズ',
+    mode_flag: '国旗モード', mode_flag_desc: '国名を見て、正しい国旗を4枚から選ぶ', mode_name: '国名モード', mode_name_desc: '国旗を見て、正しい国名を4つから選ぶ',
+    learn_first: '先に図鑑で覚える', question: '問題', quit: 'やめる', which_flag: 'この国の国旗は？', which_name: 'この国旗の国は？',
+    correct: '正解！', wrong_answer: 'ざんねん… 正解は {name}', res_perfect: '全問正解！地理王！', res_great: 'すごい！', res_good: 'いいね！', res_tryagain: 'もう一度チャレンジ！',
+    new_best: '自己ベスト更新！', best_score: '自己ベスト {n} / {total}', review_wrong: 'まちがえた国（タップでデータ）', play_again: 'もう一度', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
   },
   en: {
     app_title: 'GeoKing', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -127,6 +133,11 @@ const I18N = {
     all_regions: 'All regions', countries_n: '{n} countries', r_Africa: 'Africa', r_Americas: 'Americas', r_Asia: 'Asia', r_Europe: 'Europe', r_Oceania: 'Oceania', r_Antarctic: 'Antarctic',
     rank_info: '{prompt} Sorted {dir}. {missing}{region}', dir_desc: 'from largest', dir_asc: 'from smallest', excluded_missing: '{n} countries without data excluded. ', only_region: '({r} only)',
     zukan_title: 'Study - GeoKing',
+    quiz: 'Quiz', quiz_title: 'Flag Quiz - GeoKing', quiz_heading: 'Solo flag quiz', quiz_lead: '10 questions, 4 choices, all 197 countries.', solo_quiz: 'Solo flag quiz',
+    mode_flag: 'Flag mode', mode_flag_desc: 'See the country name, pick the right flag out of 4', mode_name: 'Name mode', mode_name_desc: 'See the flag, pick the right country name out of 4',
+    learn_first: 'Study the flags first', question: 'Question', quit: 'Quit', which_flag: 'Which flag is this country?', which_name: 'Which country is this flag?',
+    correct: 'Correct!', wrong_answer: 'Not quite… it was {name}', res_perfect: 'Perfect! You are the GeoKing!', res_great: 'Great job!', res_good: 'Nice!', res_tryagain: 'Try again!',
+    new_best: 'New personal best!', best_score: 'Best {n} / {total}', review_wrong: 'Countries you missed (tap for details)', play_again: 'Play again', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

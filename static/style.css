@@ -330,8 +330,9 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .zukanlink{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:8px 14px;border:2px solid var(--ink);border-radius:12px;background:var(--accent);color:var(--ink);text-decoration:none;font-weight:900;box-shadow:var(--shadow-sm)}
 .zukanlink small{font-weight:700;color:#5a4a10;margin-left:4px}
 .zukanlink:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
-.herodemo .zukanlink{grid-column:1;justify-self:start}
-.ztabs{display:flex;gap:8px;margin:12px 0}
+.herodemo .sololinks{grid-column:1;justify-self:start;display:flex;gap:8px;flex-wrap:wrap}
+.ztabs{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.ztab-link{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:2px solid var(--ink);border-radius:12px;background:var(--accent);color:var(--ink);text-decoration:none;font-weight:800;box-shadow:var(--shadow-sm);margin-left:auto}
 .ztabs button.on{background:var(--primary);color:var(--primary-ink)}
 .zfilters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .zfilters input:not([type]){width:auto;min-width:180px;margin:0}
@@ -355,3 +356,50 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .rank-list .val{font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
 .dl .r{color:var(--muted);font-size:11px;margin-left:6px;font-weight:700}
 @media(max-width:560px){.rank-list li{gap:8px;padding:8px 2px}.rank-list img{width:44px;height:30px;flex:none}.rank-list .rk{width:30px;font-size:15px;flex:none}.rank-list .nm{min-width:0;font-size:14px;line-height:1.25}.rank-list .val{white-space:normal;text-align:right;max-width:38%;font-size:14px;line-height:1.2}}
+
+/* ---------- ひとりで国旗クイズ */
+.qscreen h1{font-size:26px}
+.qmodes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media(max-width:600px){.qmodes{grid-template-columns:1fr}}
+.qmode{text-align:left;padding:16px 18px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+.qmode:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);background:var(--card)}
+.qmode .qm-head{font-family:var(--font-head);font-size:20px;display:flex;align-items:center;gap:8px}
+.qmode .qm-head .ico{width:1.3em;height:1.3em;color:var(--primary)}
+.qmode .qm-desc{font-weight:700;color:var(--muted);font-size:14px}
+.qbar{display:flex;align-items:center;gap:12px;font-weight:800}
+.qbar .qprog b{font-family:var(--font-head);font-size:22px}
+.qbar .qscore{margin-left:auto;font-family:var(--font-head);font-size:18px;color:var(--primary)}
+.qtrack{height:10px;border:2px solid var(--ink);border-radius:999px;background:var(--card);margin:8px 0 14px;overflow:hidden}
+.qfill{height:100%;background:var(--primary);width:0;transition:width .4s}
+.qprompt{text-align:center;margin:6px 0 14px}
+.qp-label{font-weight:800;color:var(--muted);font-size:13px;letter-spacing:.1em}
+.qp-name{font-family:var(--font-head);font-size:clamp(26px,6vw,40px);line-height:1.2;margin-top:4px}
+.qp-flag{width:min(70vw,360px);aspect-ratio:3/2;object-fit:contain;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:var(--shadow);margin-top:8px}
+.qoptions{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:640px;margin:0 auto}
+.qopt{position:relative;padding:10px;border-radius:14px;background:var(--card);box-shadow:var(--shadow-sm);font-weight:900;font-size:17px;line-height:1.3;min-height:64px;display:flex;align-items:center;justify-content:center;text-align:center}
+.qopt.flag{padding:8px;flex-direction:column;gap:6px}
+.qopt.flag img{width:100%;aspect-ratio:3/2;object-fit:contain;border:1.5px solid var(--ink);border-radius:8px;background:#fff}
+.qopt:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink);background:var(--card)}
+.qopt:disabled{opacity:1;cursor:default;transform:none}
+.qopt.correct{background:#dff2e6;border-color:var(--primary);box-shadow:3px 3px 0 var(--primary)}
+.qopt.wrong{background:#ffe1d9;border-color:var(--accent-2);box-shadow:3px 3px 0 var(--accent-2);animation:shakeX .4s}
+.qopt.dim{opacity:.45}
+.qopt-nm{font-size:12px;font-weight:800;color:var(--muted)}
+.qopt.correct .qopt-nm{color:var(--primary)}
+@keyframes shakeX{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.qfeedback{text-align:center;font-family:var(--font-head);font-size:22px;min-height:34px;margin-top:14px}
+.qfeedback.ok{color:var(--primary)}.qfeedback.ng{color:var(--accent-2);font-family:var(--font-body);font-weight:900;font-size:17px}
+.qres{text-align:center;max-width:560px;margin:0 auto}
+.qres-disc{position:relative;width:84px;height:84px;border-radius:50%;border:3px solid var(--ink);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;box-shadow:3px 3px 0 var(--ink);background:var(--card);animation:medalPop .7s cubic-bezier(.2,1.8,.4,1) both}
+.qres-disc .ico{width:44px;height:44px}
+.qres-disc.g{background:linear-gradient(135deg,#ffe58a,var(--accent) 60%,#ffd25e);animation:medalPop .7s cubic-bezier(.2,1.8,.4,1) both,medalGlow 1.6s ease-in-out .8s infinite}
+.qres-disc.s{background:linear-gradient(135deg,#fafafa,#d5dae2)}.qres-disc.b{background:linear-gradient(135deg,#f7dcc3,#e0a878)}
+.qres-disc .confetti{position:absolute;inset:-40px -20px;pointer-events:none}
+.qres-disc .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;left:50%;top:50%;opacity:0;animation:conf 1.4s ease-out forwards}
+.qres-score{font-family:var(--font-head);font-size:40px;margin:4px 0}
+.qres-score b{font-size:56px;color:var(--primary)}
+.qwrong{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0 14px}
+.qw{width:110px;border:2px solid var(--ink);border-radius:10px;padding:6px;background:var(--card);font-size:12px;font-weight:800;cursor:pointer;box-shadow:var(--shadow-sm)}
+.qw img{width:100%;aspect-ratio:3/2;object-fit:contain;border:1.5px solid var(--ink);border-radius:6px;background:#fff}
+.qres .row{justify-content:center}
+.quizlink{background:var(--card)}

@@ -715,7 +715,7 @@ async def healthz(request):
 
 # 利用ログ（ざっくり）: 対戦画面・図鑑を「誰が」「何分」見たかを運用ログに残す。
 # クライアントが開いた時・5分ごと・離れた時に POST してくる。保存はせずログ出力のみ
-VISIT_MODES = {'game': '対戦', 'zukan': '図鑑'}
+VISIT_MODES = {'game': '対戦', 'zukan': '図鑑', 'quiz': 'クイズ'}
 async def api_visit(request):
     try:
         data = await request.json()

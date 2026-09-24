@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6f4a">
+<title data-i18n="quiz_title">国旗クイズ - 地理王</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+1p:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span data-i18n="quiz">クイズ</span></div>
+  <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音・振動" data-i18n-title="sound_title"></button></div>
+  <a class="mini" href="/static/index.html" style="text-decoration:none;font-weight:800;border:2px solid var(--ink);border-radius:12px;padding:4px 10px;color:var(--ink)" data-i18n="back_to_game">対戦へ戻る</a>
+</header>
+<main>
+  <!-- モード選択 -->
+  <section id="qmenu" class="qscreen">
+    <h1 data-i18n="quiz_heading">ひとりで国旗クイズ</h1>
+    <p class="muted" data-i18n="quiz_lead">10問・4択。全197か国から出ます。</p>
+    <div class="qmodes">
+      <button class="qmode" data-mode="flag">
+        <div class="qm-head"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> <span data-i18n="mode_flag">国旗モード</span></div>
+        <div class="qm-desc" data-i18n="mode_flag_desc">国名を見て、正しい国旗を4枚から選ぶ</div>
+        <div class="qm-best muted small" id="bestFlag"></div>
+      </button>
+      <button class="qmode" data-mode="name">
+        <div class="qm-head"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="mode_name">国名モード</span></div>
+        <div class="qm-desc" data-i18n="mode_name_desc">国旗を見て、正しい国名を4つから選ぶ</div>
+        <div class="qm-best muted small" id="bestName"></div>
+      </button>
+    </div>
+    <p class="muted small"><a href="/static/zukan.html" class="muted" data-i18n="learn_first">先に図鑑で覚える</a></p>
+  </section>
+
+  <!-- 出題 -->
+  <section id="qplay" class="qscreen hidden">
+    <div class="qbar">
+      <div class="qprog"><span data-i18n="question">問題</span> <b id="qNum">1</b> / <span id="qTotal">10</span></div>
+      <div class="qscore"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#check"/></svg> <b id="qScore">0</b></div>
+      <button id="qQuit" class="mini" data-i18n="quit">やめる</button>
+    </div>
+    <div class="qtrack"><div id="qFill" class="qfill"></div></div>
+    <div id="qPrompt" class="qprompt"></div>
+    <div id="qOptions" class="qoptions"></div>
+    <div id="qFeedback" class="qfeedback"></div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="qresult" class="qscreen hidden">
+    <div class="card qres">
+      <div class="qres-disc" id="qResDisc"></div>
+      <h1 id="qResTitle"></h1>
+      <div class="qres-score"><b id="qResScore">0</b> / <span id="qResTotal">10</span></div>
+      <p class="muted" id="qResBest"></p>
+      <div id="qWrongWrap" class="hidden">
+        <h3 data-i18n="review_wrong">まちがえた国（タップでデータ）</h3>
+        <div id="qWrong" class="qwrong"></div>
+      </div>
+      <div class="row">
+        <button id="qAgain" class="primary" data-i18n="play_again">もう一度</button>
+        <button id="qOther" data-i18n="choose_mode">モードを選ぶ</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+<div id="modal" class="modal hidden"><div class="modalbox"><button id="modalClose" class="close">×</button><div id="modalBody"></div></div></div>
+<footer class="foot muted small"><a href="/static/index.html" class="muted" data-i18n="back_to_game">対戦へ戻る</a> ／ <a href="/static/zukan.html" class="muted" data-i18n="zukan">図鑑</a> ／ <a href="/static/privacy.html" class="muted" data-i18n="privacy">プライバシーポリシー</a></footer>
+<script src="/static/i18n.js"></script>
+<script src="/static/common.js"></script>
+<script src="/static/sfx.js"></script>
+<script src="/static/quiz.js"></script>
+<script src="/static/native.js"></script>
+</body>
+</html>
