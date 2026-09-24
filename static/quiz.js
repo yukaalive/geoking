@@ -24,8 +24,8 @@ function renderMenu() {
   showScreen('qmenu');
 }
 
-function startQuiz(mode) {
-  qMode = mode; qList = makeQuestions(); qIdx = 0; qScore = 0; qWrong = [];
+function startQuiz(mode, same = false) {   // same: 直前と全く同じ問題（問題の順番・4つの選択肢と並びも同じ）でもう一度
+  qMode = mode; if (!same || !qList.length) qList = makeQuestions(); qIdx = 0; qScore = 0; qWrong = [];
   $('#qTotal').textContent = Q_TOTAL;
   sfx.start();
   showScreen('qplay');
@@ -83,6 +83,8 @@ function finish() {
   $('#qResDisc').innerHTML = rate === 1 ? ico('crown') : rate >= 0.8 ? ico('trophy') : rate >= 0.5 ? ico('star') : ico('flag');
   $('#qResTitle').textContent = rate === 1 ? t('res_perfect') : rate >= 0.8 ? t('res_great') : rate >= 0.5 ? t('res_good') : t('res_tryagain');
   $('#qResScore').textContent = qScore; $('#qResTotal').textContent = Q_TOTAL;
+  // まちがえた問題があれば「同じ問題でもう一度」、全問正解なら「新しい問題に挑戦」を目立たせる（ボタンの並びは変えない）
+  $('#qReplay').classList.toggle('primary', qWrong.length > 0); $('#qAgain').classList.toggle('primary', qWrong.length === 0);
   const wrap = $('#qWrongWrap'), box = $('#qWrong'); box.innerHTML = '';
   wrap.classList.toggle('hidden', qWrong.length === 0);
   for (const c of qWrong) {
@@ -113,6 +115,7 @@ function spawnConfetti(target, tier) {
   META = await loadMeta();
   document.querySelectorAll('.qmode').forEach(b => b.onclick = () => startQuiz(b.dataset.mode));
   $('#qQuit').onclick = () => { if (confirm(t('confirm_quit'))) { sfx.leave(); renderMenu(); } };
+  $('#qReplay').onclick = () => startQuiz(qMode, true);
   $('#qAgain').onclick = () => startQuiz(qMode);
   $('#qOther').onclick = () => renderMenu();
   $('#modal').onclick = (e) => { if (e.target.id === 'modal') { $('#modal').classList.add('hidden'); sfx.close(); } };

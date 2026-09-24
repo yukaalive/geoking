@@ -18,7 +18,7 @@ const I18N = {
     spectating: '観戦中', spectate_note: 'このゲームは観戦です。次のゲームから参加できます。みんなの手札で、誰がどのカードを選んでいるかがリアルタイムで見えます。',
     result: '結果', score: 'スコア', chat: 'チャット', chat_ph: 'メッセージを入力', send: '送信', final_results: '結果発表', played_list: '出された国の一覧',
     rematch: '同じメンバーでもう一戦', to_lobby_settings: 'ロビーに戻って設定を変える', waiting_host: 'ホストの操作を待っています…',
-    code: 'コード', share_invite: '招待リンクを共有', lobby_btn: 'ロビーへ', leave: '退出', sources: 'データ出典', privacy: 'プライバシーポリシー',
+    code: 'コード', share_invite: '招待リンクを共有', people_n: '{n}人', room_count_title: '部屋にいる人数', lobby_btn: 'ロビーへ', leave: '退出', sources: 'データ出典', privacy: 'プライバシーポリシー',
     sound_title: '効果音・振動', sound_on: '効果音・振動: オン', sound_off: '効果音・振動: オフ', lang_btn: 'EN',
     // 対戦画面（JS）
     conn_lost_reload: 'サーバーに接続できません。ページを再読み込みしてください', reconnecting: '接続が切れました。再接続します…',
@@ -71,7 +71,7 @@ const I18N = {
     mode_flag: '国旗モード', mode_flag_desc: '国名を見て、正しい国旗を4枚から選ぶ', mode_name: '国名モード', mode_name_desc: '国旗を見て、正しい国名を4つから選ぶ',
     learn_first: '先に図鑑で覚える', question: '問題', quit: 'やめる', which_flag: 'この国の国旗は？', which_name: 'この国旗の国は？',
     correct: '正解！', wrong_answer: 'ざんねん… 正解は {name}', res_perfect: '全問正解！地理王！', res_great: 'すごい！', res_good: 'いいね！', res_tryagain: 'もう一度チャレンジ！',
-    review_wrong: 'まちがえた国（タップでデータ）', play_again: 'もう一度', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
+    review_wrong: 'まちがえた国（タップでデータ）', replay_same: '同じ問題でもう一度', play_again: '新しい問題に挑戦', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
   },
   en: {
     app_title: 'GeoKing | Flag card geography party game', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -87,7 +87,7 @@ const I18N = {
     spectating: 'Spectating', spectate_note: "You're watching this game and will join the next one. You can see which card each player is choosing in real time.",
     result: 'Result', score: 'Score', chat: 'Chat', chat_ph: 'Type a message', send: 'Send', final_results: 'Final results', played_list: 'Cards played',
     rematch: 'Play again', to_lobby_settings: 'Back to lobby to change settings', waiting_host: 'Waiting for the host…',
-    code: 'Code', share_invite: 'Share invite link', lobby_btn: 'Lobby', leave: 'Leave', sources: 'Data sources', privacy: 'Privacy policy',
+    code: 'Code', share_invite: 'Share invite link', people_n: '{n}', room_count_title: 'People in this room', lobby_btn: 'Lobby', leave: 'Leave', sources: 'Data sources', privacy: 'Privacy policy',
     sound_title: 'Sound & vibration', sound_on: 'Sound & vibration: on', sound_off: 'Sound & vibration: off', lang_btn: '日本語',
     conn_lost_reload: 'Cannot reach the server. Please reload the page.', reconnecting: 'Connection lost. Reconnecting…',
     enter_name: 'Please enter your name', enter_code4: 'Enter the 4-character room code',
@@ -135,7 +135,7 @@ const I18N = {
     mode_flag: 'Flag mode', mode_flag_desc: 'See the country name, pick the right flag out of 4', mode_name: 'Name mode', mode_name_desc: 'See the flag, pick the right country name out of 4',
     learn_first: 'Study the flags first', question: 'Question', quit: 'Quit', which_flag: 'Which flag is this country?', which_name: 'Which country is this flag?',
     correct: 'Correct!', wrong_answer: 'Not quite… it was {name}', res_perfect: 'Perfect! You are the GeoKing!', res_great: 'Great job!', res_good: 'Nice!', res_tryagain: 'Try again!',
-    review_wrong: 'Countries you missed (tap for details)', play_again: 'Play again', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
+    review_wrong: 'Countries you missed (tap for details)', replay_same: 'Same questions again', play_again: 'New questions', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

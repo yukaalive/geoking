@@ -240,6 +240,7 @@ function render() {
   const isHost = state.host === pid;
   document.body.classList.toggle('host', isHost); document.body.classList.toggle('guest', !isHost);
   $('#roomInfo').classList.remove('hidden');
+  $('#roomCountN').textContent = t('people_n', { n: state.players.filter(p => p.connected || p.is_bot).length });   // 上に出す「今部屋にいる人数」（ボットも数える。対戦中に接続が切れた人は数えない。ロビーでは切れた人はすぐ抜けるので「プレイヤー 3 / 8」と同じ）
   $('#lobbyBtn').classList.toggle('hidden', !(isHost && (state.phase === 'pick' || state.phase === 'reveal')));
 
   if (state.phase === 'lobby') { renderLobby(); show('lobby'); }

@@ -141,8 +141,8 @@ const EXTRA_KEYS = new Set(['climate']);   // お題にはないが表示する�
 function showCountry(id) {
   const c = META.countries[id]; if (!c) return;
   const F = META.fields;
-  const sub = LANG === 'en' ? `${c.name_official_en !== c.name_en ? c.name_en + '<br>' : ''}${c.name} ／ ${c.subregion}` : `${t('reading')}${c.official_kana}<br>${c.name_official !== c.name ? c.name + '<br>' : ''}${c.name_en} ／ ${c.subregion}`;
-  let info = `<div class="chead"><img class="cflag" src="${flagUrl(id)}" alt=""><h2>${coff(c)}</h2><div class="muted csub">${sub}<br>${t('capital')}: ${c.capital || '—'}${c.landlocked ? t('landlocked') : ''}</div></div><div class="dl">`;
+  const sub = LANG === 'en' ? `${c.name_official_en !== c.name_en ? c.name_en + '<br>' : ''}${c.name} ／ ${c.subregion}` : `${t('reading')}${c.official_kana}<br>${c.name_en} ／ ${c.subregion}`;
+  let info = `<div class="chead"><img class="cflag" src="${flagUrl(id)}" alt=""><h2>${coff(c)}</h2><div class="muted csub">${sub}<br>${t('capital')}: ${(LANG === 'en' ? c.capital : (c.capital_ja || c.capital)) || '—'}${c.landlocked ? t('landlocked') : ''}</div></div><div class="dl">`;
   const used = new Set(META.prompts.map(p => p.key));
   for (const [title, allKeys] of COUNTRY_GROUPS) {
     const keys = allKeys.filter(k => (used.has(k) || EXTRA_KEYS.has(k)) && F[k]);
@@ -157,6 +157,7 @@ function showCountry(id) {
   $('#modalBody').innerHTML = `<div class="modalgrid"><div class="minfo">${info}</div><div class="mmap worldmap"><div class="muted small">${t('map_loading')}</div></div></div>`;
   $('#modal').classList.remove('hidden');
   $('#modalBody').classList.add('wide');
+  $('#modal .modalbox').scrollTop = 0;   // 別の国を開いたときも一番上から（前に開いた国を下まで見ていると、途中から開いていた）
   loadWorld().then(() => { const box = $('#modalBody .mmap'); if (box) box.innerHTML = `<div class="muted small" style="margin-bottom:4px">${t('world_pos')}</div>` + worldMapSvg(id) + `<div class="muted small" style="margin:10px 0 4px">${t('zoom_in')}</div>` + worldMapSvg(id, true) + `<div class="muted small" style="margin-top:6px">${fmtValue(c.lat, 'lat')}　${fmtValue(c.lng, 'lng')}</div>`; });
 }
 if ($('#modalClose')) $('#modalClose').onclick = () => { $('#modal').classList.add('hidden'); if (typeof sfx !== 'undefined') sfx.close(); };
