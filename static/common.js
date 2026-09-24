@@ -41,11 +41,13 @@ function fmtValue(v, fmt) {
 // 指標ごとの世界順位（大きい順）。データがある国の中での順位と母数を返す
 const RANK_CACHE = {};
 // dir='max' は大きい順、'min' は小さい順。同値は同じ順位（1,1,1,4… の方式。サーバーの出す世界順位と同じ）
+const roundVal = (key, v) => { const d = (META.fields[key] && META.fields[key].dec) ?? 2; const m = 10 ** d; return Math.round(v * m) / m; };
 function worldRank(id, key, dir = 'max') {
   if (!RANK_CACHE[key]) {
-    RANK_CACHE[key] = Object.values(META.countries).map(c => c[key]).filter(v => v != null);
+    RANK_CACHE[key] = Object.values(META.countries).map(c => c[key]).filter(v => v != null).map(v => roundVal(key, v));   // 表示桁で丸めて比較
   }
-  const v = META.countries[id][key]; if (v == null) return null;
+  const raw = META.countries[id][key]; if (raw == null) return null;
+  const v = roundVal(key, raw);
   const vals = RANK_CACHE[key];
   const better = dir === 'max' ? vals.filter(x => x > v).length : vals.filter(x => x < v).length;
   return { rank: better + 1, total: vals.length };

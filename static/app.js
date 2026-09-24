@@ -37,6 +37,7 @@ function connect(onOpen) {
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
     if (msg.type === 'state') { reconnectTries = 0; state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } render(); }
+    else if (msg.type === 'pong') { clearTimeout(pongTimer); pongTimer = null; }
     else if (msg.type === 'toast') toast(msg.message);
     else if (msg.type === 'left') { leaveToHome(msg.message); if (ws) { ws.onclose = null; ws.close(); } }
     else if (msg.type === 'error') {
@@ -55,12 +56,32 @@ function connect(onOpen) {
     if (reconnectTries > 8) {   // 約1分あきらめたら停止（無限再接続ループを防ぐ）
       toast('サーバーに接続できません。ページを再読み込みしてください'); stopTimer(); state = null; return;
     }
-    toast('接続が切れました。再接続します…');
-    const delay = Math.min(15000, 1000 * 2 ** (reconnectTries - 1));
+    if (reconnectTries > 1) toast('接続が切れました。再接続します…');
+    const delay = reconnectTries === 1 ? 300 : Math.min(15000, 1000 * 2 ** (reconnectTries - 2));   // 1回目はすぐ、以降は間隔を広げる
     setTimeout(() => { if (state) connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value, ...rejoinInfo() })); }, delay);
   };
 }
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+
+// アプリを切り替えて戻った時（LINE など）: iOS は WebSocket が死んでも onclose が来ないことがある。
+// ping を送って 2.5 秒以内に返事がなければ切れたとみなして、待ち時間なしでつなぎ直す
+let pongTimer = null;
+function ensureConnection() {
+  if (!state) return;
+  reconnectTries = 0;
+  if (!ws || ws.readyState !== 1) { if (ws) { ws.onclose = null; try { ws.close(); } catch {} } return reconnectNow(); }
+  clearTimeout(pongTimer);
+  pongTimer = setTimeout(() => { if (ws) { ws.onclose = null; try { ws.close(); } catch {} } reconnectNow(); }, 2500);
+  send({ type: 'ping' });
+}
+function reconnectNow() {
+  if (!state) return;
+  connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value || localStorage.getItem('geoking_name') || '', ...rejoinInfo() }));
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') ensureConnection(); });
+window.addEventListener('focus', () => ensureConnection());
+window.addEventListener('pageshow', () => ensureConnection());
+window.addEventListener('online', () => ensureConnection());
 
 // ---------- ホーム
 // 名前は必須。空なら null を返して呼び出し側で止める
@@ -192,6 +213,19 @@ function render() {
   if (state.phase === 'lobby') { renderLobby(); show('lobby'); }
   else if (state.phase === 'pick' || state.phase === 'reveal') { renderGame(); show('game'); }
   else if (state.phase === 'end') { renderEnd(); show('end'); }
+  renderChat();
+}
+
+// チャットはロビー・ゲーム・結果のどの画面でも使える。カードを今の画面のスロットへ移して描画
+function renderChat() {
+  const card = $('#chatCard');
+  const slot = state.phase === 'lobby' ? $('#lobbyChatSlot') : state.phase === 'end' ? $('#endChatSlot') : $('#gameChatSlot');
+  if (slot && card.parentElement !== slot) slot.appendChild(card);
+  card.classList.remove('hidden');
+  const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
+  log.innerHTML = (state.chat || []).map(c => `<div>${c.pid && c.pid !== pid ? `<b class="who" data-pid="${c.pid}" title="通報・ミュート">${escapeHtml(c.name)}</b>` : `<b>${escapeHtml(c.name)}</b>`} ${escapeHtml(c.text)}</div>`).join('');
+  log.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
+  if (atBottom) log.scrollTop = log.scrollHeight;
 }
 
 function playerTag(p) {
@@ -228,19 +262,13 @@ function renderGame() {
   // 「〜が高い国は？」の「高い/低い」などを強調表示
   const m = pr.text.match(/^(.*?)(大きい|小さい|多い|少ない|高い|低い|長い|短い|北|南|東|西|近い)(国は？)$/);
   $('#promptText').innerHTML = m ? `${escapeHtml(m[1])}<span class="kw">${m[2]}</span>${m[3]}` : escapeHtml(pr.text);
-  $('#promptHint').textContent = pr.hint || '';
 
   // スコア
   const sl = $('#scoreList'); sl.innerHTML = '';
   for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
     sl.appendChild(el('li', '', `<span>${p.pid !== pid && !p.is_bot ? `<b class="who" data-pid="${p.pid}" title="通報・ミュート">${escapeHtml(p.name)}</b>` : escapeHtml(p.name)}${playerTag(p)}</span><b>${p.spectator ? '—' : p.score + ' 点'}${state.phase === 'pick' && !p.spectator ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
   }
-  // チャット
   sl.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
-  const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
-  log.innerHTML = state.chat.map(c => `<div>${c.pid && c.pid !== pid ? `<b class="who" data-pid="${c.pid}" title="通報・ミュート">${escapeHtml(c.name)}</b>` : `<b>${escapeHtml(c.name)}</b>`} ${escapeHtml(c.text)}</div>`).join('');
-  log.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
-  if (atBottom) log.scrollTop = log.scrollHeight;
 
   if (state.phase === 'pick') {
     $('#pickArea').classList.remove('hidden'); $('#revealArea').classList.add('hidden');
@@ -374,7 +402,7 @@ function renderReveal() {
     $('#nextCountdown').textContent = `${left}秒後に${label}へ`;
   };
   tick(); revealInterval = setInterval(tick, 250);
-  $('#revealArea').querySelector('h3').textContent = winners.length ? `${winners.join('・')} が1点獲得！（カードをクリックで裏面の全データ）` : '全員データなし… 引き分け';
+  $('#revealArea').querySelector('h3').textContent = winners.length ? `${winners.join('・')} が1点獲得！` : '全員データなし… 引き分け';
 }
 
 function renderEnd() {

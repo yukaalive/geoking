@@ -20,7 +20,7 @@
 <header class="top">
   <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span>GeoKing</span></div>
   <div id="roomInfo" class="roominfo hidden"><span id="roomTitle" class="roomtitle"></span> <span class="muted small">コード</span> <b id="roomCode"></b> <button id="copyLink" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#copy"/></svg> 招待リンクをコピー</button> <button id="lobbyBtn" class="mini hostonly hidden"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#refresh"/></svg> ロビーへ</button> <button id="leaveBtn" class="mini danger"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#door"/></svg> 退出</button></div>
-  <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音"></button><button id="vibeBtn" class="mini pref" title="振動"></button></div>
+  <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音・振動"></button></div>
 </header>
 
 <main id="app">
@@ -80,6 +80,7 @@
         <p class="guestonly muted">ホストが開始するのを待っています…</p>
       </div>
     </div>
+    <div id="lobbyChatSlot" class="chatslot"></div>
   </section>
 
   <!-- ゲーム -->
@@ -89,7 +90,6 @@
       <div id="promptCard" class="promptcard">
         <div class="cat" id="promptCat"></div>
         <div class="text" id="promptText"></div>
-        <div class="hint" id="promptHint"></div>
       </div>
       <div id="timer" class="timer hidden"></div>
     </div>
@@ -115,11 +115,7 @@
           <h3><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> スコア</h3>
           <ul id="scoreList" class="scores"></ul>
         </div>
-        <div class="card chat">
-          <h3><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#chat"/></svg> チャット</h3>
-          <div id="chatLog" class="chatlog"></div>
-          <form id="chatForm"><input id="chatInput" maxlength="80" placeholder="メッセージを入力" autocomplete="off"><button>送信</button></form>
-        </div>
+        <div id="gameChatSlot"></div>
       </aside>
     </div>
   </section>
@@ -138,7 +134,15 @@
         <span class="guestonly muted">ホストの操作を待っています…</span>
       </div>
     </div>
+    <div id="endChatSlot" class="chatslot"></div>
   </section>
+
+  <!-- チャット（ロビー・ゲーム・結果で共通。render() が今の画面のスロットへ移動する） -->
+  <div id="chatCard" class="card chat hidden">
+    <h3><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#chat"/></svg> チャット</h3>
+    <div id="chatLog" class="chatlog"></div>
+    <form id="chatForm"><input id="chatInput" maxlength="80" placeholder="メッセージを入力" autocomplete="off"><button>送信</button></form>
+  </div>
 </main>
 
 <div id="toast" class="toast hidden"></div>

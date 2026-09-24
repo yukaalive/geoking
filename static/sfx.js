@@ -2,7 +2,7 @@
 // ---------- 効果音と振動
 const sfx = (() => {
   let ctx = null;
-  const prefs = { sound: localStorage.getItem('geoking_sound') !== 'off', vibe: localStorage.getItem('geoking_vibe') !== 'off' };
+  const prefs = { sound: localStorage.getItem('geoking_sound') !== 'off' };   // 音オン＝振動もオン（設定は1つ）
   const ensure = () => { if (!prefs.sound) return null; try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; } catch { return null; } };
   // 1音: type=波形, f=周波数(Hz), t=開始遅延, d=長さ, v=音量, slide=終了周波数
   const tone = (type, f, t, d, v = .18, slide = null) => {
@@ -22,11 +22,11 @@ const sfx = (() => {
     if (slideTo) bp.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + t + d); bp.Q.value = q;
     src.connect(bp).connect(g).connect(c.destination); src.start(c.currentTime + t);
   };
-  const vibrate = (pattern) => { if (prefs.vibe && navigator.vibrate) { try { navigator.vibrate(pattern); } catch {} } };
+  const vibrate = (pattern) => { if (prefs.sound && navigator.vibrate) { try { navigator.vibrate(pattern); } catch {} } };
   return {
     prefs,
     unlock() { ensure(); },
-    toggle(k) { prefs[k] = !prefs[k]; localStorage.setItem('geoking_' + k, prefs[k] ? 'on' : 'off'); if (k === 'sound' && prefs.sound) this.select(); if (k === 'vibe' && prefs.vibe) vibrate(30); },
+    setSound(on) { prefs.sound = on; localStorage.setItem('geoking_sound', on ? 'on' : 'off'); if (on) { this.confirm(); } },   // 音＋振動のオン/オフ
     select()  { tone('square', 880, 0, .05, .08); vibrate(10); },                                   // カードを選ぶ（カチッ）
     confirm() { tone('triangle', 520, 0, .08, .2); tone('triangle', 780, .07, .12, .2); vibrate(25); }, // 決定（ポン）
     round()   { tone('sine', 660, 0, .1, .15); tone('sine', 990, .1, .16, .15); vibrate(15); },        // 新しいお題
@@ -48,27 +48,24 @@ const sfx = (() => {
     error()   { tone('square', 200, 0, .12, .08); tone('square', 160, .12, .16, .08); vibrate([30, 30, 30]); }, // エラー・拒否
     open()    { tone('sine', 700, 0, .06, .07, 900); },                                                    // 小窓を開く
     close()   { tone('sine', 900, 0, .06, .06, 600); },                                                    // 小窓を閉じる
-    toggle()  { tone('square', 990, 0, .05, .07); },                                                       // 設定の切り替え
+    switch()  { tone('square', 990, 0, .05, .07); },                                                       // 設定の切り替え
   };
 })();
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });   // 最初のタップで音を許可
 document.addEventListener('click', (e) => {
   const b = e.target.closest('button, .who, a.muted');
-  if (!b || b.closest('.flagcard') || b.id === 'soundBtn' || b.id === 'vibeBtn') return;
+  if (!b || b.closest('.flagcard') || b.id === 'soundBtn') return;
   sfx.tap();
 });
-document.addEventListener('change', (e) => { if (e.target.matches('input[type=checkbox], select')) sfx.toggle(); });
+document.addEventListener('change', (e) => { if (e.target.matches('input[type=checkbox], select')) sfx.switch(); });
 // 小窓（国データなど）を開いたら音
 if ($('#modal')) new MutationObserver(() => { if (!$('#modal').classList.contains('hidden')) sfx.open(); }).observe($('#modal'), { attributes: true, attributeFilter: ['class'] });
-// ヘッダーの効果音・振動ボタン（ある画面だけ）
+// ヘッダーの効果音ボタン（オン＝黄色、オフ＝グレーに斜線アイコン）。振動は音と一緒にオン/オフ
 function renderPrefs() {
-  if (!$('#soundBtn')) return;
-  $('#soundBtn').innerHTML = ico(sfx.prefs.sound ? 'sound' : 'mute'); $('#soundBtn').classList.toggle('off', !sfx.prefs.sound);
-  if ($('#vibeBtn')) {
-    $('#vibeBtn').innerHTML = ico(sfx.prefs.vibe ? 'vibrate' : 'vibrate-off'); $('#vibeBtn').classList.toggle('off', !sfx.prefs.vibe);
-    $('#vibeBtn').style.display = navigator.vibrate ? '' : 'none';   // iPhone の Safari は振動APIが無いので隠す
-  }
+  const b = $('#soundBtn'); if (!b) return;
+  b.innerHTML = ico(sfx.prefs.sound ? 'sound' : 'mute');
+  b.classList.toggle('on', sfx.prefs.sound); b.classList.toggle('off', !sfx.prefs.sound);
+  b.title = sfx.prefs.sound ? '効果音・振動: オン' : '効果音・振動: オフ';
 }
-if ($('#soundBtn')) $('#soundBtn').onclick = () => { sfx.toggle('sound'); renderPrefs(); toast(sfx.prefs.sound ? '効果音: オン' : '効果音: オフ'); };
-if ($('#vibeBtn')) $('#vibeBtn').onclick = () => { sfx.toggle('vibe'); renderPrefs(); toast(sfx.prefs.vibe ? '振動: オン' : '振動: オフ'); };
+if ($('#soundBtn')) $('#soundBtn').onclick = () => { sfx.setSound(!sfx.prefs.sound); renderPrefs(); toast(sfx.prefs.sound ? '効果音・振動: オン' : '効果音・振動: オフ'); };
 renderPrefs();

@@ -26,6 +26,7 @@
 }
 
 *{box-sizing:border-box}
+html{touch-action:manipulation}   /* ダブルタップ拡大を無効化（iPhone で画面が急に大きくなる問題）。ピンチは可 */
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-weight:500;line-height:1.55;
   background-image:radial-gradient(rgba(28,43,34,.07) 1px,transparent 1px);background-size:18px 18px}
 h1,h2,h3,.brand,.promptcard .text,.roundlabel b,.timer,.rev .val,.final li:first-child{font-family:var(--font-head);font-weight:400;letter-spacing:.02em}
@@ -252,7 +253,10 @@ body.composing #chatForm button{white-space:nowrap}
 .prefs{display:flex;gap:4px;margin-left:auto}
 .top .roominfo + .prefs{margin-left:0}
 button.pref{padding:4px 8px;margin:0}button.pref .ico{width:1.3em;height:1.3em;vertical-align:-.3em}
-button.pref.off{opacity:.55}
+button.pref.on{background:var(--accent);color:var(--ink)}
+button.pref.off{background:#d9d2bd;color:#6b6b60}
+button.pref.off:hover{background:#d9d2bd}
+.chatslot{margin-top:18px}.chatslot .chat{max-width:640px}
 
 .invitebox{border:2px solid var(--ink);border-radius:12px;padding:10px 12px;background:var(--bg);margin:6px 0 4px}
 .invitebox .invtitle{font-family:var(--font-head);font-size:20px}

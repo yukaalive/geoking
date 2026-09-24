@@ -48,6 +48,19 @@ FIELDS = {
     'elec_pct':    {'label': '電力アクセス率', 'fmt': 'pct'},
 }
 
+# 表示形式ごとの小数桁。順位比較はこの桁に丸めた値で行う（画面に同じ値が出るなら同順位にする）
+FMT_DECIMALS = {'float2': 2, 'years': 1, 'temp': 1, 'pct': 1, 'ton': 2, 'lat': 1, 'lng': 1, 'deg': 1, 'density': 1,
+                'mm': 0, 'km2': 0, 'people': 0, 'usd': 0, 'usd_small': 0, 'chars': 0, 'countries': 0, 'langs': 0, 'kana_rank': 0, 'text': 0}
+for _k, _f in FIELDS.items():
+    _f['dec'] = FMT_DECIMALS.get(_f['fmt'], 2)
+
+def round_value(key, v):
+    """比較用に、その指標の表示桁で丸める。None はそのまま"""
+    if v is None:
+        return None
+    return round(float(v), FIELDS[key]['dec'])
+
+
 def P(id, cat, text, key, dir, star, hint=''):
     return {'id': id, 'cat': cat, 'text': text, 'key': key, 'dir': dir, 'star': star, 'hint': hint}
 

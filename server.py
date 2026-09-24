@@ -7,7 +7,7 @@ import hmac
 import html
 from datetime import datetime, timezone, timedelta
 from aiohttp import web, WSMsgType
-from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS
+from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS, round_value
 from moderation import check_name, check_chat
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -18,7 +18,7 @@ with open(os.path.join(HERE, 'data', 'countries.json'), encoding='utf-8') as f:
     COUNTRIES = json.load(f)
 COUNTRY_BY_ID = {c['id']: c for c in COUNTRIES}
 # お題ごとの世界順位計算用: 指標 → データがある国の値一覧
-WORLD_VALUES = {p['key']: [c[p['key']] for c in COUNTRIES if c.get(p['key']) is not None] for p in PROMPTS}
+WORLD_VALUES = {p['key']: [round_value(p['key'], c[p['key']]) for c in COUNTRIES if c.get(p['key']) is not None] for p in PROMPTS}   # 表示桁で丸め
 # ボット名（アメリカでよくある名前）
 BOT_NAMES = ['エミリー', 'マイケル', 'オリビア', 'ジェームズ', 'ソフィア', 'ノア', 'エマ', 'リアム', 'アヴァ', 'イーサン',
              'ミア', 'ジェイコブ', 'イザベラ', 'メイソン', 'シャーロット', 'ルーカス', 'アメリア', 'ベンジャミン', 'ハーパー', 'ローガン',
@@ -170,7 +170,7 @@ class Room:
             if p.pick is None:
                 continue
             c = COUNTRY_BY_ID[p.pick]
-            v = c.get(key)
+            v = round_value(key, c.get(key))   # 表示桁で丸めて比較（例: 平均寿命 84.04 と 84.0 は同じ 84.0 歳 → 同順位）
             wr = None
             if v is not None:   # 世界順位: データがある国の中で、自分より良い値の国の数 + 1
                 better = sum(1 for x in WORLD_VALUES[key] if (x > v if direction == 'max' else x < v))
@@ -440,6 +440,9 @@ async def ws_handler(request):
                 r.chat = r.chat[-60:]
             ctx['room'], ctx['pid'] = r, pid
             return await broadcast(r)
+
+        if t == 'ping':
+            return await send(ws, {'type': 'pong'})
 
         if room is None or pid not in room.players:
             return await error('先に部屋を作成または参加してください')

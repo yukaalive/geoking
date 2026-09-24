@@ -7,6 +7,10 @@
   if (!Cap || !Cap.isNativePlatform || !Cap.isNativePlatform()) return;
   const { Haptics, Share, App, StatusBar, SplashScreen } = Cap.Plugins;
   document.body.classList.add('native');
+  // アプリ内では画面の拡大を禁止（ダブルタップやピンチで表示が大きくなるのを防ぐ）
+  const vp = document.querySelector('meta[name=viewport]');
+  if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+  document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
   if (SplashScreen) SplashScreen.hide({ fadeOutDuration: 250 }).catch(() => {});   // 本番ページが表示できた時点でスプラッシュを消す
   if (Haptics) {
     navigator.vibrate = (pattern) => {   // 既存の sfx.vibrate がそのまま使える
@@ -20,6 +24,10 @@
     const btn = document.getElementById('copyLink');
     if (btn) btn.onclick = () => Share.share({ title: '地理王で対戦しよう', text: `部屋コード ${state ? state.room : ''}`, url: `${window.GEOKING_SERVER || location.origin}/static/index.html?room=${state ? state.room : ''}` }).catch(() => {});
   }
-  if (App) App.addListener('backButton', () => { if (!state) App.exitApp(); });
+  if (App) {
+    App.addListener('backButton', () => { if (!state) App.exitApp(); });
+    App.addListener('appStateChange', ({ isActive }) => { if (isActive && typeof ensureConnection === 'function') ensureConnection(); });   // 他アプリから戻ったら接続を確認
+    App.addListener('resume', () => { if (typeof ensureConnection === 'function') ensureConnection(); });
+  }
   if (StatusBar) StatusBar.setStyle({ style: 'LIGHT' }).catch(() => {});
 })();
