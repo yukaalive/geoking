@@ -28,6 +28,14 @@
 <h2>変更</h2>
 <p>本ポリシーは必要に応じて改定します。改定後の内容は本ページに掲載します。</p>
 <h2>お問い合わせ</h2>
-<p>GitHub: <a href="https://github.com/yukaalive/geoking/issues">github.com/yukaalive/geoking/issues</a></p>
-<p style="margin-top:24px"><a href="/static/index.html">← 地理王へ戻る</a></p>
-</div></main></body></html>
+<p>GitHub: <a href="https://github.com/yukaalive/geoking/issues" target="_blank" rel="noopener">github.com/yukaalive/geoking/issues</a></p>
+<p style="margin-top:24px"><a href="/static/index.html" id="backHome">← 地理王へ戻る</a></p>
+</div></main>
+<script>
+// アプリ内フレーム（図鑑・クイズと同じ枠）に表示されているとき: 「地理王へ戻る」は枠を閉じる（そのまま移動すると枠の中に対戦画面が入れ子で開いてしまう）
+if (window.top !== window) {
+  document.documentElement.classList.add('inframe');
+  document.getElementById('backHome').onclick = (e) => { e.preventDefault(); window.parent.postMessage('geoking:close', '*'); };
+}
+</script>
+</body></html>
