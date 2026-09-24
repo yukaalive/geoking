@@ -69,7 +69,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 @media(max-width:800px){.grid2{grid-template-columns:1fr}}
 .settings label{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .settings label.chk{justify-content:flex-start}
-.settings label>span{white-space:nowrap;flex:none}.settings #setTitle{flex:0 1 180px;min-width:0}   /* 狭い画面では入力欄のほうを縮め、「部屋の名前」を途中で折り返さない */
+.settings label:not(.chk)>span{white-space:nowrap;flex:none}.settings #setTitle{flex:0 1 180px;min-width:0}   /* 狭い画面では入力欄のほうを縮め、「部屋の名前」を途中で折り返さない（チェックボックスの長い説明は折り返してよい） */
 .tag{font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:var(--bg);border:1.5px solid var(--ink);color:var(--ink);margin-left:6px}
 .tag.host{background:var(--accent)}.tag.off{background:var(--accent-2);color:#fff}.tag.live{background:var(--primary);color:var(--primary-ink)}
 .players,.scores{padding:0;margin:0}
