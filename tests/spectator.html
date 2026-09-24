@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>観戦の表示</title>
+<style>body{font:13px/1.4 -apple-system,sans-serif;margin:8px}table{border-collapse:collapse}td,th{border:1px solid #999;padding:2px 4px;overflow-wrap:anywhere}</style></head>
+<body><p id="msg">確かめています…（30秒ほど）</p><table id="out"></table>
+<!-- iOS シミュレーターの Safari などコンソールが使えないブラウザで、spectator_check.js の結果を画面に出す -->
+<script>
+(async () => {
+  try {
+    const rows = await eval(await (await fetch('/dev/tests/spectator_check.js', { cache: 'no-store' })).text());
+    const bad = rows.filter(r => r.結果 !== 'OK');
+    const keys = ['場面', '言語', '幅', '状態', '結果'];
+    const show = bad.length ? bad : [{ 場面: `全部 OK（${rows.length} 件）`, 言語: '', 幅: '', 状態: [...new Set(rows.map(r => r.状態))].join(' / '), 結果: '見出し: ' + [...new Set(rows.map(r => r.見出し))].join(' / ') }];
+    document.getElementById('out').innerHTML = '<tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>' + show.map(r => '<tr>' + keys.map(k => `<td>${r[k]}</td>`).join('') + '</tr>').join('');
+    document.getElementById('msg').textContent = `この画面の幅: ${innerWidth}px`;
+  } catch (e) { document.getElementById('msg').textContent = 'エラー: ' + e; }
+})();
+</script></body></html>
