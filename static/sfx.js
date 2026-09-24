@@ -65,7 +65,7 @@ function renderPrefs() {
   const b = $('#soundBtn'); if (!b) return;
   b.innerHTML = ico(sfx.prefs.sound ? 'sound' : 'mute');
   b.classList.toggle('on', sfx.prefs.sound); b.classList.toggle('off', !sfx.prefs.sound);
-  b.title = sfx.prefs.sound ? '効果音・振動: オン' : '効果音・振動: オフ';
+  b.title = sfx.prefs.sound ? t('sound_on') : t('sound_off');
 }
-if ($('#soundBtn')) $('#soundBtn').onclick = () => { sfx.setSound(!sfx.prefs.sound); renderPrefs(); toast(sfx.prefs.sound ? '効果音・振動: オン' : '効果音・振動: オフ'); };
+if ($('#soundBtn')) $('#soundBtn').onclick = () => { sfx.setSound(!sfx.prefs.sound); renderPrefs(); toast(sfx.prefs.sound ? t('sound_on') : t('sound_off')); };
 renderPrefs();

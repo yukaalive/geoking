@@ -22,7 +22,7 @@
   }
   if (Share) {
     const btn = document.getElementById('copyLink');
-    if (btn) btn.onclick = () => Share.share({ title: '地理王で対戦しよう', text: `部屋コード ${state ? state.room : ''}`, url: `${window.GEOKING_SERVER || location.origin}/static/index.html?room=${state ? state.room : ''}` }).catch(() => {});
+    if (btn) btn.onclick = () => Share.share({ title: t('share_title'), text: t('share_text', { code: state ? state.room : '' }), url: `${window.GEOKING_SERVER || location.origin}/static/index.html?room=${state ? state.room : ''}` }).catch(() => {});
   }
   if (App) {
     App.addListener('backButton', () => { if (!state) App.exitApp(); });

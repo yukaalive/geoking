@@ -23,6 +23,9 @@ WORLD_VALUES = {p['key']: [round_value(p['key'], c[p['key']]) for c in COUNTRIES
 BOT_NAMES = ['エミリー', 'マイケル', 'オリビア', 'ジェームズ', 'ソフィア', 'ノア', 'エマ', 'リアム', 'アヴァ', 'イーサン',
              'ミア', 'ジェイコブ', 'イザベラ', 'メイソン', 'シャーロット', 'ルーカス', 'アメリア', 'ベンジャミン', 'ハーパー', 'ローガン',
              'エヴリン', 'アレクサンダー', 'アビゲイル', 'ダニエル', 'エミリア', 'ヘンリー', 'エラ', 'ジャクソン', 'グレース', 'サミュエル']
+BOT_NAMES_EN = ['Emily', 'Michael', 'Olivia', 'James', 'Sophia', 'Noah', 'Emma', 'Liam', 'Ava', 'Ethan',
+                'Mia', 'Jacob', 'Isabella', 'Mason', 'Charlotte', 'Lucas', 'Amelia', 'Benjamin', 'Harper', 'Logan',
+                'Evelyn', 'Alexander', 'Abigail', 'Daniel', 'Emilia', 'Henry', 'Ella', 'Jackson', 'Grace', 'Samuel']
 
 DEFAULT_SETTINGS = {
     'categories': ['basic', 'climate', 'religion', 'society'],
@@ -76,6 +79,7 @@ def new_code():
 class Player:
     def __init__(self, pid, name, is_bot=False):
         self.pid, self.name, self.is_bot = pid, name, is_bot
+        self.name_en = None      # ボットの英語名（英語表示用）
         self.ws = None
         self.hand = []      # country ids
         self.score = 0
@@ -175,7 +179,7 @@ class Room:
             if v is not None:   # 世界順位: データがある国の中で、自分より良い値の国の数 + 1
                 better = sum(1 for x in WORLD_VALUES[key] if (x > v if direction == 'max' else x < v))
                 wr = better + 1
-            rows.append({'pid': pid, 'name': p.name, 'card': p.pick, 'value': 0 if v is None else v, 'missing': v is None,
+            rows.append({'pid': pid, 'name': p.name, 'name_en': p.name_en, 'card': p.pick, 'value': 0 if v is None else v, 'missing': v is None,
                          'world_rank': wr, 'world_total': len(WORLD_VALUES[key])})
         valid = sorted(rows, key=lambda r: r['value'], reverse=(direction == 'max'))
         best = valid[0]['value'] if valid else None
@@ -249,7 +253,7 @@ class Room:
     # ---------- views
     def public_players(self):
         return [{
-            'pid': pid, 'name': p.name, 'score': p.score, 'is_bot': p.is_bot,
+            'pid': pid, 'name': p.name, 'name_en': p.name_en, 'score': p.score, 'is_bot': p.is_bot,
             'connected': p.connected, 'picked': p.pick is not None, 'won': p.won, 'spectator': p.spectator,
             'hand_count': len(p.hand),
         } for pid, p in ((pid, self.players[pid]) for pid in self.order)]
@@ -375,8 +379,8 @@ async def ws_handler(request):
     await ws.prepare(request)
     ctx = {'room': None, 'pid': None}
 
-    async def error(msg):
-        await send(ws, {'type': 'error', 'message': msg})
+    async def error(msg, code=None):
+        await send(ws, {'type': 'error', 'message': msg, 'code': code})   # code: クライアントが言語に合わせて表示
 
     async def handle(data):
         t = data.get('type')
@@ -385,11 +389,11 @@ async def ws_handler(request):
         if t == 'create':
             cleanup_rooms()
             if len(rooms) >= MAX_ROOMS:
-                return await error('現在満室です。しばらくしてからお試しください')
+                return await error('現在満室です。しばらくしてからお試しください', 'room_full_global')
             name = clean_name(data.get('name'))
-            ok, why = check_name(name)
+            ok, why, why_code = check_name(name)
             if not ok:
-                return await error(why)
+                return await error(why, why_code)
             pid = uuid.uuid4().hex[:12]
             room = Room(new_code(), pid)
             rooms[room.code] = room
@@ -405,13 +409,13 @@ async def ws_handler(request):
             code = str(data.get('room') or '').strip().upper()[:4]
             r = rooms.get(code)
             if not r:
-                return await error('その部屋コードは見つかりません')
+                return await error('その部屋コードは見つかりません', 'room_not_found')
             want_pid = str(data.get('pid') or '')[:12]
             if want_pid and want_pid in r.players:
                 # 再接続: 秘密トークンが一致した本人のみ（他人のIDでのなりすまし防止）
                 p = r.players[want_pid]
                 if p.is_bot or not secrets.compare_digest(str(data.get('token') or ''), p.token or ''):
-                    return await error('再接続の認証に失敗しました')
+                    return await error('再接続の認証に失敗しました', 'reauth_failed')
                 if p.ws is not None and p.ws is not ws and not p.ws.closed:
                     await p.ws.close()
                 p.ws, p.connected = ws, True
@@ -420,11 +424,11 @@ async def ws_handler(request):
                 log.info('room %s reconnect %s', r.code, p.name)
             else:
                 if len(r.players) >= MAX_PLAYERS:
-                    return await error('満員です（最大8人）')
+                    return await error('満員です（最大8人）', 'room_full')
                 name = clean_name(data.get('name'))
-                ok, why = check_name(name)
+                ok, why, why_code = check_name(name)
                 if not ok:
-                    return await error(why)
+                    return await error(why, why_code)
                 pid = uuid.uuid4().hex[:12]
                 p = Player(pid, name)
                 p.ws, p.connected = ws, True
@@ -434,9 +438,9 @@ async def ws_handler(request):
                 log.info('room %s join %s%s players=%d', r.code, name, ' (spectator)' if r.phase != 'lobby' else '', len(r.players))
                 if r.phase != 'lobby':   # 途中参加はまず観戦。次のゲームから自動で参加、または「途中から参加」
                     p.spectator = True
-                    r.chat.append({'name': 'システム', 'text': f'{p.name}さんが観戦しました', 'ts': time.time()})
+                    r.chat.append({'name': 'システム', 'key': 'spectating', 'params': {'name': p.name}, 'text': f'{p.name}さんが観戦しました', 'ts': time.time()})
                 else:
-                    r.chat.append({'name': 'システム', 'text': f'{p.name}さんが入室しました', 'ts': time.time()})
+                    r.chat.append({'name': 'システム', 'key': 'joined', 'params': {'name': p.name}, 'text': f'{p.name}さんが入室しました', 'ts': time.time()})
                 r.chat = r.chat[-60:]
             ctx['room'], ctx['pid'] = r, pid
             return await broadcast(r)
@@ -445,7 +449,7 @@ async def ws_handler(request):
             return await send(ws, {'type': 'pong'})
 
         if room is None or pid not in room.players:
-            return await error('先に部屋を作成または参加してください')
+            return await error('先に部屋を作成または参加してください', 'join_first')
         is_host = (pid == room.host)
 
         if t == 'settings':
@@ -453,7 +457,7 @@ async def ws_handler(request):
                 return
             s = data.get('settings') or {}
             if not isinstance(s, dict):
-                return await error('入力値が不正です')
+                return await error('入力値が不正です', 'bad_input')
             cats = s.get('categories', room.settings['categories'])
             cats = [c for c in cats if c in CATEGORIES] if isinstance(cats, list) else room.settings['categories']
             cur = room.settings
@@ -469,7 +473,7 @@ async def ws_handler(request):
             if 'title' in s:
                 title = ''.join(ch for ch in str(s.get('title') or '') if ch.isprintable()).strip()[:20]
                 if title and not check_name(title)[0]:
-                    return await error('その部屋名は使えません（不適切な表現や連絡先を含みます）')
+                    return await error('その部屋名は使えません（不適切な表現や連絡先を含みます）', 'bad_title')
                 room.title = title
             if room.settings['hand_size'] < room.settings['rounds']:
                 room.settings['hand_size'] = room.settings['rounds'] + 1
@@ -479,11 +483,13 @@ async def ws_handler(request):
             if not (is_host and room.phase == 'lobby'):
                 return
             if len(room.players) >= MAX_PLAYERS:
-                return await error('満員です')
+                return await error('満員です', 'room_full')
             used = {p.name for p in room.players.values()}
             name = random.choice([x for x in BOT_NAMES if x not in used] or BOT_NAMES)
             bpid = 'bot_' + uuid.uuid4().hex[:6]
-            room.players[bpid] = Player(bpid, name, is_bot=True)
+            bp = Player(bpid, name, is_bot=True)
+            bp.name_en = BOT_NAMES_EN[BOT_NAMES.index(name)] if name in BOT_NAMES else name
+            room.players[bpid] = bp
             room.order.append(bpid)
             return await broadcast(room)
 
@@ -496,7 +502,7 @@ async def ws_handler(request):
                 room.remove_player(target)
                 log.info('room %s kick %s by %s', room.code, tp.name, room.players[pid].name)
                 if tp.ws is not None and not tp.ws.closed:
-                    await send(tp.ws, {'type': 'left', 'message': 'ホストによって退出させられました'})
+                    await send(tp.ws, {'type': 'left', 'message': 'ホストによって退出させられました', 'code': 'kicked'})
                     await tp.ws.close()
                 await after_player_gone(room, tp.name)
             return
@@ -534,7 +540,7 @@ async def ws_handler(request):
                     tp.chat_banned = True
                     room.chat.append({'name': 'システム', 'text': f'{tp.name}さんのチャットは通報により制限されました', 'ts': time.time()})
                     await broadcast(room)
-                await send(ws, {'type': 'toast', 'message': '通報しました。運営が確認します'})
+                await send(ws, {'type': 'toast', 'message': '通報しました。運営が確認します', 'code': 'reported'})
             return
 
         if t == 'leave':
@@ -542,14 +548,14 @@ async def ws_handler(request):
             room.remove_player(pid)
             ctx['room'], ctx['pid'] = None, None
             log.info('room %s leave %s', room.code, p.name)
-            await send(ws, {'type': 'left', 'message': '部屋から退出しました'})
+            await send(ws, {'type': 'left', 'message': '部屋から退出しました', 'code': 'left'})
             return await after_player_gone(room, p.name)
 
         if t == 'start':
             if not (is_host and room.phase in ('lobby', 'end')):
                 return
             if len(room.players) < 2:
-                return await error('2人以上（ボット可）で開始できます')
+                return await error('2人以上（ボット可）で開始できます', 'need_two')
             room.start()
             return await enter_pick_phase(room)
 
@@ -570,11 +576,11 @@ async def ws_handler(request):
             text = ''.join(ch for ch in str(data.get('text') or '') if ch.isprintable()).strip()[:80]
             p = room.players[pid]
             if p.chat_banned:
-                return await error('通報が複数あったため、この部屋ではチャットできません')
-            ok, why = check_chat(text)   # NGワード・URL・連絡先・連打
+                return await error('通報が複数あったため、この部屋ではチャットできません', 'chat_banned')
+            ok, why, why_code = check_chat(text)   # NGワード・URL・連絡先・連打
             if not ok:
                 log.info('room %s chat blocked from %s: %r', room.code, p.name, text)
-                return await error(why)
+                return await error(why, why_code)
             now = time.time()
             if text and now - p.last_chat >= CHAT_INTERVAL:
                 p.last_chat = now
@@ -589,7 +595,7 @@ async def ws_handler(request):
             was_playing = room.phase in ('pick', 'reveal')
             room.reset_to_lobby()
             if was_playing:
-                room.chat.append({'name': 'システム', 'text': 'ホストがゲームを中断してロビーに戻りました', 'ts': time.time()})
+                room.chat.append({'name': 'システム', 'key': 'host_lobby', 'params': {}, 'text': 'ホストがゲームを中断してロビーに戻りました', 'ts': time.time()})
                 log.info('room %s host returned to lobby mid-game', room.code)
             return await broadcast(room)
 
@@ -597,20 +603,20 @@ async def ws_handler(request):
         if msg.type != WSMsgType.TEXT:
             continue
         if len(msg.data) > 4000:
-            await error('メッセージが大きすぎます')
+            await error('メッセージが大きすぎます', 'msg_big')
             continue
         try:
             data = json.loads(msg.data)
             if not isinstance(data, dict):
                 raise ValueError
         except ValueError:
-            await error('入力値が不正です')
+            await error('入力値が不正です', 'bad_input')
             continue
         try:
             await handle(data)
         except Exception:   # 1人の不正入力で接続や部屋を落とさない
             log.exception('handle failed: type=%s room=%s', data.get('type'), ctx['room'].code if ctx['room'] else None)
-            await error('処理に失敗しました')
+            await error('処理に失敗しました', 'failed')
 
     # ---------- 切断処理
     room, pid = ctx['room'], ctx['pid']
@@ -641,7 +647,7 @@ async def api_rooms(request):
     for r in rooms.values():
         if r.settings['public'] and r.phase != 'end' and 0 < len(r.players) < MAX_PLAYERS and r.has_humans():
             host = r.players.get(r.host)
-            out.append({'room': r.code, 'title': r.display_title(), 'phase': r.phase, 'round': r.round,
+            out.append({'room': r.code, 'title': r.display_title(), 'title_raw': r.title, 'phase': r.phase, 'round': r.round,
                         'host': host.name if host else '', 'players': len(r.players),
                         'categories': r.settings['categories'], 'rounds': r.settings['rounds'], 'age': int(now - r.created)})
     out.sort(key=lambda x: x['age'])

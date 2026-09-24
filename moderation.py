@@ -84,20 +84,20 @@ REASON_TEXT = {
 def check_chat(text: str):
     """チャット本文のチェック。(ok, message) を返す。"""
     if not text or not text.strip():
-        return False, '空のメッセージです'
+        return False, '空のメッセージです', 'chat_empty'
     if len(text) > 80:
-        return False, 'メッセージが長すぎます（80文字まで）'
+        return False, 'メッセージが長すぎます（80文字まで）', 'chat_long'
     reason = find_ng(text)
     if reason:
-        return False, REASON_TEXT[reason]
-    return True, ''
+        return False, REASON_TEXT[reason], reason
+    return True, '', None
 
 
 def check_name(name: str):
     """ニックネーム・部屋名のチェック。"""
     if not name:
-        return False, '名前を入力してください'
+        return False, '名前を入力してください', 'name_empty'
     reason = find_ng(name)
     if reason:
-        return False, 'その名前は使えません（不適切な表現や連絡先を含みます）'
-    return True, ''
+        return False, 'その名前は使えません（不適切な表現や連絡先を含みます）', 'name_bad'
+    return True, '', None

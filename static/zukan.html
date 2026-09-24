@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1f6f4a">
-<title>図鑑 - 地理王</title>
+<title data-i18n="zukan_title">図鑑 - 地理王</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+1p:wght@500;700;800;900&display=swap" rel="stylesheet">
@@ -13,27 +13,27 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span>図鑑</span></div>
-  <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音"></button></div>
-  <a class="mini" href="/static/index.html" style="text-decoration:none;font-weight:800;border:2px solid var(--ink);border-radius:12px;padding:4px 10px;color:var(--ink)">対戦へ戻る</a>
+  <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span data-i18n="zukan">図鑑</span></div>
+  <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音・振動" data-i18n-title="sound_title"></button><button id="langBtn" class="mini pref lang" title="Language / 言語">EN</button></div>
+  <a class="mini" href="/static/index.html" style="text-decoration:none;font-weight:800;border:2px solid var(--ink);border-radius:12px;padding:4px 10px;color:var(--ink)" data-i18n="back_to_game">対戦へ戻る</a>
 </header>
 <main>
   <div class="ztabs">
-    <button id="tabFlags" class="on"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> 国旗一覧</button>
-    <button id="tabRank"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> ランキング</button>
+    <button id="tabFlags" class="on"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> <span data-i18n="tab_flags">国旗一覧</span></button>
+    <button id="tabRank"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> <span data-i18n="tab_rank">ランキング</span></button>
   </div>
 
   <!-- 国旗一覧 -->
   <section id="flags" class="card">
     <div class="zfilters">
-      <input id="q" placeholder="国名で検索（ひらがな・カタカナ・英語）">
+      <input id="q" placeholder="国名で検索（ひらがな・カタカナ・英語）" data-i18n-ph="search_ph">
       <select id="region"></select>
       <select id="sort">
-        <option value="kana">五十音順</option>
-        <option value="area">面積が大きい順</option>
-        <option value="population">人口が多い順</option>
-        <option value="gdp">GDPが高い順</option>
-        <option value="temp">年平均気温が高い順</option>
+        <option value="kana" data-i18n="sort_kana">五十音順</option>
+        <option value="area" data-i18n="sort_area">面積が大きい順</option>
+        <option value="population" data-i18n="sort_pop">人口が多い順</option>
+        <option value="gdp" data-i18n="sort_gdp">GDPが高い順</option>
+        <option value="temp" data-i18n="sort_temp">年平均気温が高い順</option>
       </select>
     </div>
     <p class="zcount" id="flagCount"></p>
@@ -45,7 +45,7 @@
     <div class="zfilters">
       <select id="promptSel"></select>
       <select id="rankRegion"></select>
-      <button id="rankFlip" class="mini">昇順／降順を反転</button>
+      <button id="rankFlip" class="mini" data-i18n="flip">昇順／降順を反転</button>
     </div>
     <p class="zcount" id="rankInfo"></p>
     <ol id="rankList" class="rank-list"></ol>
@@ -54,7 +54,8 @@
 
 <div id="toast" class="toast hidden"></div>
 <div id="modal" class="modal hidden"><div class="modalbox"><button id="modalClose" class="close">×</button><div id="modalBody"></div></div></div>
-<footer class="foot muted small"><a href="/static/index.html" class="muted">対戦へ戻る</a> ／ <a href="/static/privacy.html" class="muted">プライバシーポリシー</a></footer>
+<footer class="foot muted small"><a href="/static/index.html" class="muted" data-i18n="back_to_game">対戦へ戻る</a> ／ <a href="/static/privacy.html" class="muted" data-i18n="privacy">プライバシーポリシー</a></footer>
+<script src="/static/i18n.js"></script>
 <script src="/static/common.js"></script>
 <script src="/static/sfx.js"></script>
 <script src="/static/zukan.js"></script>

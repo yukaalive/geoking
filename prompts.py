@@ -104,3 +104,43 @@ PROMPTS = [
     P('fert_max', 'society', '出生率が高い国は？', 'fertility', 'max', 2),
 ]
 PROMPT_BY_ID = {p['id']: p for p in PROMPTS}
+
+
+# ---------- 英語（クライアントが言語設定に応じて text_en / name_en / label_en を使う）
+PROMPT_EN = {
+    'area_max': 'Which country has the largest area?', 'area_min': 'Which country has the smallest area?',
+    'pop_max': 'Which country has the largest population?', 'pop_min': 'Which country has the smallest population?',
+    'gdp_max': 'Which country has the highest GDP?', 'gdp_min': 'Which country has the lowest GDP?',
+    'gdppc_max': 'Which country has the highest GDP per capita?', 'gdppc_min': 'Which country has the lowest GDP per capita?',
+    'density_max': 'Which country has the highest population density?', 'density_min': 'Which country has the lowest population density?',
+    'eez_max': 'Which country has the largest exclusive economic zone (EEZ)?',
+    'kana_first': "Whose Japanese name comes first in kana order (closest to \u30a2)?", 'kana_last': "Whose Japanese name comes last in kana order (closest to \u30ef)?",
+    'name_max': 'Which country has the longest official name in Japanese?', 'name_min': 'Which country has the shortest official name in Japanese?',
+    'north': 'Which country is farthest north?', 'south': 'Which country is farthest south?', 'east': 'Which country is farthest east?',
+    'borders_max': 'Which country borders the most countries?', 'military_max': 'Which country spends the most on its military?',
+    'lang_max': 'Which country has the most official languages?',
+    'temp_max': 'Which country has the highest average temperature?', 'temp_min': 'Which country has the lowest average temperature?',
+    'precip_max': 'Which country gets the most annual rainfall?', 'precip_min': 'Which country gets the least annual rainfall?',
+    'equator': 'Which country is closest to the equator?',
+    'chr_max': 'Which country has the highest share of Christians?', 'mus_max': 'Which country has the highest share of Muslims?',
+    'non_max': 'Which country has the highest share of religiously unaffiliated people?',
+    'life_max': 'Which country has the longest life expectancy?', 'life_min': 'Which country has the shortest life expectancy?',
+    'age65_max': 'Which country has the highest share of people aged 65+?', 'fert_max': 'Which country has the highest fertility rate?',
+}
+for _p in PROMPTS:
+    _p['text_en'] = PROMPT_EN.get(_p['id'], _p['text'])
+CATEGORY_EN = {'basic': 'Basics', 'climate': 'Climate & Nature', 'religion': 'Religion', 'society': 'Society & Life'}
+for _k, _v in CATEGORIES.items():
+    _v['name_en'] = CATEGORY_EN.get(_k, _v['name'])
+FIELD_EN = {
+    'area': 'Area', 'population': 'Population', 'gdp': 'GDP', 'gdp_pc': 'GDP per capita', 'name_len': 'Official name length (Japanese)',
+    'eez': 'Exclusive economic zone (EEZ)', 'density': 'Population density', 'kana_rank': 'Japanese kana order', 'lat': 'Latitude', 'lng': 'Longitude',
+    'abs_lat': 'Distance from the equator', 'borders': 'Neighboring countries', 'languages': 'Official languages', 'military': 'Military spending',
+    'temp': 'Avg. temperature', 'climate': 'Climate', 'precip': 'Annual rainfall', 'forest_pct': 'Forest cover', 'agri_pct': 'Agricultural land',
+    'co2_pc': 'CO\u2082 per capita', 'rel_chr': 'Christians', 'rel_mus': 'Muslims', 'rel_bud': 'Buddhists', 'rel_hin': 'Hindus', 'rel_non': 'Unaffiliated',
+    'rel_folk': 'Folk religions', 'rel_jew': 'Jews', 'rel_div': 'Religious diversity', 'life_exp': 'Life expectancy', 'age65_pct': 'Aged 65+',
+    'fertility': 'Fertility rate', 'urban_pct': 'Urban population', 'internet_pct': 'Internet users', 'tourists': 'Tourist arrivals / yr',
+    'physicians': 'Physicians per 1,000', 'elec_pct': 'Electricity access',
+}
+for _k, _f in FIELDS.items():
+    _f['label_en'] = FIELD_EN.get(_k, _f['label'])

@@ -121,6 +121,7 @@ def main():
             'name': jp.get('common') or c['name']['common'],
             'name_official': jp.get('official') or c['name']['official'],
             'name_en': c['name']['common'],
+            'name_official_en': c['name']['official'],
             'region': c['region'],
             'subregion': c.get('subregion', ''),
             'capital': (c.get('capital') or [''])[0],
