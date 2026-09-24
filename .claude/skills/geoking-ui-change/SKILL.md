@@ -60,6 +60,8 @@ window.__r = null; eval(await (await fetch('/dev/tests/layout_check.js', { cache
 
 確認中に「The page navigated while this script was running」と出たら、ファイルを書き換えた直後などにブラウザ側がページを読み直しただけのことがある。ページの状態を見てから流し直す（それでも毎回起きるなら、ページのコードを疑う）。
 
+`layoutSnapshot` と `layoutCompare` は同じ条件で流す（ブラウザの表示の大きさを `resize_window` で変えたままにしない）。条件が違うと「【条件が違う】」と出て、変えていない画面まで変化として並ぶ。
+
 `layoutCompare('before')` の読み方:
 - 「大きさ・横位置が変わった」「増えた」「なくなった」の行が、**全部、頼まれた変更で説明できること**。説明できない行が1つでもあれば、意図しない変更が混ざっている。直してから流し直す。
 - 「ページ幅 …（画面からはみ出している）」は必ず直す。

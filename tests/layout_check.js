@@ -47,6 +47,7 @@
       fr.remove();
     }
   }
+  ['geoking_room', 'geoking_token', 'geoking_pid'].forEach(k => sessionStorage.removeItem(k));   // 枠の中で作った部屋が、このタブの保存に残らないように
   console.table(results);
   return results;
 })();

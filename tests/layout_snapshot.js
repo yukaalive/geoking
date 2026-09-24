@@ -66,21 +66,28 @@
       if (page === 'lobby' && typeof w.send === 'function') { w.send({ type: 'leave' }); await sleep(300); }
       fr.remove();
     }
+    ['geoking_room', 'geoking_token', 'geoking_pid'].forEach(k => sessionStorage.removeItem(k));   // 枠の中で作った部屋が、このタブの保存に残らないように（枠とタブは同じ保存を使う）
+    snap.__env = envOf();
     return snap;
   };
+  // 測る条件（スクロールバーの幅など）。記録したときと比べたときで違うと、変えていない所まで「変わった」と出る
+  const envOf = () => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;top:-999px;width:100px;height:100px;overflow:scroll'; document.body.appendChild(d); const sb = 100 - d.clientWidth; d.remove(); return `スクロールバー${sb}px・画面の幅${innerWidth}px`; };
   window.layoutSnapshot = async (name = 'before') => {
     const snap = await take();
     localStorage.setItem('__layout_' + name, JSON.stringify(snap));
-    const n = Object.values(snap).reduce((a, s) => a + Object.keys(s).length, 0);
-    console.log(`記録しました: ${name}（${Object.keys(snap).length} 画面, ${n} 要素）`);
-    return `記録しました: ${name}（${Object.keys(snap).length} 画面, ${n} 要素）`;
+    const screens = Object.keys(snap).filter(k => k !== '__env'); const n = screens.reduce((a, k) => a + Object.keys(snap[k]).length, 0);
+    const msg = `記録しました: ${name}（${screens.length} 画面, ${n} 要素。${snap.__env}）`;
+    console.log(msg);
+    return msg;
   };
   window.layoutCompare = async (name = 'before') => {
     const before = JSON.parse(localStorage.getItem('__layout_' + name) || 'null');
     if (!before) return `先に layoutSnapshot('${name}') で記録してください`;
     const after = await take();
     const report = {};
+    if (before.__env !== after.__env) report['注意'] = [`測った条件が記録したときと違います（記録: ${before.__env || '不明'} / 今: ${after.__env}）。変えていない所まで変化として出ることがあるので、同じ条件（ブラウザの表示の大きさを戻す等）で測り直してください`];
     for (const key of Object.keys(after)) {
+      if (key === '__env') continue;
       const a = after[key], b = before[key] || {};
       const changed = [], movedY = [], added = [], removed = [];
       for (const p of Object.keys(a)) {
@@ -100,7 +107,8 @@
       if (movedY.length) lines.push(`縦にずれただけ ${movedY.length} 件（上の要素が変わった影響）`);
       if (lines.length) report[key] = lines;
     }
-    const summary = Object.keys(report).length ? `${Object.keys(report).length} 画面で変化あり` : '変化なし（すべての画面が変更前と同じ）';
+    const changed = Object.keys(report).filter(k => k !== '注意').length;
+    const summary = (report['注意'] ? '【条件が違う】' : '') + (changed ? `${changed} 画面で変化あり` : '変化なし（すべての画面が変更前と同じ）');
     console.log(summary, report);
     return { summary, report };
   };
