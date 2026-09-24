@@ -48,6 +48,7 @@ window.__r = null; layoutSnapshot('before').then(r => window.__r = r);
 | 何を変えたか | 流すもの |
 |---|---|
 | 見た目・文言・HTML（いつも） | `layoutCompare('before')`（手順2の続き）と `tests/layout_check.js` |
+| 色・背景・文字色（ダークモードも） | `tests/contrast_check.js`（ライトとダークの両方で。ダークは `resize_window` の `colorScheme:'dark'` にしてから） |
 | 画面移動・native.js・sfx.js・図鑑/クイズ/プライバシーの開き方や戻り方 | `tests/app_frame_check.js` |
 | server.py | `GEOKING_WS=ws://localhost:8090/ws python3 tests/e2e_two_players.py` と `tests/e2e_solo_bot.py` |
 

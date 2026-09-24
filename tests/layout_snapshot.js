@@ -22,6 +22,7 @@
   };
   const record = (w) => {
     const out = {};
+    w.scrollTo(0, 0);   // スクロールした位置で測ると、上に固定したヘッダーなどの位置がずれて見える
     for (const e of w.document.querySelectorAll('#roomTitle, #lobbyCode')) e.textContent = 'ROOM';   // 部屋名は作るたびに変わる（同名があると「2」が付く）ので固定してから測る
     const skipRoots = [...w.document.querySelectorAll(SKIP)];
     for (const el of w.document.querySelectorAll('body *')) {
@@ -105,7 +106,7 @@
       if (changed.length) lines.push(`大きさ・横位置が変わった ${changed.length} 件:`, ...changed.slice(0, 15), ...(changed.length > 15 ? [`…ほか ${changed.length - 15} 件`] : []));
       if (added.length) lines.push(`増えた ${added.length} 件: ` + added.slice(0, 8).join(' | '));
       if (removed.length) lines.push(`なくなった ${removed.length} 件: ` + removed.slice(0, 8).join(' | '));
-      if (movedY.length) lines.push(`縦にずれただけ ${movedY.length} 件（上の要素が変わった影響）`);
+      if (movedY.length) lines.push(`縦にずれただけ ${movedY.length} 件（上の要素が変わった影響）: ` + movedY.slice(0, 4).map(p => { const [, y1] = b[p].split(','), [, y2] = a[p].split(','); return `${p.split(' > ').slice(-2).join(' > ')} ${y1}→${y2}`; }).join(' | '));
       if (lines.length) report[key] = lines;
     }
     const changed = Object.keys(report).filter(k => k !== '注意').length;

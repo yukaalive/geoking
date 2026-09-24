@@ -425,3 +425,25 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .appframe iframe{width:100%;height:100%;border:0;display:block}
 body.framed{overflow:hidden}
 .inframe .top{padding-top:10px}.inframe main{padding-bottom:16px}
+
+/* ダークモード: 黄色・白・金銀銅など明るい背景の上は、文字とアイコンを濃い色にする（明るい文字のままだと読めない）。
+   緑のボタンの上のアイコンは、ボタンの文字と同じ色に。ライトモードの見た目は変えない。tests/contrast_check.js で確かめる */
+@media (prefers-color-scheme:dark){
+  .roomname,.roomname-inline,.tag.host,.tag.host .ico,button.pref.on,button.pref.on .ico,.ztab-link,.ztab-link .ico,.bubble.sel,
+  .scene .card3d.win .back,.floatmsg.me,
+  .rev.win,.rev.win .ico,.rev.win .country,.rev.win .val,
+  .rev.win .wrank:not(.bronze):not(.silver):not(.gold),.rev.win .wrank:not(.bronze):not(.silver):not(.gold) b,
+  .history .hcard.win,.history .hcard.win .ico,.history .hcard.win .cn,.history .hcard.win .val,
+  .final .disc.g,.final .disc.s,.final .disc.b{color:#1c2b22}
+  .rev.win .country small,.rev.win .rank{color:#5a4a10}
+  .rev.win .wrank:not(.bronze):not(.silver):not(.gold) span{color:#4b5563}
+  .floatmsg.me b{color:#1f6f4a}
+  button.primary .ico,.ztabs button.on .ico,.tag.live .ico,.bubble.go .ico{color:var(--primary-ink)}
+  .history .hth .ico{color:inherit}   /* 結果発表の表の見出しの人のアイコンは、見出しの文字と同じ色（背景と同じ色で見えなかった） */
+  .qopt.correct,.qopt.wrong,.qopt.correct .ico,.qopt.wrong .ico{color:#1c2b22}   /* クイズで答えた直後の正解（薄い緑）・不正解（薄い赤）の選択肢 */
+  .qopt.correct .qopt-nm{color:#1f6f4a}.qopt.wrong .qopt-nm{color:#5f6f64}
+  .qres-disc.g .ico,.qres-disc.s .ico,.qres-disc.b .ico{color:#1c2b22}   /* クイズの結果の金銀銅のメダル */
+  .floatmsg.sys b{color:#1f6f4a}   /* 流れるチャットの「システム」（クリーム色の吹き出し） */
+  .rev .wrank.bronze .ico{color:#6b3a14}.rev .wrank.silver .ico{color:#374151}   /* 結果の銅・銀の世界順位バッジのアイコンは、バッジの文字と同じ色 */
+  button.pref.off .ico,button.mini:hover .ico{color:#1c2b22}   /* 効果音を切ったとき（薄い灰色）・上のボタンに指を乗せたとき（黄色）のアイコン */
+}
