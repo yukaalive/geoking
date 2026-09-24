@@ -257,6 +257,8 @@ body.composing #chatForm button{white-space:nowrap}
 .top .roominfo + .prefs{margin-left:0}
 button.pref{padding:4px 8px;margin:0}button.pref .ico{width:1.3em;height:1.3em;vertical-align:-.3em}
 button.pref.on{background:var(--accent);color:var(--ink)}
+/* 言語ボタンと更新ボタンは押しても色を変えない */
+#langBtn,#langBtn:hover,#langBtn:active,#langBtn:focus,#refreshRooms,#refreshRooms:hover,#refreshRooms:active,#refreshRooms:focus{background:var(--card);color:var(--ink);transform:none;box-shadow:none}
 button.pref.off{background:#d9d2bd;color:#6b6b60}
 button.pref.off:hover{background:#d9d2bd}
 .chatslot{margin-top:18px}.chatslot .chat{max-width:640px}
