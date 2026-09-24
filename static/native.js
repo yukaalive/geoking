@@ -28,6 +28,7 @@
     closeFrame();
     const wrap = frameWrap = document.createElement('div'); wrap.className = 'appframe loading'; wrap.dataset.url = url.href;
     const f = document.createElement('iframe'); f.src = url.href; f.setAttribute('allow', 'autoplay'); wrap.appendChild(f);
+    f.addEventListener('load', () => { try { wrap.classList.toggle('noheader', !f.contentDocument.querySelector('header.top')); } catch {} });   // 上の余白の色をヘッダーに合わせる（枠の中でページを移ったときも）
     f.addEventListener('load', () => showFrame(wrap));   // 準備の合図を送らないページ（プライバシーポリシー）や、合図の前に読み込みが終わったとき
     setTimeout(() => showFrame(wrap), 3000);   // 念のため: 通信が遅くても3秒で表示する
     document.body.appendChild(wrap);

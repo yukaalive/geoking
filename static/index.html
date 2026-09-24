@@ -61,8 +61,8 @@
 <header class="top">
   <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span>GeoKing</span></div>
   <button id="langBtn" class="mini lang" title="Language / 言語">EN</button>
-  <div id="roomInfo" class="roominfo hidden"><span class="muted small" data-i18n="room_label">部屋</span> <b id="roomTitle" class="roomname"></b> <button id="copyLink" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#copy"/></svg> <span data-i18n="copy_invite">招待リンクをコピー</span></button> <button id="lobbyBtn" class="mini hostonly hidden"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#refresh"/></svg> <span data-i18n="lobby_btn">ロビーへ</span></button> <button id="leaveBtn" class="mini danger"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#door"/></svg> <span data-i18n="leave">退出</span></button></div>
-  <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音・振動" data-i18n-title="sound_title"></button></div>
+  <div id="roomInfo" class="roominfo hidden"><button id="leaveBtn" class="mini danger"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#door"/></svg> <span data-i18n="leave">退出</span></button> <button id="lobbyBtn" class="mini hostonly hidden"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#refresh"/></svg> <span data-i18n="lobby_btn">ロビーへ</span></button></div>
+  <div class="prefs"><button id="copyLink" class="mini pref" title="招待リンクを共有" data-i18n-title="share_invite"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#share"/></svg></button><button id="soundBtn" class="mini pref" title="効果音・振動" data-i18n-title="sound_title"></button></div>
 </header>
 
 <main id="app">
@@ -94,7 +94,6 @@
     <div class="card hero" id="publicRooms">
       <h2><svg class="ico " aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="public_rooms">公開中の部屋</span> <button id="refreshRooms" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#refresh"/></svg> <span data-i18n="refresh">更新</span></button></h2>
       <ul id="publicRoomList" class="players"><li class="muted" data-i18n="loading">読み込み中…</li></ul>
-      <p class="muted small" data-i18n="public_rooms_note">世界のどこかの誰かが作った部屋に飛び入りできます。自分の部屋を載せるにはロビーで「公開部屋にする」をオンに。</p>
     </div>
   </section>
 
@@ -107,13 +106,13 @@
         <div class="row hostonly">
           <button id="addBotBtn"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#bot"/></svg> <span data-i18n="add_bot">ボットを追加</span></button>
         </div>
-        <p class="muted small"><span data-i18n="lobby_note_pre">友だちはトップページの「参加する」に部屋の名前 </span><b id="lobbyCode" class="roomname-inline"></b><span data-i18n="lobby_note_post"> を入れるだけで入れます。招待リンクの共有でもOK。ゲームが始まったあとでも途中参加できます。ゲーム中でもホストは右上の「ロビーへ」で中断して設定を変えられます。</span></p>
+        <p class="muted small"><span data-i18n="lobby_note_pre">友だちはトップページの「参加する」に部屋の名前 </span><b id="lobbyCode" class="roomname-inline"></b><span data-i18n="lobby_note_post"> を入れるだけで入れます。</span></p>
       </div>
       <div class="card">
         <h2><span data-i18n="room_settings">部屋の設定</span> <span class="muted small guestonly" data-i18n="host_only">（ホストのみ変更できます）</span></h2>
         <div class="settings hostonly-disable">
           <label><span data-i18n="room_name">部屋の名前</span> <input id="setTitle" maxlength="20" placeholder="例：ゆかの部屋" data-i18n-ph="room_title_ph" style="width:180px"></label>
-          <label class="chk"><input type="checkbox" id="setPublic"> <svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="public_room_label">公開部屋にする（トップページの一覧に載せて誰でも参加可）</span></label>
+          <label class="chk"><input type="checkbox" id="setPublic"> <svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="public_room_label">公開部屋にする</span></label>
         </div>
         <button id="startBtn" class="primary big hostonly">ゲーム開始</button>
         <p class="guestonly muted" data-i18n="waiting_host_start">ホストが開始するのを待っています…</p>

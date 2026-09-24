@@ -13,7 +13,7 @@ let pid = null;  // サーバーが発行する。再接続用トークンと共
 const rejoinInfo = () => ({ pid: sessionStorage.getItem('geoking_pid'), token: sessionStorage.getItem('geoking_token') });
 
 // ---------- 表示ユーティリティ
-function show(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); $('#' + screen).classList.remove('hidden'); if (screen !== 'home' && typeof stopRoomsPoll === 'function') stopRoomsPoll(); const lb = $('#langBtn'); if (lb) lb.classList.toggle('hidden', screen !== 'home'); }   // 言語切替はトップ画面だけ
+function show(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); $('#' + screen).classList.remove('hidden'); if (screen !== 'home' && typeof stopRoomsPoll === 'function') stopRoomsPoll(); const lb = $('#langBtn'); if (lb) lb.classList.toggle('hidden', screen !== 'home'); const br = $('header .brand'); if (br) br.classList.toggle('hidden', screen !== 'home'); }   // 言語切替と「地理王」のロゴはトップ画面だけ
 
 $('#creditsLink').onclick = (e) => {
   e.preventDefault();
@@ -239,7 +239,7 @@ function render() {
   playTransitions();
   const isHost = state.host === pid;
   document.body.classList.toggle('host', isHost); document.body.classList.toggle('guest', !isHost);
-  $('#roomInfo').classList.remove('hidden'); $('#roomTitle').textContent = roomTitle();
+  $('#roomInfo').classList.remove('hidden');
   $('#lobbyBtn').classList.toggle('hidden', !(isHost && (state.phase === 'pick' || state.phase === 'reveal')));
 
   if (state.phase === 'lobby') { renderLobby(); show('lobby'); }

@@ -41,9 +41,7 @@ a{color:var(--primary)}
 main{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .brand{font-size:22px;white-space:nowrap;flex:none}.brand span{font-family:var(--font-body);font-weight:700;color:var(--muted);font-size:12px;margin-left:8px;letter-spacing:.1em}
 .roominfo{font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.roominfo b{font-family:ui-monospace,monospace;font-size:18px;letter-spacing:3px;background:var(--ink);color:var(--card);padding:0 8px;border-radius:6px}
 .roomtitle{font-weight:800;font-size:15px}
-.roomname{font-family:var(--font-head);font-size:17px;background:var(--accent);color:var(--ink);padding:1px 10px;border-radius:8px;border:2px solid var(--ink)}
 .roomname-inline{font-size:15px;background:var(--accent);padding:0 8px;border-radius:6px;border:1.5px solid var(--ink)}
 .join input{width:170px;text-transform:none;font-family:var(--font-body);letter-spacing:0}
 
@@ -164,6 +162,13 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .rev .country small{display:block;font-weight:600;color:var(--muted);font-size:11px}
 .rev .val{font-size:20px;margin-top:2px}.rev .rank{font-size:12px;color:var(--muted)}
 .rev .crown{font-size:22px;font-weight:900}
+/* 幅 346〜405px のスマホ（iPhone など）も、幅 412px の Android と同じく結果のカードを2列に（手札が2列になる幅と同じ）。
+   上の 180px のままだと幅 406px 未満は1列になり、iPhone では国旗が Android の2倍の大きさになっていた */
+@media(min-width:346px) and (max-width:405px){
+  .reveal{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rev{overflow-wrap:break-word}   /* 細いカードでも、長い英単語や空白のない長い名前はカードの中で折り返す */
+}
+@media(min-width:346px) and (max-width:387px){.rev .val{font-size:18px}}   /* いちばん長い数値（ロシアの面積 17,098,242 km²）がカードに収まる大きさ */
 @keyframes flip{from{transform:rotateY(90deg);opacity:0}to{transform:none;opacity:1}}
 .countdown{display:inline-block;margin-top:6px;padding:6px 14px;border-radius:999px;background:var(--card);border:2px solid var(--ink);font-weight:900;font-variant-numeric:tabular-nums}
 
@@ -252,7 +257,7 @@ body.composing #chatForm button{white-space:nowrap}
 
 /* ---------- フッター・スマホ */
 .foot{text-align:center;padding:20px}
-@media(max-width:480px){.brand span{display:none}.roominfo b{font-size:15px}}
+@media(max-width:480px){.brand span{display:none}}
 
 /* ---------- アイコン */
 .ico{width:1.25em;height:1.25em;vertical-align:-.28em;display:inline-block;color:var(--ink);flex:none}
@@ -283,6 +288,8 @@ body.composing #chatForm button{white-space:nowrap}
 
 .prefs{display:flex;gap:4px;margin-left:auto}
 .top .roominfo + .prefs{margin-left:0}
+#roomInfo.hidden ~ .prefs #copyLink{display:none}   /* 招待リンク（シェアのアイコンだけ・効果音のボタンと同じ形）は、部屋にいないとき（トップ画面）は出さない */
+#leaveBtn{margin-left:0}   /* 左上の端は右上の効果音のボタンと同じく、ヘッダーの余白ぴったりから */
 button.pref{padding:4px 8px;margin:0}button.pref .ico{width:1.3em;height:1.3em;vertical-align:-.3em}
 button.pref.on{background:var(--accent);color:var(--ink)}
 /* 言語ボタンと更新ボタンは押しても色を変えない */
@@ -296,7 +303,8 @@ button.pref.off:hover{background:#d9d2bd}
 .invitebox .invtitle{font-family:var(--font-head);font-size:20px}
 .invitebox .tag{margin-left:0;margin-right:4px}
 /* スマホ幅のヘッダー: 部屋名を省き、コードとボタンを1〜2行に収める */
-@media(max-width:560px){.roomtitle{display:none}.roomname{font-size:14px;padding:0 7px}.roominfo{gap:4px;font-size:12px}.roominfo b{font-size:14px;letter-spacing:2px;padding:0 6px}button.mini{padding:3px 7px;font-size:11px;margin-left:2px}.prefs{margin-left:0}button.pref{padding:3px 6px}.top{gap:6px;padding-left:12px;padding-right:12px}.brand{font-size:19px}}
+@media(max-width:560px){.roomtitle{display:none}.roominfo{gap:4px;font-size:12px}button.mini{padding:3px 7px;font-size:11px;margin-left:2px}.prefs{margin-left:0}button.pref{padding:3px 6px}.top{gap:6px;padding-left:12px;padding-right:12px}.brand{font-size:19px}}
+header.top > .prefs:first-child{margin-left:auto}   /* 図鑑・クイズのヘッダー（ロゴなし）: 効果音のボタンはどの幅でも右の「対戦へ戻る」の隣に（狭い画面で左端へ行かないように） */
 .reactions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 button.react{padding:6px 10px;font-size:13px;border-radius:999px;box-shadow:none}
 button.react:hover{background:var(--accent);transform:none;box-shadow:none}
@@ -422,6 +430,7 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 
 /* アプリ内で図鑑・クイズを重ねて表示するフレーム */
 .appframe{position:fixed;inset:0;z-index:100;box-sizing:border-box;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(var(--card),var(--card)) top/100% env(safe-area-inset-top,0px) no-repeat,var(--bg)}   /* フレーム内のページは画面上下の余白(充電表示など)を知れないので、外側で空ける。上の余白だけヘッダーと同じ色 */
+.appframe.noheader{background:var(--bg)}   /* 中のページにヘッダーがない（プライバシーポリシー）ときは、上の余白も地の色 */
 .appframe.loading{opacity:0;pointer-events:none}   /* 中のページの準備ができるまで透明（下の画面が見えて押せる） */
 .appframe iframe{width:100%;height:100%;border:0;display:block}
 body.framed{overflow:hidden}
@@ -430,7 +439,7 @@ body.framed{overflow:hidden}
 /* ダークモード: 黄色・白・金銀銅など明るい背景の上は、文字とアイコンを濃い色にする（明るい文字のままだと読めない）。
    緑のボタンの上のアイコンは、ボタンの文字と同じ色に。ライトモードの見た目は変えない。tests/contrast_check.js で確かめる */
 @media (prefers-color-scheme:dark){
-  .roomname,.roomname-inline,.tag.host,.tag.host .ico,button.pref.on,button.pref.on .ico,.ztab-link,.ztab-link .ico,.bubble.sel,
+  .roomname-inline,.tag.host,.tag.host .ico,button.pref.on,button.pref.on .ico,.ztab-link,.ztab-link .ico,.bubble.sel,
   .scene .card3d.win .back,.floatmsg.me,
   .rev.win,.rev.win .ico,.rev.win .country,.rev.win .val,
   .rev.win .wrank:not(.bronze):not(.silver):not(.gold),.rev.win .wrank:not(.bronze):not(.silver):not(.gold) b,
