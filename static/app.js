@@ -420,8 +420,7 @@ function renderEnd() {
   const sorted = state.players.filter(p => !p.spectator).sort((a, b) => b.score - a.score);
   const top = sorted[0]?.score;
   sorted.forEach((p, i) => {
-    const won = p.won.map(id => { const pr = META.prompts.find(x => x.id === id); return pr ? (LANG === 'ja' ? pr.text.replace('は？', '') : pt(pr)) : null; }).filter(Boolean);
-    ol.appendChild(el('li', '', `${p.score === top ? ico('crown') + ' ' : ''}${escapeHtml(pname(p))}${p.pid === pid ? t('you_paren') : ''} — <b>${p.score} ${t('pts')}</b><div class="muted small">${won.join(LANG === 'ja' ? '／' : ' / ') || '—'}</div>`));
+    ol.appendChild(el('li', '', `${p.score === top ? ico('crown') + ' ' : ''}${escapeHtml(pname(p))} — <b>${p.score} ${t('pts')}</b>`));
   });
   const champs = sorted.filter(p => p.score === top).map(p => pname(p));
   $('#endTitle').innerHTML = `${ico('trophy', 'big')} ${t('is_champion', { names: escapeHtml(joinNames(champs)) })}`;
