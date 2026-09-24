@@ -109,6 +109,7 @@ $('#leaveBtn').onclick = () => { if (confirm(t('confirm_leave'))) send({ type: '
 function leaveToHome(message) {
   stopTimer(); prevKey = ''; prevChatLen = 0; prevRoom = null; prevPlayers = null; seenChat.clear(); chatPrimed = false;
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
+  document.querySelectorAll('.floatmsg').forEach(e => e.remove()); floatLastStart = 0; lastChatKey = ''; scrollTopPending = false;
   state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
   sfx.leave();
   if (message) toast(message);
@@ -139,6 +140,7 @@ $('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput')
   input.addEventListener('blur', () => setTimeout(() => {
     if (document.activeElement === input) return;
     document.body.classList.remove('composing'); form.style.top = '';
+    if (scrollTopPending && state && state.phase !== 'lobby') requestAnimationFrame(scrollGameTop);   // 打っている間に答え合わせ・次のラウンドになっていたら、ここで一番上へ
   }, 150));
   if (window.visualViewport) { visualViewport.addEventListener('resize', place); visualViewport.addEventListener('scroll', place); }
   window.addEventListener('resize', place);
@@ -161,13 +163,22 @@ const byPid = (id) => state && state.players.find(x => x.pid === id);
 const rowName = (row) => { const p = byPid(row.pid); return p ? pname(p) : ((LANG === 'en' && row.name_en) ? row.name_en : row.name); };
 const joinNames = (arr) => arr.join(t('names_sep'));
 // チャットを画面の下から上へ流す（名前＋本文）
+// 同じ時に届いた発言は同じ高さから出て重なるので、前の吹き出しがこの吹き出しの高さ分だけ上がってから出す。横も左・中・右に振り分ける
+let floatLastStart = 0, floatLane = 0;
 function floatChat(c) {
   const me = state && state.players.find(p => p.pid === pid);
   const d = el('div', 'floatmsg' + (isSystem(c) ? ' sys' : (me && c.pid === pid ? ' me' : '')));
   d.innerHTML = `<b>${escapeHtml(chatName(c))}</b>${escapeHtml(chatText(c))}`;
-  d.style.setProperty('--x', (4 + Math.random() * 50).toFixed(0) + '%');
-  const olds = document.querySelectorAll('.floatmsg'); if (olds.length >= 8) olds[0].remove();
+  const lane = floatLane++ % 3;
+  if (lane === 2) { d.style.left = 'auto'; d.style.right = (4 + Math.random() * 10).toFixed(0) + '%'; }   // 右の列は右から置く（左から置くと幅が狭まって縦に長くなる）
+  else d.style.setProperty('--x', (4 + lane * 12 + Math.random() * 10).toFixed(0) + '%');
+  d.style.visibility = 'hidden'; d.style.animationPlayState = 'paused';   // 出番まで待たせておく
+  const olds = document.querySelectorAll('.floatmsg'); if (olds.length >= 12) olds[0].remove();
   document.body.appendChild(d);
+  const speed = (innerHeight + 140) / 6500, now = Date.now();   // 流れる速さ（px/ミリ秒。CSS の floatUp と合わせる）
+  const start = Math.max(now, floatLastStart + (d.offsetHeight + 10) / speed);
+  floatLastStart = start;
+  setTimeout(() => { d.style.visibility = ''; d.style.animationPlayState = 'running'; }, start - now);
   d.addEventListener('animationend', () => d.remove());
 }
 // 言語切り替え時: 今の画面を作り直す
@@ -176,20 +187,30 @@ window.onLangChange = () => { document.title = t('app_title'); if (typeof RANK_C
 // 同じラウンドの結果をもう一度受け取ったとき（チャット・つなぎ直し・ページの読み直しなど）は、めくる動き・紙吹雪・音をやり直さない
 const revealKeyOf = (s) => s.reveal ? `${s.room}|${s.round}|${s.reveal.prompt.id}|${s.reveal.rows.map(r => r.pid + ':' + r.card).join(',')}` : '';
 const revealShown = () => { try { return sessionStorage.getItem('geoking_revealed') || ''; } catch { return ''; } };
+// 答え合わせが出たとき・次のラウンドが始まったときは画面の一番上へ（手札の下の方で選んでも、結果とお題が見えるように）
+let scrollTopNext = false, scrollTopPending = false;
+function scrollGameTop() {
+  const a = document.activeElement;
+  if (a && a.closest && a.closest('#chatForm')) { scrollTopPending = true; return; }   // チャットを打っている最中は動かさず、打ち終わって入力欄から離れたら戻す
+  scrollTopPending = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 function playTransitions() {
   const key = `${state.room}:${state.phase}:${state.round}`;
   // 部屋に入った／人が増えた・減った
   if (state.room !== prevRoom) { sfx.enter(); prevRoom = state.room; prevPlayers = state.players.length; }
   else if (prevPlayers != null && state.players.length !== prevPlayers) { (state.players.length > prevPlayers ? sfx.joined : sfx.left)(); prevPlayers = state.players.length; }
   if (key !== prevKey) {
-    if (state.phase === 'pick' && state.round === 1 && !prevKey.endsWith(':pick:1')) { sfx.start(); lastTickSec = null; }
-    else if (state.phase === 'pick') { sfx.round(); lastTickSec = null; }
+    if (state.phase === 'pick' && state.round === 1 && !prevKey.endsWith(':pick:1')) { sfx.start(); lastTickSec = null; scrollTopNext = true; }
+    else if (state.phase === 'pick') { sfx.round(); lastTickSec = null; scrollTopNext = true; }
     else if (state.phase === 'reveal' && state.reveal && revealKeyOf(state) !== revealShown()) {
+      scrollTopNext = true;
       sfx.reveal();
       const me = state.reveal.rows.find(r => r.pid === pid);
       const isSpectator = !!state.players.find(p => p.pid === pid && p.spectator);
       if (me && !isSpectator) setTimeout(() => (me.winner ? sfx.win() : sfx.lose()), 350);
     } else if (state.phase === 'end') {
+      scrollTopNext = true;
       const mine = state.players.find(p => p.pid === pid);
       const scores = state.players.filter(p => !p.spectator).map(p => p.score);
       const top = scores.length ? Math.max(...scores) : 0;
@@ -225,18 +246,27 @@ function render() {
   else if (state.phase === 'pick' || state.phase === 'reveal') { renderGame(); show('game'); }
   else if (state.phase === 'end') { renderEnd(); show('end'); }
   renderChat();
+  if (scrollTopNext) { scrollTopNext = false; requestAnimationFrame(scrollGameTop); }
 }
 
 // チャットはロビー・ゲーム・結果のどの画面でも使える。カードを今の画面のスロットへ移して描画
+let lastChatKey = '';
 function renderChat() {
   const card = $('#chatCard');
   const slot = state.phase === 'lobby' ? $('#lobbyChatSlot') : state.phase === 'end' ? $('#endChatSlot') : $('#gameChatSlot');
-  if (slot && card.parentElement !== slot) slot.appendChild(card);
+  const moved = !!slot && card.parentElement !== slot;
+  if (moved) slot.appendChild(card);
   card.classList.remove('hidden');
-  const log = $('#chatLog'); const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
+  const log = $('#chatLog');
+  const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
+  const chat = state.chat || [], last = chat[chat.length - 1];
+  const lastKey = last ? `${last.ts}|${last.pid || ''}|${last.text}` : '';
+  const newMsg = lastKey !== lastChatKey; lastChatKey = lastKey;
   log.innerHTML = (state.chat || []).map(c => `<div>${c.pid && c.pid !== pid ? `<b class="who" data-pid="${c.pid}" title="${t('report_mute')}">${escapeHtml(chatName(c))}</b>` : `<b>${escapeHtml(chatName(c))}</b>`} ${escapeHtml(chatText(c))}</div>`).join('');
   log.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
-  if (atBottom) log.scrollTop = log.scrollHeight;
+  // 新しい発言が来たとき・画面が変わって欄を移したとき（移すと一番上に戻る）・もともと一番下にいたときは、いちばん新しい発言（一番下）を見せる。
+  // 前の発言を読み返している途中は、ほかの更新（誰かがカードを出した等）で引き戻さない
+  if (moved || newMsg || atBottom) { log.scrollTop = log.scrollHeight; requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; }); }
 }
 
 // 部屋名（未設定なら「〇〇の部屋」を言語に合わせて）

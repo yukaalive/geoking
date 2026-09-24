@@ -343,6 +343,7 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 
 /* ---------- 図鑑 */
 .zukanlink{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:8px 14px;border:2px solid var(--ink);border-radius:12px;background:var(--accent);color:var(--ink);text-decoration:none;font-weight:900;box-shadow:var(--shadow-sm)}
+@media (prefers-color-scheme:dark){.zukanlink,.zukanlink .ico{color:#1c2b22}}   /* ダークモードでも黄色いボタンの文字は濃い色（明るい文字だと黄色の上で読めない） */
 .zukanlink small{font-weight:700;color:#5a4a10;margin-left:4px}
 .zukanlink:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
 .herodemo .sololinks{grid-column:1;justify-self:start;display:flex;gap:8px;flex-wrap:wrap}
@@ -417,7 +418,6 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .qw{width:110px;border:2px solid var(--ink);border-radius:10px;padding:6px;background:var(--card);font-size:12px;font-weight:800;cursor:pointer;box-shadow:var(--shadow-sm)}
 .qw img{width:100%;aspect-ratio:3/2;object-fit:contain;border:1.5px solid var(--ink);border-radius:6px;background:#fff}
 .qres .row{justify-content:center}
-.quizlink{background:var(--card)}
 
 /* アプリ内で図鑑・クイズを重ねて表示するフレーム */
 .appframe{position:fixed;inset:0;z-index:100;box-sizing:border-box;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(var(--card),var(--card)) top/100% env(safe-area-inset-top,0px) no-repeat,var(--bg)}   /* フレーム内のページは画面上下の余白(充電表示など)を知れないので、外側で空ける。上の余白だけヘッダーと同じ色 */

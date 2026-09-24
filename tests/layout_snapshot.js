@@ -44,6 +44,7 @@
     const w = fr.contentWindow;
     const st = w.document.createElement('style'); st.textContent = '*,*::before,*::after{animation:none!important;transition:none!important}'; w.document.head.appendChild(st);
     await Promise.race([Promise.all([...w.document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))), sleep(4000)]);
+    await Promise.race([w.document.fonts.ready, sleep(4000)]);   // 文字の形（Web フォント）が読み込み終わってから測る。途中だと英語の太字などの幅が変わって見える
     await sleep(300);
     if (page === 'lobby') {
       w.sessionStorage.removeItem('geoking_room');
@@ -59,7 +60,7 @@
     for (const W of WIDTHS) for (const page of PAGES) {
       const fr = await openPage(page, W); const w = fr.contentWindow;
       for (const lang of (typeof w.setLang === 'function' ? ['ja', 'en'] : ['ja'])) {
-        if (w.setLang) { w.setLang(lang); await sleep(250); }
+        if (w.setLang) { w.setLang(lang); await sleep(250); await Promise.race([w.document.fonts.ready, sleep(4000)]); }   // 言語を変えると別の文字の形を読み込むことがある
         snap[`${page}@${W}px/${lang}`] = record(w);
       }
       if (w.setLang) w.setLang('ja');
@@ -71,7 +72,7 @@
     return snap;
   };
   // 測る条件（スクロールバーの幅など）。記録したときと比べたときで違うと、変えていない所まで「変わった」と出る
-  const envOf = () => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;top:-999px;width:100px;height:100px;overflow:scroll'; document.body.appendChild(d); const sb = 100 - d.clientWidth; d.remove(); return `スクロールバー${sb}px・画面の幅${innerWidth}px`; };
+  const envOf = () => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;top:-999px;width:100px;height:100px;overflow:scroll'; document.body.appendChild(d); const sb = 100 - d.clientWidth; d.remove(); return `スクロールバー${sb}px`; };   // 各画面は幅を決めた枠の中で測るので、比べるのはスクロールバーの幅（スマホ表示にすると 0 になる）
   window.layoutSnapshot = async (name = 'before') => {
     const snap = await take();
     localStorage.setItem('__layout_' + name, JSON.stringify(snap));
