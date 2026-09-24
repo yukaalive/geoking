@@ -178,8 +178,23 @@ body.composing #chatForm button{white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.floatmsg{display:none}}
 
 /* ---------- 結果 */
-.final li{padding:9px 0;border-bottom:2px dashed var(--line-soft);font-size:16px;font-weight:700}
-.final li:first-child{font-size:22px}
+/* 最終結果のメンバー欄（メダル形式） */
+.final{list-style:none;padding:0;margin:0}
+.final li.m{display:flex;align-items:center;gap:14px;padding:10px 6px;border-bottom:2px dashed var(--line-soft);animation:medalIn .5s cubic-bezier(.2,1.4,.4,1) both}
+.final .disc{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:18px;box-shadow:2px 2px 0 var(--ink);flex:none;background:var(--card);color:var(--muted)}
+.final .disc.g{background:linear-gradient(135deg,#ffe58a,var(--accent) 60%,#ffd25e);color:var(--ink);animation:medalPop .7s cubic-bezier(.2,1.8,.4,1) both,medalGlow 1.6s ease-in-out .8s infinite}
+.final .disc.s{background:linear-gradient(135deg,#fafafa,#d5dae2);color:var(--ink)}
+.final .disc.b{background:linear-gradient(135deg,#f7dcc3,#e0a878);color:var(--ink)}
+.final .nm{font-weight:900;font-size:17px;flex:1;line-height:1.2}
+.final li.top .nm{font-family:var(--font-head);font-weight:400;font-size:22px}
+.final li.top .nm .ico{color:var(--accent);filter:drop-shadow(1px 1px 0 var(--ink));width:1.1em;height:1.1em;vertical-align:-.15em}
+.final .sc{font-family:var(--font-head);font-size:22px;white-space:nowrap}
+.final .sc small{font-family:var(--font-body);font-weight:800;font-size:12px;color:var(--muted);margin-left:3px}
+@keyframes medalIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes medalPop{0%{transform:scale(.3) rotate(-30deg)}60%{transform:scale(1.15) rotate(5deg)}100%{transform:none}}
+@keyframes medalGlow{0%,100%{box-shadow:2px 2px 0 var(--ink),0 0 0 0 rgba(244,197,66,0)}50%{box-shadow:2px 2px 0 var(--ink),0 0 0 9px rgba(244,197,66,.5)}}
+.final .disc .confetti{position:absolute;inset:-40px -20px;pointer-events:none}
+.final .disc .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;left:50%;top:50%;opacity:0;animation:conf 1.4s ease-out forwards}
 /* 最終結果の一覧: 横軸＝プレイヤー（固定）、縦軸＝ラウンド。狭い画面は横スクロール */
 .history .htablewrap{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
 .history .htable{display:grid;gap:6px;align-items:stretch;width:max-content;max-width:none}

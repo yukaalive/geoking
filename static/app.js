@@ -419,8 +419,15 @@ function renderEnd() {
   const ol = $('#finalList'); ol.innerHTML = '';
   const sorted = state.players.filter(p => !p.spectator).sort((a, b) => b.score - a.score);
   const top = sorted[0]?.score;
+  // メダル形式: 同点は同じ順位（1,1,3…）。金・銀・銅、4位以下は白。1位はポンと出て光り、紙吹雪
+  let rank = 0, prev = null;
   sorted.forEach((p, i) => {
-    ol.appendChild(el('li', '', `${p.score === top ? ico('crown') + ' ' : ''}${escapeHtml(pname(p))} — <b>${p.score} ${t('pts')}</b>`));
+    if (p.score !== prev) { rank = i + 1; prev = p.score; }
+    const cls = rank === 1 ? 'g' : rank === 2 ? 's' : rank === 3 ? 'b' : 'n';
+    const li = el('li', 'm' + (rank === 1 ? ' top' : ''), `<div class="disc ${cls}">${rank}</div><div class="nm">${rank === 1 ? ico('crown') + ' ' : ''}${escapeHtml(pname(p))}</div><div class="sc">${p.score}<small>${t('pts')}</small></div>`);
+    li.style.animationDelay = (0.15 * i) + 's';
+    ol.appendChild(li);
+    if (rank === 1) setTimeout(() => spawnConfetti(li.querySelector('.disc'), 'gold'), 400 + 150 * i);
   });
   const champs = sorted.filter(p => p.score === top).map(p => pname(p));
   $('#endTitle').innerHTML = `${ico('trophy', 'big')} ${t('is_champion', { names: escapeHtml(joinNames(champs)) })}`;
