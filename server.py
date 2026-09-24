@@ -361,10 +361,11 @@ async def start_timer(room):
         room.timer_task.cancel()
     if not room.deadline:
         return
+    rnd = room.round
 
     async def _run():
         await asyncio.sleep(max(0, room.deadline - time.time()))
-        if room.phase == 'pick':
+        if room.phase == 'pick' and room.round == rnd:   # 前のラウンドの時計が、次のラウンドの始まりに鳴らないように（鳴ると次の結果がすぐ出てしまう）
             for p in room.players.values():
                 if p.pick is None and p.hand:
                     p.pick = random.choice(p.hand)  # 時間切れはランダム

@@ -173,6 +173,9 @@ function floatChat(c) {
 // 言語切り替え時: 今の画面を作り直す
 window.onLangChange = () => { document.title = t('app_title'); if (typeof RANK_CACHE_CLEAR === 'function') RANK_CACHE_CLEAR(); if (state) render(); else loadRooms(); renderPrefs(); };
 
+// 同じラウンドの結果をもう一度受け取ったとき（チャット・つなぎ直し・ページの読み直しなど）は、めくる動き・紙吹雪・音をやり直さない
+const revealKeyOf = (s) => s.reveal ? `${s.room}|${s.round}|${s.reveal.prompt.id}|${s.reveal.rows.map(r => r.pid + ':' + r.card).join(',')}` : '';
+const revealShown = () => { try { return sessionStorage.getItem('geoking_revealed') || ''; } catch { return ''; } };
 function playTransitions() {
   const key = `${state.room}:${state.phase}:${state.round}`;
   // 部屋に入った／人が増えた・減った
@@ -181,7 +184,7 @@ function playTransitions() {
   if (key !== prevKey) {
     if (state.phase === 'pick' && state.round === 1 && !prevKey.endsWith(':pick:1')) { sfx.start(); lastTickSec = null; }
     else if (state.phase === 'pick') { sfx.round(); lastTickSec = null; }
-    else if (state.phase === 'reveal' && state.reveal) {
+    else if (state.phase === 'reveal' && state.reveal && revealKeyOf(state) !== revealShown()) {
       sfx.reveal();
       const me = state.reveal.rows.find(r => r.pid === pid);
       const isSpectator = !!state.players.find(p => p.pid === pid && p.spectator);
@@ -386,7 +389,9 @@ function spawnConfetti(target, tier, scale = 1) {
 }
 function renderReveal() {
   const r = state.reveal, F = META.fields[r.prompt.key];
+  const key = revealKeyOf(state), fresh = key !== revealShown();   // 初めて見る結果だけ動かす
   const box = $('#revealRows'); box.innerHTML = '';
+  box.classList.toggle('still', !fresh);
   r.rows.forEach((row, i) => {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
@@ -395,8 +400,9 @@ function renderReveal() {
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
     const tier = wrankTier(row.world_rank || 999).cls.trim();
-    if (tier) { d.dataset.tier = tier; setTimeout(() => spawnConfetti(d.querySelector('.wrank'), tier), i * 250 + 350); }
+    if (tier) { d.dataset.tier = tier; if (fresh) setTimeout(() => spawnConfetti(d.querySelector('.wrank'), tier), i * 250 + 350); }
   });
+  try { sessionStorage.setItem('geoking_revealed', key); } catch {}
   // 結果画面が出ている間は紙吹雪を繰り返す（最初の大きな一発のあと、少し控えめに）
   clearInterval(confettiTimer);
   confettiTimer = setInterval(() => {

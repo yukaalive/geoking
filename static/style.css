@@ -328,6 +328,9 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .rev .wrank.gold b{font-size:24px}
 .rev .wrank.gold em{font-size:16px}
 .rev .wrank.gold span{color:#5a4a10}
+/* 同じ結果を描き直すとき（チャットやつなぎ直しで画面が更新されたとき）は、めくる・飛び出す動きをやり直さない。金の光り方はそのまま */
+#revealRows.still .rev,#revealRows.still .rev .wrank.bronze,#revealRows.still .rev .wrank.silver{animation:none}
+#revealRows.still .rev .wrank.gold{animation:wrankGlow 1.6s ease-in-out infinite}
 @keyframes wrankPop{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
 @keyframes wrankGlow{0%,100%{box-shadow:3px 3px 0 var(--ink),0 0 0 0 rgba(244,197,66,0)}50%{box-shadow:3px 3px 0 var(--ink),0 0 0 8px rgba(244,197,66,.45)}}
 .history .who.hot{font-weight:900;border-radius:6px;padding:0 4px;display:inline-block}
