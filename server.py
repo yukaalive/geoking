@@ -709,6 +709,31 @@ async def service_worker(request):
     return web.FileResponse(os.path.join(HERE, 'static', 'sw.js'), headers={'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache'})
 
 
+# 検索エンジン向け: クロールしてよい範囲と、載せてほしいページの一覧
+SITE_URL = os.environ.get('SITE_URL', 'https://geoking-vlgh.onrender.com').rstrip('/')
+SITEMAP_PAGES = ['/static/index.html', '/static/zukan.html', '/static/quiz.html', '/static/privacy.html']
+
+async def robots_txt(request):   # 国データ（/api/meta）は図鑑の表示に要るので許可。利用ログ送信などは除外
+    return web.Response(text=f"User-agent: *\nAllow: /api/meta\nDisallow: /api/\nDisallow: /admin/\n\nSitemap: {SITE_URL}/sitemap.xml\n")
+
+
+async def sitemap_xml(request):
+    urls = ''.join(f'<url><loc>{SITE_URL}{p}</loc></url>' for p in SITEMAP_PAGES)
+    return web.Response(text=f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>\n',
+                        content_type='application/xml')
+
+
+# Google Search Console の所有確認（HTML ファイル方式）。Render の Environment に
+# GOOGLE_SITE_VERIFICATION=google0123abcd.html のようにファイル名を入れると、そのファイルを返す
+GOOGLE_SITE_VERIFICATION = os.environ.get('GOOGLE_SITE_VERIFICATION', '').strip()
+
+async def google_verification(request):
+    name = request.match_info['name'] + '.html'
+    if not GOOGLE_SITE_VERIFICATION or not hmac.compare_digest(name, GOOGLE_SITE_VERIFICATION):
+        raise web.HTTPNotFound()
+    return web.Response(text=f'google-site-verification: {name}')
+
+
 async def healthz(request):
     return web.json_response({'ok': True, 'rooms': len(rooms)})
 
@@ -838,6 +863,9 @@ def make_app():
     app.cleanup_ctx.append(periodic_cleanup)
     app.router.add_get('/', index)
     app.router.add_get('/healthz', healthz)
+    app.router.add_get('/robots.txt', robots_txt)
+    app.router.add_get('/sitemap.xml', sitemap_xml)
+    app.router.add_get('/{name:google[0-9a-f]+}.html', google_verification)
     app.router.add_get('/manifest.json', manifest)
     app.router.add_get('/sw.js', service_worker)
     app.router.add_get('/api/meta', api_meta)

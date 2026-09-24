@@ -10,7 +10,48 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
 <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
-<title>地理王</title>
+<title>地理王｜国旗で対戦する地理カードゲーム</title>
+<meta name="description" content="地理王（GeoKing）は、国旗だけを見て「面積が大きい国は？」などのお題に一番合う国を出し合う、みんなで遊べる地理カードゲーム。ブラウザですぐ遊べて、iPhone アプリもあります。無料・登録不要。">
+<link rel="canonical" href="https://geoking-vlgh.onrender.com/static/index.html">
+<!-- iPhone の Safari で開いたとき、画面上に App Store への案内（スマートバナー）を出す -->
+<meta name="apple-itunes-app" content="app-id=6815042682">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="地理王">
+<meta property="og:title" content="地理王｜国旗で対戦する地理カードゲーム">
+<meta property="og:description" content="国旗だけを見て、お題に一番合う国を出し合う地理カードゲーム。ブラウザですぐ遊べて、iPhone アプリもあります。">
+<meta property="og:url" content="https://geoking-vlgh.onrender.com/static/index.html">
+<meta property="og:image" content="https://geoking-vlgh.onrender.com/static/icons/og.png">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<!-- 検索エンジン向け: サイト名と、Web 版・iPhone アプリが同じ「地理王」であることを伝える -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "地理王",
+      "alternateName": ["GeoKing", "地理王 GeoKing"],
+      "url": "https://geoking-vlgh.onrender.com/"
+    },
+    {
+      "@type": ["VideoGame", "WebApplication"],
+      "name": "地理王",
+      "alternateName": "GeoKing",
+      "url": "https://geoking-vlgh.onrender.com/static/index.html",
+      "description": "国旗だけを見て「面積が大きい国は？」などのお題に一番合う国を出し合う、みんなで遊べる地理カードゲーム。197の国と地域、約30種のデータ。",
+      "image": "https://geoking-vlgh.onrender.com/static/icons/icon-512.png",
+      "inLanguage": ["ja", "en"],
+      "genre": ["パーティーゲーム", "地理", "国旗クイズ"],
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web, iOS",
+      "playMode": ["MultiPlayer", "SinglePlayer"],
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+      "sameAs": ["https://apps.apple.com/jp/app/id6815042682"]
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+1p:wght@500;700;800;900&display=swap" rel="stylesheet">
@@ -40,7 +81,7 @@
           </div>
         </div>
       </div>
-      <div class="sololinks"><a class="zukanlink" href="/static/zukan.html"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#cards"/></svg> <span data-i18n="learn_zukan">図鑑で学ぶ</span></a> <a class="zukanlink quizlink" href="/static/quiz.html"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> <span data-i18n="solo_quiz">ひとりで国旗クイズ</span></a></div>
+      <div class="sololinks"><a class="zukanlink" href="/static/zukan.html"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#cards"/></svg> <span data-i18n="learn_zukan">図鑑で学ぶ</span></a> <a class="zukanlink quizlink" href="/static/quiz.html"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> <span data-i18n="solo_quiz">ひとりで国旗クイズ</span></a> <a class="zukanlink quizlink storelink" href="https://apps.apple.com/jp/app/id6815042682" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#phone"/></svg> <span data-i18n="iphone_app">iPhone アプリ（App Store）</span></a></div>
       <div class="scene" aria-hidden="true">
         <div class="qcard"><small data-i18n="demo_prompt">お題</small><span data-i18n="demo_q">面積が大きい国は？</span></div>
         <div class="win"><svg class="ico " aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> <span data-i18n="demo_win">ブラジル 851万km²</span></div>

@@ -5,8 +5,8 @@
    - setLang(lang): 切り替えて保存。各画面は window.onLangChange で再描画する */
 const I18N = {
   ja: {
-    app_title: '地理王', tagline: '国旗から、どんな国かを推測せよ！', your_name: 'あなたの名前（必須）', name_ph: 'ニックネームを入力',
-    create_room: '部屋を作る', code_ph: '友だちの部屋の名前', join: '参加する', room_label: '部屋', enter_room_name: '部屋の名前を入力してください', learn_zukan: '図鑑で学ぶ', public_rooms: '募集中の公開部屋', refresh: '更新',
+    app_title: '地理王｜国旗で対戦する地理カードゲーム', tagline: '国旗から、どんな国かを推測せよ！', your_name: 'あなたの名前（必須）', name_ph: 'ニックネームを入力',
+    create_room: '部屋を作る', code_ph: '友だちの部屋の名前', join: '参加する', room_label: '部屋', enter_room_name: '部屋の名前を入力してください', learn_zukan: '図鑑で学ぶ', iphone_app: 'iPhone アプリ（App Store）', public_rooms: '募集中の公開部屋', refresh: '更新',
     loading: '読み込み中…', public_rooms_note: '世界のどこかの誰かが作った部屋に飛び入りできます。自分の部屋を載せるにはロビーで「公開部屋にする」をオンに。',
     demo_prompt: 'お題', demo_q: '面積が大きい国は？', demo_win: 'ブラジル 851万km²', c_br: 'ブラジル', c_jp: '日本', c_mn: 'モンゴル', c_mt: 'マルタ',
     v_br: '851万km²', v_jp: '37.8万km²', v_mn: '156万km²', v_mt: '316km²',
@@ -75,8 +75,8 @@ const I18N = {
     review_wrong: 'まちがえた国（タップでデータ）', play_again: 'もう一度', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
   },
   en: {
-    app_title: 'GeoKing', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
-    create_room: 'Create room', code_ph: "Friend's room name", join: 'Join', room_label: 'Room', enter_room_name: 'Enter the room name', learn_zukan: 'Study mode', public_rooms: 'Open public rooms', refresh: 'Refresh',
+    app_title: 'GeoKing | Flag card geography party game', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
+    create_room: 'Create room', code_ph: "Friend's room name", join: 'Join', room_label: 'Room', enter_room_name: 'Enter the room name', learn_zukan: 'Study mode', iphone_app: 'iPhone app (App Store)', public_rooms: 'Open public rooms', refresh: 'Refresh',
     loading: 'Loading…', public_rooms_note: 'Jump into a room someone else made. To list your own room, turn on "Public room" in the lobby.',
     demo_prompt: 'PROMPT', demo_q: 'Largest area?', demo_win: 'Brazil 8.51M km²', c_br: 'Brazil', c_jp: 'Japan', c_mn: 'Mongolia', c_mt: 'Malta',
     v_br: '8.51M km²', v_jp: '378K km²', v_mn: '1.56M km²', v_mt: '316 km²',
