@@ -50,7 +50,7 @@ function renderRank() {
 // ---------- 起動
 (async function init() {
   trackVisit('zukan');   // 利用ログ（開始・5分ごと・離脱）
-  META = await (await fetch(API + '/api/meta')).json();
+  META = await loadMeta();
   // 地域の選択肢
   const fillSelects = () => {
     for (const sel of [$('#region'), $('#rankRegion')]) {
@@ -87,4 +87,5 @@ function renderRank() {
   const q = new URLSearchParams(location.search);
   if (q.get('prompt')) { ps.value = q.get('prompt'); showTab('rank'); }
   else showTab(location.hash === '#rank' ? 'rank' : 'flags');
+  frameReady();
 })();

@@ -110,7 +110,7 @@ function spawnConfetti(target, tier) {
 
 (async function init() {
   trackVisit('quiz');
-  META = await (await fetch(API + '/api/meta')).json();
+  META = await loadMeta();
   document.querySelectorAll('.qmode').forEach(b => b.onclick = () => startQuiz(b.dataset.mode));
   $('#qQuit').onclick = () => { if (confirm(t('confirm_quit'))) { sfx.leave(); renderMenu(); } };
   $('#qAgain').onclick = () => startQuiz(qMode);
@@ -119,4 +119,5 @@ function spawnConfetti(target, tier) {
   window.onLangChange = () => { document.title = t('quiz_title'); if (!$('#qmenu').classList.contains('hidden')) renderMenu(); renderPrefs(); };
   const q = new URLSearchParams(location.search);
   if (q.get('mode') === 'flag' || q.get('mode') === 'name') startQuiz(q.get('mode')); else renderMenu();
+  frameReady();
 })();

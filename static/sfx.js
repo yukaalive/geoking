@@ -57,7 +57,8 @@ document.addEventListener('click', (e) => {
   const a = e.target.closest('a.zukanlink, a.ztab-link, a.mini, .foot a[href]');
   if (a && a.href && !a.target && !e.metaKey && !e.ctrlKey && !e.shiftKey && a.getAttribute('href') !== '#') {
     e.preventDefault(); sfx.confirm();
-    setTimeout(() => { (window.navigateTo || ((u) => { location.href = u; }))(a.href); }, 160);
+    // ページを移ると音が途切れるので少し待つ。アプリで枠を重ねるときはページが残るので待たない
+    setTimeout(() => { (window.navigateTo || ((u) => { location.href = u; }))(a.href); }, window.navigateKeepsPage ? 0 : 160);
     return;
   }
   const b = e.target.closest('button, .who, a.muted');

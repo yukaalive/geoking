@@ -6,6 +6,30 @@ if (window.self !== window.top) document.documentElement.classList.add('inframe'
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 let META = null;          // countries, fields, categories, prompts（/api/meta）
+let META_AT = 0;          // 国データを通信で取った時刻
+// 国データを読み込む。アプリ内フレームでは、外側のページが読み込み済みのものを写して使う（大きな通信を1回省いて早く開く）
+async function loadMeta() {
+  try {
+    const shared = window.top !== window && typeof window.parent.sharedMeta === 'function' && window.parent.sharedMeta();
+    if (shared && typeof structuredClone === 'function') return structuredClone(shared);
+  } catch (e) { /* 外側が読めないときは通信で取る */ }
+  const m = await (await fetch(API + '/api/meta')).json();
+  META_AT = Date.now();
+  return m;
+}
+// 外側のページとして国データを貸す。アプリは何日も開いたままのことがあるので、10分より古ければ貸さず（フレームが自分で取る）、次回用に裏で取り直す
+let metaRefreshing = false;
+window.sharedMeta = () => {
+  if (META && Date.now() - META_AT < 10 * 60 * 1000) return META;
+  if (META && !metaRefreshing) {
+    metaRefreshing = true;
+    fetch(API + '/api/meta').then(r => r.json()).then(m => { META = m; META_AT = Date.now(); RANK_CACHE_CLEAR(); }).catch(() => {}).finally(() => { metaRefreshing = false; });
+  }
+  return null;
+};
+// アプリ内フレームに表示されたページが、表示の準備ができたことを外側に知らせる（外側はそれまで今の画面を見せておく）
+// 文言の差し替えは本来 DOMContentLoaded だが、その前に表示されると一瞬日本語が見えるので、合図の前に済ませる
+const frameReady = () => { if (window.top === window) return; if (typeof applyI18n === 'function') applyI18n(); window.parent.postMessage('geoking:ready', '*'); };
 
 const flagUrl = (id, w = 320) => `https://flagcdn.com/w${w}/${id}.png`;
 const ico = (name, cls = '') => `<svg class="ico ${cls}" aria-hidden="true"><use href="/static/icons.svg?v=2#${name}"/></svg>`;

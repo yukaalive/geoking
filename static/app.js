@@ -113,8 +113,8 @@ function leaveToHome(message) {
   sfx.leave();
   if (message) toast(message);
 }
-$('#startBtn').onclick = () => send({ type: 'start' });
-$('#rematchBtn').onclick = () => send({ type: 'start' });
+$('#startBtn').onclick = () => send({ type: 'start', with_bot: state.players.length < 2 });   // ひとりのときはボットを1体入れて始める
+$('#rematchBtn').onclick = () => send({ type: 'start', with_bot: state.players.length < 2 });
 $('#toLobbyBtn').onclick = () => send({ type: 'to_lobby' });
 $('#chatForm').onsubmit = (e) => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) { send({ type: 'chat', text: t }); sfx.send(); } $('#chatInput').value = ''; };
 // スマホ：キーボードが出ると入力欄が隠れるので、入力中はキーボードの真上に固定表示する
@@ -262,8 +262,7 @@ function renderLobby() {
   if (document.activeElement?.closest('.settings') == null) {
     $('#setPublic').checked = s.public; $('#setTitle').value = state.title_raw || ''; $('#setTitle').placeholder = roomTitle() || t('room_title_ph');
   }
-  $('#startBtn').disabled = state.players.length < 2;
-  $('#startBtn').textContent = state.players.length < 2 ? t('start_need2') : t('start_rounds', { n: state.settings.rounds });
+  $('#startBtn').textContent = state.players.length < 2 ? t('start_with_bot') : t('start_rounds', { n: state.settings.rounds });
 }
 
 function renderGame() {
@@ -429,6 +428,7 @@ function renderEnd() {
     ol.appendChild(li);
     if (rank === 1) setTimeout(() => spawnConfetti(li.querySelector('.disc'), 'gold'), 400 + 150 * i);
   });
+  const rb = $('#rematchBtn'); rb.dataset.i18n = state.players.length < 2 ? 'start_with_bot' : 'rematch'; rb.textContent = t(rb.dataset.i18n);   // ひとりならボットを入れて始める
   const champs = sorted.filter(p => p.score === top).map(p => pname(p));
   $('#endTitle').innerHTML = `${ico('trophy', 'big')} ${t('is_champion', { names: escapeHtml(joinNames(champs)) })}`;
   renderHistory();
@@ -560,7 +560,7 @@ async function showInvite(code) {
 
 // ---------- 起動
 (async function init() {
-  META = await (await fetch(API + '/api/meta')).json();
+  META = await loadMeta();
   const q = new URLSearchParams(location.search);
   const room = q.get('room') || sessionStorage.getItem('geoking_room');
   if (q.get('room')) { $('#codeInput').value = q.get('room').toUpperCase(); }

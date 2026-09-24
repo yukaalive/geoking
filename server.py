@@ -270,7 +270,7 @@ class Room:
             self.order.remove(pid)
         if self.host == pid:
             humans = [x for x in self.order if not self.players[x].is_bot]
-            self.host = humans[0] if humans else (self.order[0] if self.order else None)
+            self.host = humans[0] if humans else None   # ボットには渡さない（次に入った人がホストになる）
 
     def has_humans(self):
         return any(p.connected and not p.is_bot for p in self.players.values())
@@ -385,6 +385,17 @@ def to_int(v, lo, hi, default):
         return default
 
 
+def add_bot(room):
+    used = {p.name for p in room.players.values()}
+    name = random.choice([x for x in BOT_NAMES if x not in used] or BOT_NAMES)
+    bpid = 'bot_' + uuid.uuid4().hex[:6]
+    bp = Player(bpid, name, is_bot=True)
+    bp.name_en = BOT_NAMES_EN[BOT_NAMES.index(name)] if name in BOT_NAMES else name
+    room.players[bpid] = bp
+    room.order.append(bpid)
+    return bp
+
+
 async def after_player_gone(room, name):
     """退出・キック・切断後の後始末。"""
     if not room.has_humans():
@@ -462,6 +473,8 @@ async def ws_handler(request):
                 p.ws, p.connected = ws, True
                 r.players[pid] = p
                 r.order.append(pid)
+                if r.host not in r.players or r.players[r.host].is_bot:   # ホストがいない部屋（ひとりでリロードした等）に戻ってきた人をホストに
+                    r.host = pid
                 r.empty_since = None
                 log.info('room %s join %s%s players=%d', r.code, name, ' (spectator)' if r.phase != 'lobby' else '', len(r.players))
                 if r.phase != 'lobby':   # 途中参加はまず観戦。次のゲームから自動で参加、または「途中から参加」
@@ -515,13 +528,7 @@ async def ws_handler(request):
                 return
             if len(room.players) >= MAX_PLAYERS:
                 return await error('満員です', 'room_full')
-            used = {p.name for p in room.players.values()}
-            name = random.choice([x for x in BOT_NAMES if x not in used] or BOT_NAMES)
-            bpid = 'bot_' + uuid.uuid4().hex[:6]
-            bp = Player(bpid, name, is_bot=True)
-            bp.name_en = BOT_NAMES_EN[BOT_NAMES.index(name)] if name in BOT_NAMES else name
-            room.players[bpid] = bp
-            room.order.append(bpid)
+            add_bot(room)
             return await broadcast(room)
 
         if t == 'kick':
@@ -586,7 +593,9 @@ async def ws_handler(request):
             if not (is_host and room.phase in ('lobby', 'end')):
                 return
             if len(room.players) < 2:
-                return await error('2人以上（ボット可）で開始できます', 'need_two')
+                if not data.get('with_bot'):
+                    return await error('2人以上（ボット可）で開始できます', 'need_two')
+                add_bot(room)   # 「botとゲーム開始」: ひとりのときはボットを1体入れて始める
             room.start()
             return await enter_pick_phase(room)
 
