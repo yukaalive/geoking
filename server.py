@@ -52,6 +52,31 @@ if os.environ.get('GEOKING_DEMO'):   # 撮影用デモ: 操作に時間がかか
 rooms = {}  # code -> Room
 
 
+def norm_title(s):
+    """部屋名の照合用: 全角半角・大文字小文字・空白の違いを無視"""
+    import unicodedata
+    return ''.join(unicodedata.normalize('NFKC', str(s or '')).casefold().split())
+
+
+def find_room_by_title(name, exclude=None):
+    key = norm_title(name)
+    if not key:
+        return None
+    for r in rooms.values():
+        if r is not exclude and norm_title(r.title) == key:
+            return r
+    return None
+
+
+def unique_title(base, exclude=None):
+    """他の部屋と重ならない部屋名（重なったら 2, 3… を付ける）"""
+    base = (base or '部屋')[:18]
+    cand, n = base, 2
+    while find_room_by_title(cand, exclude):
+        cand = f'{base}{n}'; n += 1
+    return cand
+
+
 def clean_name(v, room=None):
     """名前は必須。空なら '' を返し、呼び出し側でエラーにする。"""
     return ''.join(ch for ch in str(v or '') if ch.isprintable()).strip()[:16]
@@ -223,7 +248,7 @@ class Room:
         p.hand = [self.deck.pop() for _ in range(min(need, len(self.deck)))]
         p.score, p.won, p.pick = 0, [], None
 
-    def display_title(self):
+    def display_title(self):   # 互換用（title は作成時に必ず入る）
         if self.title:
             return self.title
         host = self.players.get(self.host)
@@ -401,15 +426,18 @@ async def ws_handler(request):
             p.ws, p.connected = ws, True
             room.players[pid] = p
             room.order.append(pid)
+            room.title = unique_title(name)   # 既定の部屋名はホストの名前。友だちはこの名前で参加する
             ctx['room'], ctx['pid'] = room, pid
             log.info('room %s created by %s, rooms=%d', room.code, name, len(rooms))
             return await broadcast(room)
 
         if t == 'join':
             code = str(data.get('room') or '').strip().upper()[:4]
-            r = rooms.get(code)
+            r = rooms.get(code) if code else None
+            if not r and data.get('room_name'):   # 部屋名で参加（招待リンクはコード）
+                r = find_room_by_title(str(data.get('room_name'))[:40])
             if not r:
-                return await error('その部屋コードは見つかりません', 'room_not_found')
+                return await error('その名前の部屋は見つかりません', 'room_not_found')
             want_pid = str(data.get('pid') or '')[:12]
             if want_pid and want_pid in r.players:
                 # 再接続: 秘密トークンが一致した本人のみ（他人のIDでのなりすまし防止）
@@ -474,7 +502,10 @@ async def ws_handler(request):
                 title = ''.join(ch for ch in str(s.get('title') or '') if ch.isprintable()).strip()[:20]
                 if title and not check_name(title)[0]:
                     return await error('その部屋名は使えません（不適切な表現や連絡先を含みます）', 'bad_title')
-                room.title = title
+                if title and find_room_by_title(title, exclude=room):
+                    return await error('その部屋名はすでに使われています。別の名前にしてください', 'title_taken')
+                host = room.players.get(room.host)
+                room.title = title or unique_title(host.name if host else '部屋', exclude=room)
             if room.settings['hand_size'] < room.settings['rounds']:
                 room.settings['hand_size'] = room.settings['rounds'] + 1
             return await broadcast(room)

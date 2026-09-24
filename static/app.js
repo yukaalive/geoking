@@ -89,8 +89,11 @@ $('#nameInput').value = localStorage.getItem('geoking_name') || '';
 $('#nameInput').addEventListener('focus', function () { this.select(); });   // 前回の名前が入っていても、そのまま打てば置き換わる
 $('#createBtn').onclick = () => { const name = myName(); if (!name) return; manualJoin = true; connect(() => send({ type: 'create', name })); };
 $('#joinBtn').onclick = () => {
-  const code = $('#codeInput').value.trim().toUpperCase(); if (code.length !== 4) return toast(t('enter_code4'));
-  const name = myName(); if (!name) return; manualJoin = true; connect(() => send({ type: 'join', room: code, name }));
+  const raw = $('#codeInput').value.trim(); if (!raw) return toast(t('enter_room_name'));
+  const name = myName(); if (!name) return; manualJoin = true;
+  // 4文字の英数字なら招待コード、それ以外は部屋の名前として探す（両方送ってサーバーに任せる）
+  const asCode = /^[A-Za-z0-9]{4}$/.test(raw) ? raw.toUpperCase() : '';
+  connect(() => send({ type: 'join', room: asCode, room_name: raw, name }));
 };
 $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
 
@@ -212,7 +215,7 @@ function render() {
   playTransitions();
   const isHost = state.host === pid;
   document.body.classList.toggle('host', isHost); document.body.classList.toggle('guest', !isHost);
-  $('#roomInfo').classList.remove('hidden'); $('#roomCode').textContent = state.room; $('#roomTitle').textContent = roomTitle();
+  $('#roomInfo').classList.remove('hidden'); $('#roomTitle').textContent = roomTitle();
   $('#lobbyBtn').classList.toggle('hidden', !(isHost && (state.phase === 'pick' || state.phase === 'reveal')));
 
   if (state.phase === 'lobby') { renderLobby(); show('lobby'); }
@@ -247,7 +250,7 @@ function playerTag(p) {
 }
 
 function renderLobby() {
-  $('#lobbyCode').textContent = state.room;
+  $('#lobbyCode').textContent = roomTitle();
   $('#playerCount').textContent = `${state.players.length} / 8`;
   const ul = $('#lobbyPlayers'); ul.innerHTML = '';
   for (const p of state.players) {
