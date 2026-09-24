@@ -120,6 +120,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 @media(max-width:480px){.scene .back b{font-size:13px;line-height:1.15}}   /* 小さくしたカードの裏面に収める */
 @media (prefers-reduced-motion:reduce){.scene .inner,.scene .card3d.win,.scene .card3d.win .back,.scene .crownmark{animation:none}}
 #publicRooms{max-width:none;margin:0}
+#publicRooms h2{font-family:var(--font-body);font-weight:900}   /* 見出しの太い字体（Dela Gothic One）だと「公開」「部屋」「更新」の漢字が潰れるので、本文の字体の太字に */
 
 /* ---------- 対戦画面 */
 .gamehead{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;margin-bottom:16px}
