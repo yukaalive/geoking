@@ -105,8 +105,8 @@ function worldMapSvg(id, zoom = false) {
 // ---------- 国データの小窓（カード裏面）: 全指標＋世界順位＋地図
 // 表示するのはお題（prompts.py）で使う指標だけ。お題にない指標は一覧から自動で外れる
 const COUNTRY_GROUPS = [
-  ['g_basic', ['area', 'population', 'density', 'gdp', 'gdp_pc', 'eez', 'name_len', 'kana_rank', 'lat', 'lng', 'borders', 'languages', 'military']],
-  ['g_climate', ['climate', 'temp', 'precip', 'forest_pct', 'agri_pct', 'co2_pc']],
+  ['g_basic', ['area', 'population', 'density', 'gdp', 'gdp_pc', 'eez', 'name_len', 'kana_rank', 'lat', 'lng', 'borders', 'military']],
+  ['g_climate', ['climate', 'temp', 'forest_pct', 'agri_pct', 'co2_pc']],
   ['g_religion', ['rel_chr', 'rel_mus', 'rel_bud', 'rel_hin', 'rel_non', 'rel_folk', 'rel_jew', 'rel_div']],
   ['g_society', ['life_exp', 'age65_pct', 'fertility', 'urban_pct', 'internet_pct', 'tourists', 'physicians', 'elec_pct']],
 ];

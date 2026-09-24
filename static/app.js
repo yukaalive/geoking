@@ -13,7 +13,7 @@ let pid = null;  // サーバーが発行する。再接続用トークンと共
 const rejoinInfo = () => ({ pid: sessionStorage.getItem('geoking_pid'), token: sessionStorage.getItem('geoking_token') });
 
 // ---------- 表示ユーティリティ
-function show(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); $('#' + screen).classList.remove('hidden'); if (screen !== 'home' && typeof stopRoomsPoll === 'function') stopRoomsPoll(); }
+function show(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); $('#' + screen).classList.remove('hidden'); if (screen !== 'home' && typeof stopRoomsPoll === 'function') stopRoomsPoll(); const lb = $('#langBtn'); if (lb) lb.classList.toggle('hidden', screen !== 'home'); }   // 言語切替はトップ画面だけ
 
 $('#creditsLink').onclick = (e) => {
   e.preventDefault();
@@ -267,9 +267,8 @@ function renderLobby() {
 }
 
 function renderGame() {
-  const pr = state.prompt, cat = META.categories[pr.cat];
+  const pr = state.prompt;
   $('#roundNum').textContent = state.round; $('#roundTotal').textContent = state.total_rounds;
-  $('#promptCat').innerHTML = `${ico(cat.icon)} ${escapeHtml(catName(cat))} ／ ${t('difficulty')} ${stars(pr.star)}`;
   // 「〜が高い国は？」の「高い/低い」などを強調表示（日本語のみ）
   const m = LANG === 'ja' ? pr.text.match(/^(.*?)(大きい|小さい|多い|少ない|高い|低い|長い|短い|北|南|東|西|近い)(国は？)$/) : null;
   $('#promptText').innerHTML = m ? `${escapeHtml(m[1])}<span class="kw">${m[2]}</span>${m[3]}` : escapeHtml(pt(pr));

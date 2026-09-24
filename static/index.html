@@ -20,7 +20,7 @@
 <header class="top">
   <div class="brand"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> 地理王 <span>GeoKing</span></div>
   <div id="roomInfo" class="roominfo hidden"><span class="muted small" data-i18n="room_label">部屋</span> <b id="roomTitle" class="roomname"></b> <button id="copyLink" class="mini"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#copy"/></svg> <span data-i18n="copy_invite">招待リンクをコピー</span></button> <button id="lobbyBtn" class="mini hostonly hidden"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#refresh"/></svg> <span data-i18n="lobby_btn">ロビーへ</span></button> <button id="leaveBtn" class="mini danger"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#door"/></svg> <span data-i18n="leave">退出</span></button></div>
-  <div class="prefs"><button id="soundBtn" class="mini pref" title="効果音・振動" data-i18n-title="sound_title"></button><button id="langBtn" class="mini pref lang" title="Language / 言語">EN</button></div>
+  <div class="prefs"><button id="langBtn" class="mini pref lang" title="Language / 言語">EN</button><button id="soundBtn" class="mini pref" title="効果音・振動" data-i18n-title="sound_title"></button></div>
 </header>
 
 <main id="app">
@@ -88,7 +88,6 @@
     <div class="gamehead">
       <div class="roundlabel"><span data-i18n="round">ラウンド</span> <b id="roundNum"></b> / <span id="roundTotal"></span></div>
       <div id="promptCard" class="promptcard">
-        <div class="cat" id="promptCat"></div>
         <div class="text" id="promptText"></div>
       </div>
       <div id="timer" class="timer hidden"></div>
