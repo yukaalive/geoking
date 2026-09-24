@@ -364,7 +364,7 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 @media(max-width:600px){.qmodes{grid-template-columns:1fr}}
 .qmode{text-align:left;padding:20px 22px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
 .qmode:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);background:var(--card)}
-.qmode .qm-head{font-family:var(--font-head);font-weight:400;font-size:24px;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.qmode .qm-head{font-family:var(--font-body);font-weight:900;font-size:22px;letter-spacing:.03em;display:flex;align-items:center;gap:10px}
 .qmode .qm-head .ico{width:1.3em;height:1.3em;color:var(--primary)}
 .qmode .qm-desc{font-weight:700;color:var(--muted);font-size:15px;line-height:1.5}
 .qbar{display:flex;align-items:center;gap:12px;font-weight:800}
