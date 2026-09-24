@@ -9,9 +9,11 @@
   document.body.classList.add('native');
   // 図鑑・クイズなど同じサイト内の別ページは、アプリ内にフレームを重ねて表示する
   // （Capacitor は起点 URL 以外への画面移動を Safari で開いてしまうため。フレーム内の「対戦へ戻る」で閉じる）
+  // このファイルはフレーム内のページでも読み込まれる。フレーム内では sfx.js の navigateTo（フレームを閉じる合図を送る）を残すため、以下の差し替えはしない
+  const inFrame = window.top !== window;
   let frameWrap = null;
   const closeFrame = () => { if (frameWrap) { frameWrap.remove(); frameWrap = null; document.body.classList.remove('framed'); if (typeof sfx !== 'undefined') sfx.leave(); } };
-  window.navigateTo = (u) => {
+  if (!inFrame) window.navigateTo = (u) => {
     const url = new URL(u, location.href);
     if (url.origin !== location.origin) { window.open(url.href, '_blank'); return; }
     if (url.pathname === '/' || url.pathname.endsWith('/index.html')) { closeFrame(); return; }
@@ -20,8 +22,7 @@
     const f = document.createElement('iframe'); f.src = url.href; f.setAttribute('allow', 'autoplay'); frameWrap.appendChild(f);
     document.body.appendChild(frameWrap); document.body.classList.add('framed');
   };
-  window.addEventListener('message', (e) => { if (e.data === 'geoking:close') closeFrame(); });
-  window.closeAppFrame = closeFrame;
+  if (!inFrame) { window.addEventListener('message', (e) => { if (e.data === 'geoking:close') closeFrame(); }); window.closeAppFrame = closeFrame; }
   // アプリ内では画面の拡大を禁止（ダブルタップやピンチで表示が大きくなるのを防ぐ）
   const vp = document.querySelector('meta[name=viewport]');
   if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
@@ -39,7 +40,7 @@
     const btn = document.getElementById('copyLink');
     if (btn) btn.onclick = () => Share.share({ title: t('share_title'), text: t('share_text', { code: state ? state.room : '' }), url: `${window.GEOKING_SERVER || location.origin}/static/index.html?room=${state ? state.room : ''}` }).catch(() => {});
   }
-  if (App) {
+  if (App && !inFrame) {   // 戻るボタンなどは外側のページだけで受ける
     App.addListener('backButton', () => { if (frameWrap) closeFrame(); else if (!state) App.exitApp(); });
     App.addListener('appStateChange', ({ isActive }) => { if (isActive && typeof ensureConnection === 'function') ensureConnection(); });   // 他アプリから戻ったら接続を確認
     App.addListener('resume', () => { if (typeof ensureConnection === 'function') ensureConnection(); });
