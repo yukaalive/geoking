@@ -884,6 +884,8 @@ def make_app():
     app.router.add_get('/api/room/{code}', api_room)
     app.router.add_get('/ws', ws_handler)
     app.router.add_static('/static/', os.path.join(HERE, 'static'))
+    if os.environ.get('GEOKING_DEV'):   # 開発用: tests/ にある画面の確認スクリプトをブラウザから読めるようにする（本番では環境変数を入れないので出ない）
+        app.router.add_static('/dev/tests/', os.path.join(HERE, 'tests'))
     return app
 
 

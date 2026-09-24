@@ -18,6 +18,17 @@
         "server.py"
       ],
       "port": 8080
+    },
+    {
+      "name": "geoking-check",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PORT=8090",
+        "GEOKING_DEV=1",
+        "python3",
+        "server.py"
+      ],
+      "port": 8090
     }
   ]
 }
