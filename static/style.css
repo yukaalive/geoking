@@ -31,6 +31,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body)
   background-image:radial-gradient(rgba(28,43,34,.07) 1px,transparent 1px);background-size:18px 18px}
 h1,h2,h3,.brand,.promptcard .text,.roundlabel b,.timer,.rev .val,.final li:first-child{font-family:var(--font-head);font-weight:400;letter-spacing:.02em}
 h1{font-size:28px;margin:0 0 8px}h2{font-size:20px;margin:0 0 10px}h3{font-size:15px;margin:0 0 8px}
+h2,h3{font-family:var(--font-body);font-weight:900}   /* 中見出し・小見出しは本文の字体の太字（見出し用の太い字体だと画数の多い漢字が潰れる）。大きなタイトル（h1）はそのまま */
 .hidden{display:none!important}
 .muted{color:var(--muted)}.small{font-size:12px}
 a{color:var(--primary)}
@@ -120,7 +121,6 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 @media(max-width:480px){.scene .back b{font-size:13px;line-height:1.15}}   /* 小さくしたカードの裏面に収める */
 @media (prefers-reduced-motion:reduce){.scene .inner,.scene .card3d.win,.scene .card3d.win .back,.scene .crownmark{animation:none}}
 #publicRooms{max-width:none;margin:0}
-#publicRooms h2{font-family:var(--font-body);font-weight:900}   /* 見出しの太い字体（Dela Gothic One）だと「公開」「部屋」「更新」の漢字が潰れるので、本文の字体の太字に */
 
 /* ---------- 対戦画面 */
 .gamehead{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;margin-bottom:16px}
