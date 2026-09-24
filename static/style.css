@@ -415,7 +415,6 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .qw img{width:100%;aspect-ratio:3/2;object-fit:contain;border:1.5px solid var(--ink);border-radius:6px;background:#fff}
 .qres .row{justify-content:center}
 .quizlink{background:var(--card)}
-.native .storelink{display:none}   /* App Store への案内はブラウザ版だけ（アプリ内では出さない） */
 
 /* アプリ内で図鑑・クイズを重ねて表示するフレーム */
 .appframe{position:fixed;inset:0;z-index:100;box-sizing:border-box;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(var(--card),var(--card)) top/100% env(safe-area-inset-top,0px) no-repeat,var(--bg)}   /* フレーム内のページは画面上下の余白(充電表示など)を知れないので、外側で空ける。上の余白だけヘッダーと同じ色 */
