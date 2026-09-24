@@ -72,7 +72,7 @@ const I18N = {
     mode_flag: '国旗モード', mode_flag_desc: '国名を見て、正しい国旗を4枚から選ぶ', mode_name: '国名モード', mode_name_desc: '国旗を見て、正しい国名を4つから選ぶ',
     learn_first: '先に図鑑で覚える', question: '問題', quit: 'やめる', which_flag: 'この国の国旗は？', which_name: 'この国旗の国は？',
     correct: '正解！', wrong_answer: 'ざんねん… 正解は {name}', res_perfect: '全問正解！地理王！', res_great: 'すごい！', res_good: 'いいね！', res_tryagain: 'もう一度チャレンジ！',
-    new_best: '自己ベスト更新！', best_score: '自己ベスト {n} / {total}', review_wrong: 'まちがえた国（タップでデータ）', play_again: 'もう一度', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
+    review_wrong: 'まちがえた国（タップでデータ）', play_again: 'もう一度', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
   },
   en: {
     app_title: 'GeoKing', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -137,7 +137,7 @@ const I18N = {
     mode_flag: 'Flag mode', mode_flag_desc: 'See the country name, pick the right flag out of 4', mode_name: 'Name mode', mode_name_desc: 'See the flag, pick the right country name out of 4',
     learn_first: 'Study the flags first', question: 'Question', quit: 'Quit', which_flag: 'Which flag is this country?', which_name: 'Which country is this flag?',
     correct: 'Correct!', wrong_answer: 'Not quite… it was {name}', res_perfect: 'Perfect! You are the GeoKing!', res_great: 'Great job!', res_good: 'Nice!', res_tryagain: 'Try again!',
-    new_best: 'New personal best!', best_score: 'Best {n} / {total}', review_wrong: 'Countries you missed (tap for details)', play_again: 'Play again', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
+    review_wrong: 'Countries you missed (tap for details)', play_again: 'Play again', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

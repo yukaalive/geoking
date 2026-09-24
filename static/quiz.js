@@ -6,8 +6,6 @@ const Q_TOTAL = 10;
 let qMode = 'flag', qList = [], qIdx = 0, qScore = 0, qWrong = [], qLocked = false;
 
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const bestKey = () => 'geoking_quiz_best_' + qMode;
-const getBest = (mode) => { try { return Number(localStorage.getItem('geoking_quiz_best_' + mode) || 0); } catch { return 0; } };
 
 function makeQuestions() {
   const all = Object.values(META.countries);
@@ -23,9 +21,6 @@ function makeQuestions() {
 function showScreen(id) { document.querySelectorAll('.qscreen').forEach(s => s.classList.add('hidden')); $('#' + id).classList.remove('hidden'); }
 
 function renderMenu() {
-  const b1 = getBest('flag'), b2 = getBest('name');
-  $('#bestFlag').textContent = b1 ? t('best_score', { n: b1, total: Q_TOTAL }) : '';
-  $('#bestName').textContent = b2 ? t('best_score', { n: b2, total: Q_TOTAL }) : '';
   showScreen('qmenu');
 }
 
@@ -82,16 +77,12 @@ function answer(id, btn) {
 
 function finish() {
   $('#qFill').style.width = '100%';
-  const prevBest = getBest(qMode);
-  const isBest = qScore > prevBest;
-  if (isBest) { try { localStorage.setItem(bestKey(), String(qScore)); } catch {} }
   const rate = qScore / Q_TOTAL;
   const tier = rate === 1 ? 'g' : rate >= 0.8 ? 's' : rate >= 0.5 ? 'b' : 'n';
   $('#qResDisc').className = 'qres-disc ' + tier;
   $('#qResDisc').innerHTML = rate === 1 ? ico('crown') : rate >= 0.8 ? ico('trophy') : rate >= 0.5 ? ico('star') : ico('flag');
   $('#qResTitle').textContent = rate === 1 ? t('res_perfect') : rate >= 0.8 ? t('res_great') : rate >= 0.5 ? t('res_good') : t('res_tryagain');
   $('#qResScore').textContent = qScore; $('#qResTotal').textContent = Q_TOTAL;
-  $('#qResBest').textContent = isBest ? t('new_best') : t('best_score', { n: Math.max(prevBest, qScore), total: Q_TOTAL });
   const wrap = $('#qWrongWrap'), box = $('#qWrong'); box.innerHTML = '';
   wrap.classList.toggle('hidden', qWrong.length === 0);
   for (const c of qWrong) {
