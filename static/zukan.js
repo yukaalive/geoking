@@ -48,6 +48,8 @@ function renderRank() {
 }
 
 // ---------- 起動
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';   // 読み直し・戻るで前のスクロール位置に戻さない
+if (/^#(flags|rank)$/.test(location.hash)) history.replaceState(null, '', '#tab-' + location.hash.slice(1));   // 前の版のアドレス（#flags など）で開いたとき、読み込みの最後にその部品まで飛ばないよう先に書き換える
 (async function init() {
   trackVisit('zukan');   // 利用ログ（開始・5分ごと・離脱）
   META = await loadMeta();
@@ -75,7 +77,7 @@ function renderRank() {
   const showTab = (which) => {
     $('#flags').classList.toggle('hidden', which !== 'flags'); $('#rank').classList.toggle('hidden', which !== 'rank');
     $('#tabFlags').classList.toggle('on', which === 'flags'); $('#tabRank').classList.toggle('on', which === 'rank');
-    history.replaceState(null, '', '#' + which);
+    history.replaceState(null, '', '#tab-' + which);   // 画面の部品の id（#flags / #rank）と同じ名前にすると、読み直したときにその部品まで勝手にスクロールして検索欄が隠れる
     if (which === 'rank') renderRank(); else renderFlags();
   };
   $('#tabFlags').onclick = () => showTab('flags'); $('#tabRank').onclick = () => showTab('rank');
@@ -86,6 +88,7 @@ function renderRank() {
   $('#q').addEventListener('input', () => sfx.tap());   // 検索の入力中もカチカチ
   const q = new URLSearchParams(location.search);
   if (q.get('prompt')) { ps.value = q.get('prompt'); showTab('rank'); }
-  else showTab(location.hash === '#rank' ? 'rank' : 'flags');
+  else showTab(location.hash === '#tab-rank' ? 'rank' : 'flags');
+  window.scrollTo(0, 0);   // 開いたときはいつも一番上から（検索欄が見えるように）。前の版の #flags などで開いたときも
   frameReady();
 })();

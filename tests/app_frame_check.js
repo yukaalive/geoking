@@ -3,7 +3,7 @@
    図鑑・クイズ・プライバシーポリシーを開いて「対戦へ戻る」「地理王へ戻る」で枠が閉じるかを確かめる。
    ホームのボタンから開くときは、準備の合図まで枠が透明なこと・合図ですぐ出ること・出た時点で中身があり訳されていること・国データを取り直さないこと、
    読み込み中に別のボタンを押したときの動きも見る。
-   枠の上の余白（充電表示の下）が、ヘッダーのあるページではヘッダーの色、ないページ（プライバシーポリシー）では地の色になっているかも見る。
+   枠の上の余白（充電表示の下）が、ヘッダーのあるページではヘッダーの色、ないページ（プライバシーポリシー）では地の色になっているか、図鑑が一番上から開くかも見る。
    図鑑・クイズの開き方、native.js / sfx.js の画面移動、戻るリンクを変えたら必ず流す。
    注意: X-Frame-Options が SAMEORIGIN になったサーバーで動かすこと（古いサーバーだとフレームが空になる） */
 (async () => {
@@ -104,6 +104,10 @@
       // 上の余白（充電表示の下）の色: ヘッダーのあるページはヘッダーの色、ないページ（プライバシーポリシー）は地の色。ページの読み込みが終わったところで決まる
       for (let i = 0; i < 50 && w.document.readyState !== 'complete'; i++) await sleep(100);
       await sleep(50);
+      if (w.location.pathname.endsWith('/zukan.html')) {   // 図鑑は一番上から開く（検索欄が上の帯に隠れていない）。2026-09-25: アドレスの #flags で国旗一覧まで勝手にスクロールしていた
+        const q = w.document.getElementById('q').getBoundingClientRect().top, hb = w.document.querySelector('header.top').getBoundingClientRect().bottom;
+        if (w.scrollY !== 0 || q < hb) throw new Error(`図鑑が一番上から開いていない（スクロール ${Math.round(w.scrollY)}px）`);
+      }
       const wrap = document.querySelector('.appframe'), noHeader = !w.document.querySelector('header.top');
       if (wrap.classList.contains('noheader') !== noHeader) throw new Error(`上の余白の色がページに合っていない（${w.location.pathname} はヘッダー${noHeader ? 'なし' : 'あり'}）`);
       w.document.querySelector(back).click();
