@@ -498,7 +498,8 @@ def resume_room(room):
     """引っ越し後（または送れなかったとき）に、止めていた時計を動かし直す。"""
     if room.phase == 'pick':
         asyncio.create_task(start_timer(room))
-        asyncio.create_task(bots_play(room))   # まだ出していないボット（つなぎ直し待ちの人がいる間は結果に進まない）
+        if any(p.is_bot and p.pick is None and p.hand for p in room.players.values()):   # まだ出していないボットだけ動かす（全員出していれば古いサーバーと同じく、人の操作か時間切れまで待つ。
+            asyncio.create_task(bots_play(room))                                          #  ここで結果に進めると、いったん切れていた人のいない間にラウンドが決まってしまう）
     elif room.phase == 'reveal' and room.next_at:
         schedule_advance(room, room.next_at - time.time())
 
@@ -1068,6 +1069,31 @@ async def google_verification(request):
     return web.Response(text=f'google-site-verification: {name}')
 
 
+def compute_asset_version():
+    """画面の部品（static/ の全ファイル）の中身から作る版の目印。画面を変えて公開したときだけ変わる（サーバーの再起動やスリープからの復帰では変わらない）。"""
+    import hashlib
+    h = hashlib.sha1(os.environ.get('GEOKING_VERSION_SALT', '').encode())   # 確かめ用: 中身を変えずに「新しい版」を作る
+    root = os.path.join(HERE, 'static')
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames.sort()
+        for fn in sorted(filenames):
+            if fn.startswith('.'):
+                continue
+            path = os.path.join(dirpath, fn)
+            h.update(os.path.relpath(path, root).encode())
+            with open(path, 'rb') as f:
+                h.update(f.read())
+    return h.hexdigest()[:12]
+
+
+ASSET_VERSION = compute_asset_version()
+
+
+async def api_version(request):
+    """画面の版。画面（app.js）が数分おきとアプリに戻ったときに見て、変わっていれば対戦中でないときに読み直す。"""
+    return web.json_response({'v': ASSET_VERSION}, headers={'Cache-Control': 'no-store'})
+
+
 async def healthz(request):
     return web.json_response({'ok': True, 'rooms': len(rooms), 'boot': BOOT_ID, 'started': STARTED, 'moved': moved})   # boot・started: 更新時に、古いサーバーが新しいサーバーへ切り替わったかを見分ける
 
@@ -1205,6 +1231,7 @@ def make_app():
     app.router.add_get('/manifest.json', manifest)
     app.router.add_get('/sw.js', service_worker)
     app.router.add_get('/api/meta', api_meta)
+    app.router.add_get('/api/version', api_version)
     app.router.add_post('/api/visit', api_visit)
     app.router.add_get('/admin/visits', admin_visits)
     app.router.add_get('/api/rooms', api_rooms)

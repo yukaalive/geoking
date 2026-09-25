@@ -79,6 +79,37 @@ window.addEventListener('focus', () => ensureConnection());
 window.addEventListener('pageshow', () => ensureConnection());
 window.addEventListener('online', () => ensureConnection());
 
+// ---------- 更新の自動読み直し
+// アプリ（Android・iPhone）は裏に回して戻っても画面を読み直さないので、更新（Render の Manual sync）の前の画面が残る。
+// 画面の版（/api/version）を、開いた時・アプリに戻った時・5分おきに確かめ、変わっていたら対戦中でないとき
+// （ホーム画面で部屋に入っておらず、図鑑・クイズの枠も小窓も開いておらず、入力中でも操作の直後でもない）に読み直す。部屋にいる間は待ち、ホームに戻ってから読み直す
+let pageVersion = null, updateVersion = null, lastTouch = 0;
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { lastTouch = Date.now(); }, true));
+async function fetchVersion() {
+  try { const r = await fetch(API + '/api/version', { cache: 'no-store' }); return r.ok ? (await r.json()).v : null; } catch { return null; }
+}
+function safeToReload() {
+  const a = document.activeElement;
+  return !state && (!ws || ws.readyState === 3) && !document.querySelector('.appframe') && $('#modal').classList.contains('hidden')
+    && !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) && Date.now() - lastTouch > 5000;
+}
+async function checkForUpdate() {
+  if (!pageVersion) { pageVersion = await fetchVersion(); return; }
+  if (!updateVersion) {
+    const v = await fetchVersion();
+    if (!v || v === pageVersion) return;
+    updateVersion = v;
+  }
+  if (!safeToReload()) return;   // 対戦中などは待つ（下の見張りが、読み直してよくなったところで読み直す）
+  try { if (sessionStorage.getItem('geoking_reloaded_for') === updateVersion) return; sessionStorage.setItem('geoking_reloaded_for', updateVersion); } catch {}   // 同じ版で何度も読み直さない
+  location.reload();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+window.addEventListener('pageshow', () => checkForUpdate());
+setInterval(() => { if (updateVersion) checkForUpdate(); }, 3000);   // 新しい版が見つかっていたら、読み直してよくなるのを待つ
+setInterval(() => { if (document.visibilityState === 'visible') checkForUpdate(); }, 5 * 60 * 1000);
+checkForUpdate();   // 開いた時の版を覚える
+
 // ---------- ホーム
 // 名前は必須。空なら null を返して呼び出し側で止める
 function myName() {

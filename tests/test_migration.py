@@ -194,6 +194,7 @@ async def main():
             await frank.wait(lambda d: d['settings']['timer'] == 60)
             await frank.send({'type': 'start', 'with_bot': True})
             st4 = await frank.wait(lambda d: d['phase'] == 'pick')
+            st4 = await frank.wait(lambda d: all(p['picked'] for p in d['players'] if p['is_bot']))   # ボットが出してから切る（切れた後にボットが出すと、古いサーバーでもその場で結果に進む）
             await frank.ws.close()
             await asyncio.sleep(0.5)
 
