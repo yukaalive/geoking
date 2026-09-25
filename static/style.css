@@ -149,7 +149,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .others{margin-top:18px;border-top:2px dashed var(--line-soft);padding-top:10px}
 .others h4{margin:0 0 6px;font-size:12px;font-weight:800;color:var(--muted)}
 .others .orow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:5px 0}
-.others .oname{font-size:13px;font-weight:800;min-width:90px}
+.others .oname{font-size:13px;font-weight:800;flex-basis:100%}   /* 名前（と観戦中の状態の札）で1行、国旗はその下の行から左端そろえで（プレイヤー側も観戦中も同じ） */
 .others img{width:44px;height:30px;object-fit:contain;border:1.5px solid var(--ink);border-radius:4px;background:#fff;cursor:pointer}
 
 /* ---------- 公開 */
@@ -278,7 +278,7 @@ body.composing #chatForm button{white-space:nowrap}
 .others .oflag img{display:block;cursor:pointer}
 .others .oflag.sel{border-color:var(--accent);transform:translateY(-3px)}
 .others .oflag.go{border-color:var(--primary);transform:translateY(-5px) scale(1.06);box-shadow:var(--shadow-sm)}
-.others .orow.live .oname{flex-basis:100%;display:inline-flex;align-items:center;gap:6px}   /* 観戦中: 名前と状態（考え中・選択中・勝負）で1行、国旗はその下の行から */
+.others .orow.live .oname{display:inline-flex;align-items:center;gap:6px}   /* 観戦中: 名前と状態（考え中・選択中・勝負）を横に並べる */
 .bubble{position:relative;display:inline-block;font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;border:2px solid var(--ink);background:var(--card)}
 .bubble.think{color:var(--muted);animation:blinkdots 1.4s infinite}
 .bubble.sel{background:var(--accent)}

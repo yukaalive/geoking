@@ -1,7 +1,8 @@
-/* 観戦中の「みんなの手札」の確認: 開発サーバーのホーム画面をブラウザで開き、コンソールで実行する。
+/* 「みんなの手札」の確認（観戦中とプレイヤー側）: 開発サーバーのホーム画面をブラウザで開き、コンソールで実行する。
    iPhone（WebKit）では iOS シミュレーターの Safari で /dev/tests/spectator.html を開くと、同じ確認を流して結果を画面に出す。
    枠Aで部屋を作ってボットと始め（ホスト）、枠Bで途中から入って観戦する。ホストが1枚選んだところ（選択中）と出したところ（勝負）を、
    幅ごとに測る: 国旗が名前と状態（考え中・選択中・勝負）の下の行から左端そろえで始まるか、状態の札に吹き出しの三角がないか、ページが画面からはみ出していないか。
+   プレイヤー側（ホストの画面。何を出したかは見えない）の「みんなの手札」も、国旗が名前の下の行から左端そろえで始まるかを見る。
    2026-09-25: 国旗が名前と同じ行に入り、幅 412px の Android で途中から変に改行されていた。 */
 (async () => {
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -34,10 +35,22 @@
     B = await frame(412); const wb = B.contentWindow, db = wb.document, SB = () => wb.eval('state');
     db.getElementById('nameInput').value = 'みるひと'; db.getElementById('codeInput').value = SA().room; db.getElementById('joinBtn').click();
     await until(() => SB() && SB().phase === 'pick' && SB().live, '観戦に入る');
-    const st = db.createElement('style'); st.textContent = '*,*::before,*::after{animation:none!important;transition:none!important}html{scrollbar-width:none}::-webkit-scrollbar{display:none}'; db.head.appendChild(st);
+    for (const doc of [db, wa.document]) { const st = doc.createElement('style'); st.textContent = '*,*::before,*::after{animation:none!important;transition:none!important}html{scrollbar-width:none}::-webkit-scrollbar{display:none}'; doc.head.appendChild(st); }
+    const rowsNg = (doc, rowSel) => {   // 国旗が名前（と状態の札）の下の行から、左端そろえで始まるか
+      const ng = [];
+      for (const row of doc.querySelectorAll(rowSel)) {
+        // 位置は offsetTop/offsetLeft で測る（選択中・勝負の国旗は少し浮かせて大きくしてあるので、見た目の枠だと位置がずれて見える）
+        const pos = (e) => ({ left: e.offsetLeft, top: e.offsetTop, bottom: e.offsetTop + e.offsetHeight });
+        const nm = row.querySelector('.oname'), name = pos(nm), flags = [...row.querySelectorAll('.oflag')].map(pos);
+        const who = nm.textContent.trim().slice(0, 12);
+        if (flags.some(f => f.top < name.bottom - 1)) ng.push(`${who}: 国旗が名前と同じ行にある`);
+        if (flags.length && Math.abs(Math.min(...flags.map(f => f.left)) - pos(row).left) > 1) ng.push(`${who}: 国旗の行が左端から始まっていない`);
+      }
+      return ng;
+    };
     const measure = async (label) => {
       for (const lang of ['ja', 'en']) {
-        wb.setLang(lang); await sleep(300);
+        wb.setLang(lang); wa.setLang(lang); await sleep(300);
         for (const W of WIDTHS) {
           B.style.width = W + 'px'; await sleep(300);
           if (db.documentElement.scrollWidth > W) await sleep(700);   // iPhone は枠の幅を変えてから配置が追いつくまで少しかかる
@@ -45,21 +58,22 @@
           const h4 = db.querySelector('#othersHands h4');
           const orows = [...db.querySelectorAll('#othersHands .orow.live')];
           if (!orows.length) ng.push('観戦の行がない');
+          ng.push(...rowsNg(db, '#othersHands .orow.live'));
           for (const row of orows) {
-            // 位置は offsetTop/offsetLeft で測る（選択中・勝負の国旗は少し浮かせて大きくしてあるので、見た目の枠だと位置がずれて見える）
-            const pos = (e) => ({ left: e.offsetLeft, top: e.offsetTop, bottom: e.offsetTop + e.offsetHeight });
-            const nm = row.querySelector('.oname'), name = pos(nm), flags = [...row.querySelectorAll('.oflag')].map(pos);
-            const who = nm.textContent.trim().slice(0, 12);
-            if (flags.some(f => f.top < name.bottom - 1)) ng.push(`${who}: 国旗が名前と同じ行にある`);
-            if (flags.length && Math.abs(Math.min(...flags.map(f => f.left)) - pos(row).left) > 1) ng.push(`${who}: 国旗の行が左端から始まっていない`);
             const bub = row.querySelector('.bubble');
-            if (bub && wb.getComputedStyle(bub, '::before').content !== 'none') ng.push(`${who}: 状態の札に吹き出しの三角がある`);
+            if (bub && wb.getComputedStyle(bub, '::before').content !== 'none') ng.push(`${row.querySelector('.oname').textContent.trim().slice(0, 12)}: 状態の札に吹き出しの三角がある`);
           }
           if (db.documentElement.scrollWidth > W) ng.push(`ページ幅 ${db.documentElement.scrollWidth}px（画面からはみ出している）`);
+          // プレイヤー側（ホストの画面）: 同じ幅で
+          A.style.width = W + 'px'; await sleep(250);
+          const prow = wa.document.querySelectorAll('#othersHands .orow:not(.live)');
+          if (!prow.length) ng.push('プレイヤー側の行がない');
+          ng.push(...rowsNg(wa.document, '#othersHands .orow:not(.live)').map(x => 'プレイヤー側 ' + x));
+          if (wa.document.documentElement.scrollWidth > W) ng.push(`プレイヤー側のページ幅 ${wa.document.documentElement.scrollWidth}px（画面からはみ出している）`);
           rows.push({ 場面: label, 言語: lang, 幅: W, 見出し: h4 ? h4.textContent : '（なし）', 状態: orows.map(r => (r.querySelector('.bubble') || {}).textContent || '').join(' / '), 結果: ng.join('、') || 'OK' });
         }
       }
-      wb.setLang('ja'); await sleep(200);
+      wb.setLang('ja'); wa.setLang('ja'); await sleep(200);
     };
     const hostPid = SA().players.find(p => p.name === 'ホスト').pid;
     wa.send({ type: 'selecting', card: SA().hand[0] });
