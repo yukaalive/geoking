@@ -40,7 +40,8 @@ DEFAULT_SETTINGS = {
 MAX_ROOMS = 300
 MAX_PLAYERS = 8
 ROOM_TTL = 6 * 3600
-EMPTY_GRACE = 90       # 秒。人間が全員切断しても、この間は部屋を残す（リロード・再接続用）
+EMPTY_GRACE = 600      # 秒。人間が全員切断しても、この間は部屋を残す（LINE など別のアプリに行って戻る・リロード・再接続用。Render 無料プランが止まる15分より短く）
+LEFT_GRACE = 90        # 秒。最後の人が自分で「退出」して空になった部屋は、これまでどおり短く残す（長く残すと部屋名がふさがり、同じ名前で作ると「名前2」になる）
 CHAT_INTERVAL = 0.7    # 秒。連投制限
 # チャットは moderation.check_chat（NGワード・連絡先・URL・連打）を通過したものだけ流れる
 REPORTS_TO_MUTE = 2   # 異なる2人から通報されたら、その部屋ではチャット禁止
@@ -506,7 +507,7 @@ def resume_room(room):
 
 def room_worth_moving(r):
     """送る価値のある部屋: 人（ボット以外）がいる部屋。いまは全員切れていても、つなぎ直しの猶予中なら送る（アプリを裏に回した人など）。"""
-    return any(not p.is_bot for p in r.players.values())
+    return r.empty_since is not None or any(not p.is_bot for p in r.players.values())   # ロビーでは切れた人はすぐ外れるので、猶予中（empty_since あり）の部屋も送る（ひとりで LINE に行ったホストの部屋）
 
 
 async def migrated_grace(room):
@@ -765,7 +766,8 @@ async def ws_session(ws):
                 if p.is_bot or not secrets.compare_digest(str(data.get('token') or ''), p.token or ''):
                     return await error('再接続の認証に失敗しました', 'reauth_failed')
                 if p.ws is not None and p.ws is not ws and not p.ws.closed:
-                    await p.ws.close()
+                    old, p.ws = p.ws, None   # 先に外す: 閉じるのを待つ間に古い接続の切断処理が走り、ロビーではこの人を部屋から外してしまう（新しい接続が部屋にいない人につながり、返事が来なくなる）
+                    await old.close()
                 if migrating or moved or getattr(r, 'dead', False):   # 閉じるのを待つ間に引っ越し・置き換えが起きた: つなぎ直してもらう
                     return await ws.close()
                 p.ws, p.connected = ws, True
@@ -898,7 +900,10 @@ async def ws_session(ws):
             ctx['room'], ctx['pid'] = None, None
             log.info('room %s leave %s', room.code, p.name)
             await send(ws, {'type': 'left', 'message': '部屋から退出しました', 'code': 'left'})
-            return await after_player_gone(room, p.name)
+            await after_player_gone(room, p.name)
+            if room.empty_since and not any(not x.is_bot for x in room.players.values()):   # 最後の人が自分で退出した（戻ってくる人がいない）: EMPTY_GRACE ではなく、これまでどおり LEFT_GRACE で消す
+                room.empty_since -= EMPTY_GRACE - LEFT_GRACE
+            return
 
         if t == 'start':
             if not (is_host and room.phase in ('lobby', 'end')):
