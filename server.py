@@ -1040,6 +1040,10 @@ async def manifest(request):
     return web.FileResponse(os.path.join(HERE, 'static', 'manifest.json'), headers={'Content-Type': 'application/manifest+json'})
 
 
+async def favicon(request):   # Google の検索結果のアイコンや、アイコンの指定がないページでブラウザが読みに来る
+    return web.FileResponse(os.path.join(HERE, 'static', 'icons', 'favicon.ico'), headers={'Content-Type': 'image/x-icon', 'Cache-Control': 'public, max-age=86400'})
+
+
 async def service_worker(request):
     return web.FileResponse(os.path.join(HERE, 'static', 'sw.js'), headers={'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache'})
 
@@ -1229,6 +1233,7 @@ def make_app():
     app.router.add_get('/sitemap.xml', sitemap_xml)
     app.router.add_get('/{name:google[0-9a-f]+}.html', google_verification)
     app.router.add_get('/manifest.json', manifest)
+    app.router.add_get('/favicon.ico', favicon)
     app.router.add_get('/sw.js', service_worker)
     app.router.add_get('/api/meta', api_meta)
     app.router.add_get('/api/version', api_version)
