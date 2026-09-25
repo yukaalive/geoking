@@ -14,18 +14,20 @@
 <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
 <title>地理王｜国旗で対戦する地理カードゲーム</title>
 <meta name="description" content="地理王（GeoKing）は、国旗だけを見て「面積が大きい国は？」などのお題に一番合う国を出し合う、みんなで遊べる地理カードゲーム。ブラウザですぐ遊べて、iPhone アプリもあります。無料・登録不要。">
-<link rel="canonical" href="https://geoking-vlgh.onrender.com/static/index.html">
+<link rel="canonical" href="https://geoking-vlgh.onrender.com/">
 <!-- iPhone の Safari で開いたとき、画面上に App Store への案内（スマートバナー）を出す -->
 <meta name="apple-itunes-app" content="app-id=6815042682">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="地理王">
 <meta property="og:title" content="地理王｜国旗で対戦する地理カードゲーム">
 <meta property="og:description" content="国旗だけを見て、お題に一番合う国を出し合う地理カードゲーム。ブラウザですぐ遊べて、iPhone アプリもあります。">
-<meta property="og:url" content="https://geoking-vlgh.onrender.com/static/index.html">
+<meta property="og:url" content="https://geoking-vlgh.onrender.com/">
 <meta property="og:image" content="https://geoking-vlgh.onrender.com/static/icons/og.png">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
-<!-- 検索エンジン向け: サイト名と、Web 版・iPhone アプリが同じ「地理王」であることを伝える -->
+<!-- 検索エンジン向け: サイト名と、Web 版・iPhone アプリが同じ「地理王」であることを伝える。
+     Google はサイト名をトップ（/）のページから取るので、/ でもこのページを返し（server.py の index）、正式なアドレスは / にする。
+     /static/index.html もアプリ・招待リンク用にそのまま使える。alternateName の最後のアドレスは、Google が「地理王」を選ばないときの予備（Google の説明どおり小文字で） -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -33,14 +35,14 @@
     {
       "@type": "WebSite",
       "name": "地理王",
-      "alternateName": ["GeoKing", "地理王 GeoKing"],
+      "alternateName": ["GeoKing", "地理王 GeoKing", "geoking-vlgh.onrender.com"],
       "url": "https://geoking-vlgh.onrender.com/"
     },
     {
       "@type": ["VideoGame", "WebApplication"],
       "name": "地理王",
       "alternateName": "GeoKing",
-      "url": "https://geoking-vlgh.onrender.com/static/index.html",
+      "url": "https://geoking-vlgh.onrender.com/",
       "description": "国旗だけを見て「面積が大きい国は？」などのお題に一番合う国を出し合う、みんなで遊べる地理カードゲーム。197の国と地域、約30種のデータ。",
       "image": "https://geoking-vlgh.onrender.com/static/icons/icon-512.png",
       "inLanguage": ["ja", "en"],

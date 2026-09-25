@@ -1032,8 +1032,8 @@ async def api_room(request):
                               'names': [r.players[x].name for x in r.order]})
 
 
-async def index(request):
-    raise web.HTTPFound('/static/index.html')
+async def index(request):   # トップ（/）でもホームを返す。Google はサイト名（検索結果の「地理王」）をトップのページから取り、転送だけだと「Render」になる
+    return web.FileResponse(os.path.join(HERE, 'static', 'index.html'), headers={'Cache-Control': 'no-cache'})
 
 
 async def manifest(request):
@@ -1050,7 +1050,7 @@ async def service_worker(request):
 
 # 検索エンジン向け: クロールしてよい範囲と、載せてほしいページの一覧
 SITE_URL = os.environ.get('SITE_URL', 'https://geoking-vlgh.onrender.com').rstrip('/')
-SITEMAP_PAGES = ['/static/index.html', '/static/zukan.html', '/static/quiz.html', '/static/privacy.html']
+SITEMAP_PAGES = ['/', '/static/zukan.html', '/static/quiz.html', '/static/privacy.html']
 
 async def robots_txt(request):   # 国データ（/api/meta）は図鑑の表示に要るので許可。利用ログ送信などは除外
     return web.Response(text=f"User-agent: *\nAllow: /api/meta\nDisallow: /api/\nDisallow: /admin/\n\nSitemap: {SITE_URL}/sitemap.xml\n")
