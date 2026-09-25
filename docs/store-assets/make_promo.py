@@ -3,7 +3,9 @@
    ・斜めの深緑の地に、左寄せの「ラベル札」風キャッチコピー
    ・少し傾けたスマホ枠と、その足元に扇状の国旗カード
    ・吹き出し型の説明カード、ステップ番号の丸バッジ
-   使い方: python3 make_promo.py → promo/ に Play 用 (1080x2400) と App Store 用 (1290x2796)
+   使い方: python3 make_promo.py → promo/ に Play 用 (1080x2400) と App Store 用 (1290x2796 / 1284x2778 / 1320x2868)
+           python3 make_promo.py appstore → App Store 用だけ作り直す（Play 用はそのまま）
+   画面の写真: Play 用は android-*.png（Android エミュレーター）、App Store 用は ios-*.png（iPhone シミュレーター。2026-09-26 撮影）
    依存: macOS の qlmanage（SVG→PNG）, sips
 """
 import base64, os, subprocess, shutil
@@ -15,13 +17,13 @@ FONT = "Hiragino Sans, Hiragino Kaku Gothic ProN, sans-serif"
 
 # (スクリーンショット, 見出し行, 説明行[(text, highlight)], 飾りの国旗)
 FRAMES = [
-    ('android-1-home.png',   ['国旗だけで、', '勝負！'],
-     [('裏のデータは見ないで、', False), ('お題に合いそうな国旗を1枚。', False), ('めくって一番近い人が1点！', True)], ['br', 'jp', 'ke']),
-    ('android-3-game.png',   ['お題に合う', '国旗を選べ'],
-     [('面積・人口・気温・宗教…', False), ('約30種のデータが裏側に。', True), ('知識より、勘と度胸！', False)], ['no', 'ar', 'eg']),
-    ('android-4-reveal.png', ['めくって、', '勝負！'],
-     [('7ラウンドで最多得点が地理王。', True), ('友だちと部屋コードで、', False), ('公開部屋で世界の誰かとも。', False)], ['jp', 'eg', 'br']),
-    ('android-5-modal.png',  ['めくった国の', 'ことが分かる'],
+    (('android-1-home.png', 'ios-1-home.png'),     ['国旗だけで、', '勝負！'],
+     [('国名もデータも見えない。', False), ('お題に合いそうな国旗を1枚。', False), ('一番近い人が1点！', True)], ['br', 'jp', 'ke']),
+    (('android-3-game.png', 'ios-2-game.png'),     ['お題に合う', '国旗を選べ'],
+     [('面積・人口・気温・宗教…', False), ('約30種のデータからお題が出る。', True), ('知識より、勘と度胸！', False)], ['no', 'ar', 'eg']),
+    (('android-4-reveal.png', 'ios-3-reveal.png'), ['答え合わせで、', '勝負！'],
+     [('7ラウンドで最多得点が地理王。', True), ('友だちとは招待リンクで、', False), ('公開部屋で世界の誰かとも。', False)], ['jp', 'eg', 'br']),
+    (('android-5-modal.png', 'ios-4-modal.png'),   ['出した国の', 'ことが分かる'],
      [('197の国旗と国のデータ、', False), ('首都・気候・宗教まで丸わかり。', True), ('遊ぶほど、世界に強くなる。', False)], ['ke', 'no', 'ar']),
 ]
 
@@ -31,7 +33,15 @@ def esc(t):
 def b64(path):
     return base64.b64encode(open(path, 'rb').read()).decode()
 
-def build_svg(shot_path, head, desc, flags, index, W, H, status_bar_px=110):
+def png_size(path):
+    import struct
+    with open(path, 'rb') as f:
+        return struct.unpack('>II', f.read(24)[16:24])
+
+def build_svg(shot_path, head, desc, flags, index, W, H, status_bar_px=None):
+    src_w, src_h = png_size(shot_path)
+    if status_bar_px is None:   # 画面の上の状態表示（時刻など）の帯を切り落とす高さ
+        status_bar_px = 150 if src_w == 1206 else 110 * src_w / 1080
     s = W / 1080.0
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{W}" height="{H}" viewBox="0 0 {W} {H}">']
     # ---- スマホの寸法（傾けて右寄せ）
@@ -41,8 +51,8 @@ def build_svg(shot_path, head, desc, flags, index, W, H, status_bar_px=110):
     phone_y = 640 * s
     radius = 64 * s
     img_x, img_y, img_w = phone_x + 16 * s, phone_y + 16 * s, phone_w - 32 * s
-    img_h_full = img_w * 2400 / 1080
-    img_dy = status_bar_px * (img_w / 1080)
+    img_h_full = img_w * src_h / src_w
+    img_dy = status_bar_px * (img_w / src_w)
     clip_h = phone_h - 32 * s
     tilt = -6
     cx, cy = phone_x + phone_w / 2, phone_y + phone_h / 2
@@ -132,10 +142,14 @@ def render(svg_text, out_png, W, H):
     os.remove(tmp_svg)
 
 def main():
+    import sys
+    only = sys.argv[1] if len(sys.argv) > 1 else ''   # 'appstore' なら App Store 用だけ、'play' なら Play 用だけ
     os.makedirs(OUT, exist_ok=True)
-    for i, (shot, head, desc, flags) in enumerate(FRAMES, 1):
-        src = os.path.join(HERE, shot)
+    for i, (shots, head, desc, flags) in enumerate(FRAMES, 1):
         for tag, W, H in (('play', 1080, 2400), ('appstore', 1290, 2796), ('appstore65', 1284, 2778), ('appstore69', 1320, 2868)):
+            if only and not tag.startswith(only):
+                continue
+            src = os.path.join(HERE, shots[0] if tag == 'play' else shots[1])
             out = os.path.join(OUT, f'{tag}-{i}.png')
             render(build_svg(src, head, desc, flags, i, W, H), out, W, H)
             print('wrote', out)
