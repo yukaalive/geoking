@@ -325,6 +325,8 @@ async def bots_play(room):
     for p in list(room.players.values()):
         if p.is_bot and p.pick is None and p.hand:
             await asyncio.sleep(random.uniform(0.6, 1.8))
+            if migrating or moved or getattr(room, 'dead', False):   # 引っ越し中・後、置き換えた部屋は進めない（新しいサーバー・新しい部屋が続きを出す）
+                return
             if room.phase == 'pick' and p.pick is None:
                 p.pick = random.choice(p.hand)
                 if not room.all_picked():
@@ -334,13 +336,20 @@ async def bots_play(room):
 
 async def finish_reveal(room):
     """結果を公開し、REVEAL_SECONDS 後に自動で次のラウンド（または結果発表）へ進む。"""
+    if migrating or moved or getattr(room, 'dead', False):   # 引っ越し中・後、置き換えた部屋は結果を出さない（送った中身と食い違わないように）
+        return
     room.do_reveal()
     await broadcast(room)
+    schedule_advance(room, REVEAL_SECONDS)
+
+
+def schedule_advance(room, delay):
+    """結果表示のあと delay 秒で次のラウンド（または結果発表）へ進む。"""
     if room.reveal_task:
         room.reveal_task.cancel()
 
     async def _advance():
-        await asyncio.sleep(REVEAL_SECONDS)
+        await asyncio.sleep(max(0, delay))
         if room.phase != 'reveal' or rooms.get(room.code) is not room:
             return
         room.next_round()
@@ -410,10 +419,304 @@ async def after_player_gone(room, name):
     await broadcast(room)
 
 
+# ---------- 更新時の部屋の引っ越し
+# Render は更新のとき新しいサーバーを立て、/healthz に応えたら接続先を切り替える。古いサーバーは切り替えの60秒後に止まり、
+# 部屋はメモリにしかないので、そのままだと対戦中の部屋が消える。そこで古いサーバーが、公開アドレスの /healthz が
+# 自分より後に起動したサーバー（新しいサーバー）を指したのに気づいたら、全部の部屋の中身を新しいサーバーへ送り、送り終えたら接続を切る。
+# 画面は切れると 0.3 秒ほどで自動でつなぎ直す（同じ pid・token で）ので、新しいサーバーの同じ部屋から続きを遊べる。
+BOOT_ID = secrets.token_hex(8)   # このサーバー（起動ごと）の目印。/healthz で返し、切り替わったかの判定に使う
+STARTED = time.time()            # 起動した時刻。自分より後に起動したサーバーにだけ送る（切り替えの途中で古い方へ送り返さないように）
+MIGRATE_KEY = os.environ.get('MIGRATE_KEY', '')   # 引っ越し用の合言葉（render.yaml で Render が自動で作る。両方のサーバーで同じ値）
+PUBLIC_URL = (os.environ.get('MIGRATE_URL') or os.environ.get('RENDER_EXTERNAL_URL') or '').rstrip('/')   # 公開アドレス（Render が自動で入れる）
+MIGRATE_POLL = float(os.environ.get('MIGRATE_POLL', '2'))   # 秒。部屋がある間だけ、この間隔で確かめる（部屋がなければ確かめないので、無料プランのスリープの邪魔をしない）
+MIGRATE_EXTRA_PICK = 3     # 秒。引っ越しで止まった分、選ぶ時間の残りに足す
+MIGRATE_EXTRA_REVEAL = 1   # 秒。結果表示の残りに足す
+MIGRATE_GRACE = float(os.environ.get('MIGRATE_GRACE', '20'))   # 秒。引っ越してきた人がつなぎ直すまで「いる」ものとして待つ（その間にラウンドが勝手に決まらないように）
+MIGRATE_WAIT_JOIN = 8      # 秒。起動直後の新しいサーバーに、部屋が届く前につなぎ直してきた人を待たせる長さ（すぐ「部屋がない」と返してホームに戻さない）
+MIGRATE_MAX = 8 * 1024 * 1024   # 引っ越しで1回に受け取る中身の上限（バイト）
+MIGRATE_BATCH = int(os.environ.get('MIGRATE_BATCH', '20'))   # 1回に送る部屋の数（大きな部屋でも1部屋 80KB ほどなので、上限に十分収まる）
+migrating = False   # 部屋の中身を送っている最中（この間に届いた操作は、送り終わるか失敗するまで待たせる）
+moved = False       # 部屋を新しいサーバーへ送り終えた（このサーバーはもう部屋を持たない）
+LIVE_SOCKETS = set()   # つながっている全部の WebSocket（送り終えたら、部屋に入る前の接続も含めて全部切る）
+
+
+def player_to_dict(p):
+    return {'pid': p.pid, 'name': p.name, 'name_en': p.name_en, 'is_bot': p.is_bot, 'hand': list(p.hand), 'score': p.score,
+            'won': list(p.won), 'pick': p.pick, 'selecting': p.selecting, 'connected': p.connected, 'token': p.token,
+            'spectator': p.spectator, 'muted': sorted(p.muted), 'reported_by': sorted(p.reported_by), 'chat_banned': p.chat_banned}
+
+
+def room_to_dict(r, now):
+    """部屋の中身を送れる形に。時刻は「あと何秒」で送る（サーバーどうしの時計のずれに左右されない）。"""
+    return {'code': r.code, 'host': r.host, 'order': list(r.order), 'settings': r.settings, 'phase': r.phase, 'round': r.round,
+            'prompts': r.prompts, 'reveal': r.reveal, 'chat': r.chat, 'title': r.title, 'deck': list(r.deck), 'history': r.history,
+            'deadline_in': (r.deadline - now) if (r.phase == 'pick' and r.deadline) else None,
+            'next_in': (r.next_at - now) if (r.phase == 'reveal' and r.next_at) else None,
+            'age': now - r.created, 'empty_for': (now - r.empty_since) if r.empty_since else None,
+            'players': [player_to_dict(p) for p in r.players.values()]}
+
+
+def room_from_dict(d, now, source=None):
+    """送られてきた部屋を組み立てる。今のサーバーのお題・国データで扱えない中身なら ValueError（その部屋は受け取らない）。"""
+    code = str(d['code'])[:4]
+    if code in rooms and getattr(rooms[code], 'migrated_from', None) != source:
+        raise ValueError('code already used')   # 新しいサーバーで先に同じコードの部屋ができていた（まれ）
+    prompts = [PROMPT_BY_ID.get(p.get('id'), p) for p in d['prompts']]
+    if any(p.get('key') not in WORLD_VALUES for p in prompts):
+        raise ValueError('unknown prompt')
+    r = Room(code, d['host'])
+    r.migrated_from = source   # 送ってきた古いサーバー（同じサーバーが送り直してきたら置き換える）
+    r.settings = {**DEFAULT_SETTINGS, **d['settings']}
+    r.phase, r.round, r.prompts = d['phase'], int(d['round']), prompts
+    if r.phase not in ('lobby', 'pick', 'reveal', 'end'):
+        raise ValueError('bad phase')
+    r.reveal, r.chat, r.history = d['reveal'], list(d['chat'])[-60:], list(d['history'])
+    r.deck = [c for c in d['deck'] if c in COUNTRY_BY_ID]
+    old = rooms.get(code)
+    r.title = d['title'] if not find_room_by_title(d['title'], exclude=old) else unique_title(d['title'], exclude=old)   # 同じ名前の部屋が新しいサーバーで先にできていたら番号を付ける
+    for pd in d['players']:
+        p = Player(str(pd['pid']), pd['name'], is_bot=bool(pd['is_bot']))
+        p.name_en, p.hand, p.score, p.won = pd['name_en'], list(pd['hand']), int(pd['score']), list(pd['won'])
+        p.pick, p.selecting, p.spectator, p.chat_banned = pd['pick'], pd['selecting'], bool(pd['spectator']), bool(pd['chat_banned'])
+        p.token = pd['token']
+        p.muted, p.reported_by = set(pd['muted']), set(pd['reported_by'])
+        p.connected = bool(pd['connected'])   # つながっていた人は、つなぎ直すまで（MIGRATE_GRACE 秒まで）いるものとして扱う
+        if any(c not in COUNTRY_BY_ID for c in p.hand + ([p.pick] if p.pick else [])):
+            raise ValueError('unknown card')
+        r.players[p.pid] = p
+    r.order = [x for x in d['order'] if x in r.players]
+    if r.phase == 'pick' and d['deadline_in'] is not None:
+        r.deadline = now + max(0, d['deadline_in']) + MIGRATE_EXTRA_PICK
+    if r.phase == 'reveal':
+        r.next_at = now + max(0, d['next_in'] or 0) + MIGRATE_EXTRA_REVEAL
+    r.created = now - float(d['age'])
+    r.empty_since = (now - float(d['empty_for'])) if d['empty_for'] is not None else None
+    return r
+
+
+def resume_room(room):
+    """引っ越し後（または送れなかったとき）に、止めていた時計を動かし直す。"""
+    if room.phase == 'pick':
+        asyncio.create_task(start_timer(room))
+        asyncio.create_task(bots_play(room))   # まだ出していないボット（つなぎ直し待ちの人がいる間は結果に進まない）
+    elif room.phase == 'reveal' and room.next_at:
+        schedule_advance(room, room.next_at - time.time())
+
+
+def room_worth_moving(r):
+    """送る価値のある部屋: 人（ボット以外）がいる部屋。いまは全員切れていても、つなぎ直しの猶予中なら送る（アプリを裏に回した人など）。"""
+    return any(not p.is_bot for p in r.players.values())
+
+
+async def migrated_grace(room):
+    """引っ越してきた部屋で、MIGRATE_GRACE 秒たってもつなぎ直さない人は、切断したものとして扱う（ふつうの切断と同じ後始末）。"""
+    await asyncio.sleep(MIGRATE_GRACE)
+    if rooms.get(room.code) is not room:
+        return
+    gone = [p for p in room.players.values() if not p.is_bot and p.connected and p.ws is None]
+    for p in gone:
+        p.connected = False
+        if room.phase == 'lobby':
+            room.remove_player(p.pid)
+    if gone:
+        log.info('room %s migrated: %d player(s) did not reconnect', room.code, len(gone))
+        await after_player_gone(room, None)
+
+
+async def wait_migrated_room(code):
+    """起動して間もない新しいサーバーで、まだ届いていない部屋につなぎ直してきた人を少し待たせる（古いサーバーが送るまでの数秒）。"""
+    if not MIGRATE_KEY or time.time() - STARTED > 120:
+        return rooms.get(code)
+    end = time.time() + MIGRATE_WAIT_JOIN
+    while code not in rooms and time.time() < end:
+        await asyncio.sleep(0.2)
+    return rooms.get(code)
+
+
+def retire_room(prev, keep):
+    """送り直しで置き換えた前の部屋を止める（前の部屋の時計やボットが、古い中身を画面に送らないように）。"""
+    prev.dead = True
+    for task in (prev.timer_task, prev.reveal_task):
+        if task:
+            task.cancel()
+    for op in prev.players.values():
+        np = keep.players.get(op.pid)
+        if op.ws is not None:
+            if np is not None:   # すでにこちらへつなぎ直した人の接続は、新しい方の部屋に引き継ぐ
+                np.ws, np.connected = op.ws, True
+            else:                # 新しい中身にいない人（送り直しの間に入ってきた人）は切って、つなぎ直してもらう
+                asyncio.create_task(op.ws.close())
+        op.ws, op.connected = None, False
+
+
+def key_ok(got):
+    try:
+        return bool(MIGRATE_KEY) and hmac.compare_digest(got.encode('utf-8', 'surrogateescape'), MIGRATE_KEY.encode('utf-8'))
+    except Exception:
+        return False
+
+
+async def internal_migrate(request):
+    """新しいサーバー側: 古いサーバーから部屋を受け取る。合言葉が合うときだけ。"""
+    if not key_ok(request.headers.get('X-Migrate-Key', '')):
+        raise web.HTTPNotFound()
+    if moved or migrating:   # 自分も部屋を送っている・送り終えたサーバーは受け取らない（受け取っても行き場がない）
+        return web.json_response({'ok': False, 'error': 'moving'}, status=409)
+    body = b''
+    async for chunk in request.content.iter_chunked(64 * 1024):   # アプリ全体の上限（64KB）より大きい中身を受け取る
+        body += chunk
+        if len(body) > MIGRATE_MAX:
+            return web.json_response({'ok': False, 'error': 'too_big'}, status=413)
+    try:
+        data = json.loads(body)
+        if data.get('v') != 1 or data.get('from') == BOOT_ID:
+            raise ValueError
+    except Exception:
+        return web.json_response({'ok': False, 'error': 'bad'}, status=400)
+    now, got, skipped = time.time(), [], []
+    for d in data.get('rooms') or []:
+        try:
+            if len(rooms) >= MAX_ROOMS and not (isinstance(d, dict) and str(d.get('code'))[:4] in rooms):
+                raise ValueError('full')
+            r = room_from_dict(d, now, source=data.get('from'))
+        except Exception as e:
+            skipped.append(str(d.get('code') if isinstance(d, dict) else '?'))
+            log.warning('migrate in: skip room %s (%s)', skipped[-1], e)
+            continue
+        prev = rooms.get(r.code)
+        if prev is not None:   # 同じ古いサーバーからの送り直し（前の返事が届かなかった）: 前に受け取った方を止めて置き換える
+            retire_room(prev, r)
+            r.replaced = True
+        rooms[r.code] = r
+        got.append(r)
+    for r in got:
+        resume_room(r)
+        asyncio.create_task(migrated_grace(r))
+        if getattr(r, 'replaced', False):   # 置き換える前にこちらへつなぎ直していた人に、新しい中身を送る
+            asyncio.create_task(broadcast(r))
+    log.info('migrate in: %d room(s) from %s, skipped=%s, rooms=%d', len(got), data.get('from'), skipped, len(rooms))
+    return web.json_response({'ok': True, 'rooms': len(got), 'skipped': skipped})
+
+
+async def migrate_out(session, timeout=6):
+    """古いサーバー側: 全部の部屋を新しいサーバーへ送る。送れたら接続を切り、画面に新しいサーバーへつなぎ直させる。"""
+    global migrating, moved
+    from aiohttp import ClientTimeout
+    migrating = True
+    for r in rooms.values():   # 送った後に進まないよう、時計を止める
+        for task in (r.timer_task, r.reveal_task):
+            if task:
+                task.cancel()
+    now = time.time()
+    res = {'ok': True, 'rooms': 0, 'skipped': []}
+    try:
+        items = [room_to_dict(r, now) for r in rooms.values()]
+        for i in range(0, len(items), MIGRATE_BATCH):   # 部屋が多くても受け取りの上限を超えないよう、何部屋かずつ送る（送り直しは受け取る側で置き換わる）
+            body = json.dumps({'v': 1, 'from': BOOT_ID, 'rooms': items[i:i + MIGRATE_BATCH]}, ensure_ascii=False).encode('utf-8')
+            async with session.post(PUBLIC_URL + '/internal/migrate', data=body, timeout=ClientTimeout(total=timeout),
+                                    headers={'X-Migrate-Key': MIGRATE_KEY, 'Content-Type': 'application/json'}) as resp:
+                part = await resp.json(content_type=None) if resp.status == 200 else {'ok': False, 'status': resp.status}
+            if not part.get('ok'):
+                res = part
+                break
+            res['rooms'] += part.get('rooms', 0); res['skipped'] += part.get('skipped', [])
+    except Exception as e:   # どこで失敗しても、止めた時計を戻してこのサーバーで続ける（固まらないように）
+        res = {'ok': False, 'error': repr(e)}
+    if not res.get('ok'):
+        log.warning('migrate out failed: %s (keep rooms here and retry)', res)
+        frozen = time.time() - now   # 止めていた間の分、残り時間を戻す
+        for r in rooms.values():
+            if r.deadline:
+                r.deadline += frozen
+            if r.next_at:
+                r.next_at += frozen
+        migrating = False   # 待たせていた操作は、このあとそのまま続きを処理する
+        for r in rooms.values():
+            resume_room(r)
+        return False
+    moved = True
+    log.info('migrate out: %d room(s) moved (%s skipped by the new server)', res.get('rooms'), res.get('skipped'))
+    sockets = [ws for ws in LIVE_SOCKETS if not ws.closed]
+    rooms.clear()
+    # 画面は自動でつなぎ直し、新しいサーバーの同じ部屋に入る（相手の返事は長く待たない）
+    await asyncio.gather(*(asyncio.wait_for(ws.close(), 2) for ws in sockets), return_exceptions=True)
+    return True
+
+
+fail_count = 0
+async def switched_to_other(session, timeout=5):
+    """公開アドレスの /healthz が、自分より後に起動したサーバーを指していたら True（Render が新しいサーバーに切り替えた）。"""
+    global fail_count
+    from aiohttp import ClientTimeout
+    try:
+        async with session.get(PUBLIC_URL + '/healthz', params={'from': BOOT_ID}, headers={'Cache-Control': 'no-cache'},
+                               timeout=ClientTimeout(total=timeout)) as resp:
+            h = (await resp.json(content_type=None)) if resp.status == 200 else {'status': resp.status}
+    except Exception as e:
+        h = {'error': type(e).__name__}
+    if not h.get('boot'):
+        fail_count += 1
+        if fail_count in (1, 10) or fail_count % 100 == 0:   # 確かめられないときは、ときどき記録に残す（なぜ引っ越せなかったかを後で追えるように）
+            log.warning('migrate: cannot check %s/healthz (%s, %d times)', PUBLIC_URL, h, fail_count)
+        return False
+    fail_count = 0
+    return h['boot'] != BOOT_ID and float(h.get('started') or 0) > STARTED and not h.get('moved')
+
+
+async def migrate_watch(app):
+    """古いサーバー側の見張り: 部屋がある間だけ、公開アドレスが新しいサーバーに切り替わったかを数秒おきに確かめる。"""
+    if not (MIGRATE_KEY and PUBLIC_URL):   # 手元の開発などで合言葉か公開アドレスがなければ何もしない
+        log.info('migrate: off (%s)', 'MIGRATE_KEY is not set' if not MIGRATE_KEY else 'no public URL')
+        yield
+        return
+    log.info('migrate: on (url=%s, every %.0fs while rooms exist)', PUBLIC_URL, MIGRATE_POLL)
+    from aiohttp import ClientSession, ClientTimeout
+    session = app['migrate_session'] = ClientSession(timeout=ClientTimeout(total=10))
+
+    async def _run():
+        while not moved:
+            await asyncio.sleep(MIGRATE_POLL)
+            if migrating or not any(room_worth_moving(r) for r in rooms.values()):
+                continue
+            try:
+                if await switched_to_other(session):
+                    await migrate_out(session)
+            except Exception:   # 見張りが止まらないように
+                log.exception('migrate: watcher error')
+    app['migrate_task'] = asyncio.create_task(_run())
+    yield
+    app['migrate_task'].cancel()
+    await session.close()
+
+
+async def migrate_on_shutdown(app):
+    """止める合図（SIGTERM）が見張りより先に来たとき: 接続を切る前に、切り替わっていれば最後に部屋を送る（Render が強制終了する前に終わるよう短く）。"""
+    session = app.get('migrate_session')
+    if session is None or moved or migrating:
+        return
+    app['migrate_task'].cancel()
+    try:
+        if any(room_worth_moving(r) for r in rooms.values()) and await switched_to_other(session, timeout=3):
+            await migrate_out(session, timeout=5)
+    except Exception:
+        log.exception('migrate: shutdown attempt failed')
+
+
 # ---------- websocket handler
 async def ws_handler(request):
     ws = web.WebSocketResponse(heartbeat=25)
     await ws.prepare(request)
+    if moved:   # 部屋はもう新しいサーバーにある。切れば画面がつなぎ直して新しいサーバーへ行く
+        await ws.close()
+        return ws
+    LIVE_SOCKETS.add(ws)
+    try:
+        return await ws_session(ws)
+    finally:
+        LIVE_SOCKETS.discard(ws)
+
+
+async def ws_session(ws):
     ctx = {'room': None, 'pid': None}
 
     async def error(msg, code=None):
@@ -422,6 +725,8 @@ async def ws_handler(request):
     async def handle(data):
         t = data.get('type')
         room, pid = ctx['room'], ctx['pid']
+        if room is not None and rooms.get(room.code) not in (None, room):   # 引っ越しの送り直しで部屋が新しい中身に置き換わった
+            room = ctx['room'] = rooms[room.code]
 
         if t == 'create':
             cleanup_rooms()
@@ -448,6 +753,8 @@ async def ws_handler(request):
             r = rooms.get(code) if code else None
             if not r and data.get('room_name'):   # 部屋名で参加（招待リンクはコード）
                 r = find_room_by_title(str(data.get('room_name'))[:40])
+            if not r and code and data.get('pid') and data.get('token'):   # 更新の直後: 古いサーバーから部屋が届くのを少し待つ（すぐ「ない」と返すとホームに戻ってしまう）
+                r = await wait_migrated_room(code)
             if not r:
                 return await error('その名前の部屋は見つかりません', 'room_not_found')
             want_pid = str(data.get('pid') or '')[:12]
@@ -458,6 +765,8 @@ async def ws_handler(request):
                     return await error('再接続の認証に失敗しました', 'reauth_failed')
                 if p.ws is not None and p.ws is not ws and not p.ws.closed:
                     await p.ws.close()
+                if migrating or moved or getattr(r, 'dead', False):   # 閉じるのを待つ間に引っ越し・置き換えが起きた: つなぎ直してもらう
+                    return await ws.close()
                 p.ws, p.connected = ws, True
                 pid = want_pid
                 r.empty_since = None
@@ -593,6 +902,9 @@ async def ws_handler(request):
         if t == 'start':
             if not (is_host and room.phase in ('lobby', 'end')):
                 return
+            if room.phase == 'lobby':   # ロビーでは切れた人はすぐ抜けるので、接続のない人は引っ越しのあとまだつなぎ直していない人。開始の前に外す（いない人に手札を配らない）
+                for gp in [x for x in room.players.values() if not x.is_bot and x.ws is None and x.pid != pid]:
+                    room.remove_player(gp.pid)
             if len(room.players) < 2:
                 if not data.get('with_bot'):
                     return await error('2人以上（ボット可）で開始できます', 'need_two')
@@ -643,6 +955,14 @@ async def ws_handler(request):
     async for msg in ws:
         if msg.type != WSMsgType.TEXT:
             continue
+        if '"ping"' in msg.data and msg.data.replace(' ', '') in ('{"type":"ping"}',):   # 生存確認はいつでもすぐ返す（引っ越し中に返さないと、画面が切れたと思ってつなぎ直してしまう）
+            await send(ws, {'type': 'pong'})
+            continue
+        while migrating:   # 部屋を新しいサーバーへ送っている最中の操作は、終わるまで待たせる（送れなかったら、そのまま続きを処理する）
+            await asyncio.sleep(0.05)
+        if moved:   # 送り終えた: この操作は新しいサーバーでやり直してもらう（切ると画面がつなぎ直す）
+            await ws.close()
+            break
         if len(msg.data) > 4000:
             await error('メッセージが大きすぎます', 'msg_big')
             continue
@@ -660,7 +980,11 @@ async def ws_handler(request):
             await error('処理に失敗しました', 'failed')
 
     # ---------- 切断処理
+    if moved:   # 引っ越しで切った接続。部屋は新しいサーバーにあるので、ここでは何もしない
+        return ws
     room, pid = ctx['room'], ctx['pid']
+    if room is not None and rooms.get(room.code) not in (None, room):   # 引っ越しの送り直しで部屋が置き換わった
+        room = rooms[room.code]
     if room and pid in room.players and room.players[pid].ws is ws:
         p = room.players[pid]
         p.connected, p.ws = False, None
@@ -698,7 +1022,7 @@ async def api_rooms(request):
 async def api_room(request):
     """招待リンク用: 部屋の概要（存在するか、名前、人数、進行状況）。"""
     code = request.match_info['code'].upper()[:4]
-    r = rooms.get(code)
+    r = rooms.get(code) or await wait_migrated_room(code)
     if not r or not r.has_humans():
         return web.json_response({'found': False}, status=404)
     host = r.players.get(r.host)
@@ -745,7 +1069,7 @@ async def google_verification(request):
 
 
 async def healthz(request):
-    return web.json_response({'ok': True, 'rooms': len(rooms)})
+    return web.json_response({'ok': True, 'rooms': len(rooms), 'boot': BOOT_ID, 'started': STARTED, 'moved': moved})   # boot・started: 更新時に、古いサーバーが新しいサーバーへ切り替わったかを見分ける
 
 
 # 利用ログ（ざっくり）: 対戦画面・図鑑を「誰が」「何分」見たかを運用ログに残す。
@@ -871,6 +1195,8 @@ async def periodic_cleanup(app):
 def make_app():
     app = web.Application(middlewares=[security_headers], client_max_size=64 * 1024)
     app.cleanup_ctx.append(periodic_cleanup)
+    app.cleanup_ctx.append(migrate_watch)
+    app.on_shutdown.append(migrate_on_shutdown)
     app.router.add_get('/', index)
     app.router.add_get('/healthz', healthz)
     app.router.add_get('/robots.txt', robots_txt)
@@ -884,6 +1210,7 @@ def make_app():
     app.router.add_get('/api/rooms', api_rooms)
     app.router.add_get('/api/room/{code}', api_room)
     app.router.add_get('/ws', ws_handler)
+    app.router.add_post('/internal/migrate', internal_migrate)
     app.router.add_static('/static/', os.path.join(HERE, 'static'))
     if os.environ.get('GEOKING_DEV'):   # 開発用: tests/ にある画面の確認スクリプトをブラウザから読めるようにする（本番では環境変数を入れないので出ない）
         app.router.add_static('/dev/tests/', os.path.join(HERE, 'tests'))

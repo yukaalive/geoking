@@ -51,7 +51,7 @@ window.__r = null; layoutSnapshot('before').then(r => window.__r = r);
 | 見た目・文言・HTML（いつも） | `layoutCompare('before')`（手順2の続き）と `tests/layout_check.js` |
 | 色・背景・文字色（ダークモードも） | `tests/contrast_check.js`（ライトとダークの両方で。ダークは `resize_window` の `colorScheme:'dark'` にしてから） |
 | 画面移動・native.js・sfx.js・図鑑/クイズ/プライバシーの開き方や戻り方 | `tests/app_frame_check.js` |
-| server.py | `GEOKING_WS=ws://localhost:8090/ws python3 tests/e2e_two_players.py` と `tests/e2e_solo_bot.py` |
+| server.py | `GEOKING_WS=ws://localhost:8090/ws python3 tests/e2e_two_players.py` と `tests/e2e_solo_bot.py`。部屋の中身・つなぎ直し・時計を触ったら `python3 tests/test_migration.py`（更新時の部屋の引っ越し） |
 | 結果（答え合わせ）画面のカード・国旗の大きさや並び | `tests/result_size_check.js`（幅ごとの列の数・国旗の大きさ・長い国名や数値のはみ出し）。iPhone（WebKit）はシミュレーターの Safari で `/dev/tests/result_size.html` を開く |
 | 観戦中の画面（みんなの手札・考え中/選択中/勝負の札） | `tests/spectator_check.js`（部屋を作って途中から観戦に入り、幅ごとに国旗の並びとはみ出しを見る）。iPhone は `/dev/tests/spectator.html` |
 

@@ -9,3 +9,5 @@ services:
     envVars:
       - key: ADMIN_KEY        # 利用ログ一覧 /admin/visits?key=… を開くための合言葉。Render の Environment で値を設定
         sync: false
+      - key: MIGRATE_KEY      # 更新のとき、古いサーバーが部屋の中身を新しいサーバーへ送る（引っ越し）ための合言葉。Render が自動で作る（入力不要）
+        generateValue: true

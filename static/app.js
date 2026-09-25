@@ -26,7 +26,7 @@ $('#modal').onclick = (e) => { if (e.target.id === 'modal') { $('#modal').classL
 function connect(onOpen) {
   const base = API ? new URL(API) : location;
   const proto = base.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${proto}://${base.host}/ws`);
+  const sock = ws = new WebSocket(`${proto}://${base.host}/ws`);
   ws.onopen = () => { onOpen && onOpen(); };
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
@@ -46,6 +46,7 @@ function connect(onOpen) {
     }
   };
   ws.onclose = () => {
+    if (ws !== sock) return;   // もう新しい接続に替わっている（古い接続が閉じただけ）。ここでつなぎ直すと、2本の接続が互いを切り合って止まらない
     if (!state) return;
     reconnectTries++;
     if (reconnectTries > 8) {   // 約1分あきらめたら停止（無限再接続ループを防ぐ）
@@ -53,7 +54,7 @@ function connect(onOpen) {
     }
     if (reconnectTries > 1) toast(t('reconnecting'));
     const delay = reconnectTries === 1 ? 300 : Math.min(15000, 1000 * 2 ** (reconnectTries - 2));   // 1回目はすぐ、以降は間隔を広げる
-    setTimeout(() => { if (state) connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value, ...rejoinInfo() })); }, delay);
+    setTimeout(() => { if (state && ws === sock) connect(() => send({ type: 'join', room: state.room, name: $('#nameInput').value, ...rejoinInfo() })); }, delay);   // 待つ間に別の経路（アプリに戻った時など）でつなぎ直していたら何もしない
   };
 }
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
