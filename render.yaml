@@ -11,3 +11,7 @@ services:
         sync: false
       - key: MIGRATE_KEY      # 更新のとき、古いサーバーが部屋の中身を新しいサーバーへ送る（引っ越し）ための合言葉。Render が自動で作る（入力不要）
         generateValue: true
+      - key: SHEET_LOG_URL    # 出来事を書き込む Google スプレッドシート（Apps Script のウェブアプリ）のアドレス。Render の Environment で値を設定（手順は docs/sheet-log/README.md）
+        sync: false
+      - key: SHEET_LOG_KEY    # そのウェブアプリの合言葉（Apps Script の setup が実行ログに出す値）。Render の Environment で値を設定
+        sync: false

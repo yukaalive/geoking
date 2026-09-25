@@ -2,7 +2,7 @@
 """GeoKing（地理王） オンライン対戦サーバー。aiohttp + WebSocket。
     python3 server.py  →  http://localhost:8080
 """
-import asyncio, json, logging, os, random, secrets, string, time, uuid
+import asyncio, collections, json, logging, os, random, secrets, string, time, uuid
 import hmac
 import html
 from datetime import datetime, timezone, timedelta
@@ -83,6 +83,114 @@ def clean_name(v, room=None):
     return ''.join(ch for ch in str(v or '') if ch.isprintable()).strip()[:16]
 
 
+# ---------- スプレッドシートへの記録
+# サーバーのログ（Render の Logs は無料プランで7日）や管理者ページ（メモリ）は更新で消えるので、部屋や画面の出来事を
+# 30秒ごとにまとめて、運営者の Google スプレッドシート（Apps Script のウェブアプリ）へ送る。送れなかった分は次の回に送り直す。
+# 送るのは裏でだけで、ゲームの動きは待たせない。スプレッドシート側のプログラムと設定の手順は docs/sheet-log/（90日より古い行はそちらで毎日消す）
+# 環境変数 SHEET_LOG_URL（ウェブアプリのアドレス）と SHEET_LOG_KEY（合言葉。Apps Script のスクリプト プロパティ LOG_KEY と同じ値）がそろったときだけ動く
+SHEET_LOG_URL = os.environ.get('SHEET_LOG_URL', '').strip()
+SHEET_LOG_KEY = os.environ.get('SHEET_LOG_KEY', '').strip()
+SHEET_LOG_EVERY = float(os.environ.get('SHEET_LOG_EVERY', '30'))   # 秒。まとめて送る間隔
+SHEET_LOG_BATCH = 500             # 1回に送る行の上限
+SHEET_ROWS = collections.deque(maxlen=5000)   # 送る前の行。送れないまま増えたら古い方から捨てる（メモリを使いすぎない）
+SHEET_LOCK = asyncio.Lock()
+SHEET_PER_MIN = {'visit': 120, 'room': 600}   # 1分に残す行の上限（画面を開いた記録は誰でも送れるので少なめ）。超えた分は残さない
+sheet_minute = {'at': 0, 'visit': 0, 'room': 0}
+SHEET_GIVE_UP = 20     # 返事は来るのに書けない（合言葉違い・シートがいっぱい等）が続いたら、その回の分をあきらめて先へ進む（いつまでも止まらないように）
+sheet_pending = None   # 送りかけの1回分 {'id', 'rows'}。書けたか分からないとき（返事が来ない等）は同じ id で送り直し、スプレッドシート側で二重に書かない
+sheet_fail_count = 0
+
+
+def sheet_log(event, room=None, name='', detail='', kind='room'):
+    """スプレッドシートに1行残す（ここではためるだけ。送るのは sheet_log_ctx の見張り）。列: 日時・出来事・部屋コード・部屋名・ニックネーム・人数・くわしく"""
+    if not (SHEET_LOG_URL and SHEET_LOG_KEY):
+        return
+    minute = int(time.time() // 60)
+    if sheet_minute['at'] != minute:
+        over = {k: sheet_minute[k] - SHEET_PER_MIN[k] for k in SHEET_PER_MIN if sheet_minute[k] > SHEET_PER_MIN[k]}
+        if over:
+            log.warning('sheet log: too many rows in a minute, dropped %s', over)
+        sheet_minute.update({'at': minute, 'visit': 0, 'room': 0})
+    sheet_minute[kind] += 1
+    if sheet_minute[kind] > SHEET_PER_MIN[kind]:
+        return
+    SHEET_ROWS.append({'ts': round(time.time(), 3), 'event': event, 'room': room.code if room else '',
+                       'title': room.display_title() if room else '', 'name': name or '',
+                       'count': len(room.players) if room else '', 'detail': str(detail or '')[:300]})
+
+
+async def sheet_flush(session, timeout=15):
+    """ためた行を送る。送れたら True。送れなかった分は次の回に同じ中身・同じ id で送り直す"""
+    global sheet_fail_count, sheet_pending
+    from aiohttp import ClientTimeout
+    async with SHEET_LOCK:
+        while sheet_pending or SHEET_ROWS:
+            if sheet_pending is None:
+                sheet_pending = {'id': secrets.token_hex(8), 'rows': [SHEET_ROWS.popleft() for _ in range(min(SHEET_LOG_BATCH, len(SHEET_ROWS)))]}
+            why = ''
+            answered = False
+            try:   # Apps Script は書き込んだあと別のアドレスへ転送して返事を返すので、転送先までたどる（aiohttp が自動でたどる）
+                async with session.post(SHEET_LOG_URL, json={'key': SHEET_LOG_KEY, **sheet_pending}, timeout=ClientTimeout(total=timeout)) as r:
+                    answered = True
+                    body = await r.text()
+                    try:
+                        ok = r.status == 200 and json.loads(body).get('ok') is True
+                    except ValueError:
+                        ok = False
+                    why = f'status={r.status} body={body[:120]!r}'
+            except Exception as e:
+                ok, why = False, repr(e)
+            if not ok:
+                sheet_fail_count += 1
+                if sheet_fail_count in (1, 3) or sheet_fail_count % 20 == 0:   # 同じ失敗でログを埋めない
+                    log.warning('sheet log: send failed %d times (%s), %d rows waiting', sheet_fail_count, why, len(SHEET_ROWS) + len(sheet_pending['rows']))
+                if answered and sheet_fail_count >= SHEET_GIVE_UP:   # 通信はできているのに書けない: この回の分をあきらめる（通信できないときは書けたかもしれないので送り直し続ける）
+                    log.warning('sheet log: gave up %d rows after %d failures (%s)', len(sheet_pending['rows']), sheet_fail_count, why)
+                    sheet_pending, sheet_fail_count = None, 0
+                return False
+            sheet_pending = None
+            if sheet_fail_count:
+                log.info('sheet log: sent again after %d failures', sheet_fail_count)
+                sheet_fail_count = 0
+    return True
+
+
+async def sheet_log_ctx(app):
+    if not (SHEET_LOG_URL and SHEET_LOG_KEY):
+        log.info('sheet log: off (SHEET_LOG_URL / SHEET_LOG_KEY is not set)')
+        yield
+        return
+    from aiohttp import ClientSession
+    session = app['sheet_session'] = ClientSession()
+    log.info('sheet log: on (every %.0fs)', SHEET_LOG_EVERY)
+
+    async def _run():
+        while True:
+            await asyncio.sleep(SHEET_LOG_EVERY)
+            try:
+                await sheet_flush(session)
+            except Exception:   # 見張りが止まらないように
+                log.exception('sheet log: flush error')
+    task = asyncio.create_task(_run())
+    yield
+    task.cancel()
+    try:
+        await sheet_flush(session, timeout=5)   # 止める前に残りを送る
+    except Exception:
+        pass
+    await session.close()
+
+
+async def sheet_log_on_shutdown(app):
+    """止める合図（SIGTERM）のとき: Render は30秒で強制終了するので、接続の後片付けを待たずに先に送る"""
+    session = app.get('sheet_session')
+    if session is not None:
+        try:
+            await asyncio.wait_for(sheet_flush(session, timeout=5), 8)
+        except Exception:
+            pass
+
+
 def cleanup_rooms():
     now = time.time()
     for code, r in list(rooms.items()):
@@ -92,6 +200,7 @@ def cleanup_rooms():
                     task.cancel()
             rooms.pop(code, None)
             log.info('room %s removed (%s), rooms=%d', code, 'ttl' if now - r.created > ROOM_TTL else 'empty', len(rooms))
+            sheet_log('部屋削除', r, detail='6時間たった' if now - r.created > ROOM_TTL else '誰もいなくなった')
 
 
 def new_code():
@@ -174,6 +283,9 @@ class Room:
         self.round = 0
         log.info('room %s start: players=%s rounds=%d cats=%s', self.code,
                  [self.players[x].name + ('(bot)' if self.players[x].is_bot else '') for x in self.order], s['rounds'], ','.join(s['categories']))
+        host = self.players.get(self.host)
+        sheet_log('ゲーム開始', self, host.name if host else '',
+                  '、'.join(self.players[x].name + ('（ボット）' if self.players[x].is_bot else '') for x in self.order) + f'／{s["rounds"]}ラウンド')
         self.begin_round()
 
     def begin_round(self):
@@ -235,6 +347,11 @@ class Room:
         if self.round >= len(self.prompts):
             self.phase = 'end'
             log.info('room %s end: %s', self.code, {self.players[x].name: self.players[x].score for x in self.order})
+            ranked = sorted((x for x in self.order if not self.players[x].spectator), key=lambda x: -self.players[x].score)   # 途中から観戦で入った人は遊んでいないので入れない
+            top = self.players[ranked[0]].score if ranked else 0
+            nm = lambda x: self.players[x].name + ('（ボット）' if self.players[x].is_bot else '')
+            sheet_log('ゲーム終了', self, '・'.join(nm(x) for x in ranked if self.players[x].score == top),
+                      '、'.join(f'{nm(x)} {self.players[x].score}点' for x in ranked))
         else:
             self.begin_round()
 
@@ -748,6 +865,7 @@ async def ws_session(ws):
             room.title = unique_title(name)   # 既定の部屋名はホストの名前。友だちはこの名前で参加する
             ctx['room'], ctx['pid'] = room, pid
             log.info('room %s created by %s, rooms=%d', room.code, name, len(rooms))
+            sheet_log('部屋作成', room, name)
             return await broadcast(room)
 
         if t == 'join':
@@ -790,6 +908,7 @@ async def ws_session(ws):
                     r.host = pid
                 r.empty_since = None
                 log.info('room %s join %s%s players=%d', r.code, name, ' (spectator)' if r.phase != 'lobby' else '', len(r.players))
+                sheet_log('入室' if r.phase == 'lobby' else '観戦で入室', r, name)
                 if r.phase != 'lobby':   # 途中参加はまず観戦。次のゲームから自動で参加、または「途中から参加」
                     p.spectator = True
                     r.chat.append({'name': 'システム', 'key': 'spectating', 'params': {'name': p.name}, 'text': f'{p.name}さんが観戦しました', 'ts': time.time()})
@@ -815,6 +934,7 @@ async def ws_session(ws):
             cats = s.get('categories', room.settings['categories'])
             cats = [c for c in cats if c in CATEGORIES] if isinstance(cats, list) else room.settings['categories']
             cur = room.settings
+            was_title, was_public = room.display_title(), cur['public']
             room.settings.update({
                 'categories': cats or ['basic'],
                 'rounds': to_int(s.get('rounds', cur['rounds']), 3, 12, cur['rounds']),
@@ -824,6 +944,9 @@ async def ws_session(ws):
                 'max_star': to_int(s.get('max_star', cur['max_star']), 1, 3, cur['max_star']),
                 'public': bool(s.get('public', cur['public'])),
             })
+            host = room.players.get(room.host)
+            if room.settings['public'] != was_public:
+                sheet_log('公開部屋にした' if room.settings['public'] else '公開部屋をやめた', room, host.name if host else '')
             if 'title' in s:
                 title = ''.join(ch for ch in str(s.get('title') or '') if ch.isprintable()).strip()[:20]
                 if title and not check_name(title)[0]:
@@ -834,6 +957,9 @@ async def ws_session(ws):
                 room.title = title or unique_title(host.name if host else '部屋', exclude=room)
             if room.settings['hand_size'] < room.settings['rounds']:
                 room.settings['hand_size'] = room.settings['rounds'] + 1
+            host = room.players.get(room.host)
+            if room.display_title() != was_title:
+                sheet_log('部屋名変更', room, host.name if host else '', f'{was_title} → {room.display_title()}')
             return await broadcast(room)
 
         if t == 'add_bot':
@@ -852,6 +978,7 @@ async def ws_session(ws):
                 tp = room.players[target]
                 room.remove_player(target)
                 log.info('room %s kick %s by %s', room.code, tp.name, room.players[pid].name)
+                sheet_log('退出させた', room, tp.name, f'ホスト {room.players[pid].name} が退出させた')
                 if tp.ws is not None and not tp.ws.closed:
                     await send(tp.ws, {'type': 'left', 'message': 'ホストによって退出させられました', 'code': 'kicked'})
                     await tp.ws.close()
@@ -887,6 +1014,7 @@ async def ws_session(ws):
                 tp.reported_by.add(pid)
                 log.warning('room %s REPORT %s -> %s reason=%s recent=%s', room.code, room.players[pid].name, tp.name, reason,
                             [c['text'] for c in room.chat if c.get('pid') == target][-5:])
+                sheet_log('通報', room, tp.name, f'{room.players[pid].name} が通報／理由: {reason}')   # チャットの中身は残さない
                 if len(tp.reported_by) >= REPORTS_TO_MUTE and not tp.chat_banned:
                     tp.chat_banned = True
                     room.chat.append({'name': 'システム', 'text': f'{tp.name}さんのチャットは通報により制限されました', 'ts': time.time()})
@@ -899,6 +1027,7 @@ async def ws_session(ws):
             room.remove_player(pid)
             ctx['room'], ctx['pid'] = None, None
             log.info('room %s leave %s', room.code, p.name)
+            sheet_log('退出', room, p.name)
             await send(ws, {'type': 'left', 'message': '部屋から退出しました', 'code': 'left'})
             await after_player_gone(room, p.name)
             if room.empty_since and not any(not x.is_bot for x in room.players.values()):   # 最後の人が自分で退出した（戻ってくる人がいない）: EMPTY_GRACE ではなく、これまでどおり LEFT_GRACE で消す
@@ -956,6 +1085,8 @@ async def ws_session(ws):
             if was_playing:
                 room.chat.append({'name': 'システム', 'key': 'host_lobby', 'params': {}, 'text': 'ホストがゲームを中断してロビーに戻りました', 'ts': time.time()})
                 log.info('room %s host returned to lobby mid-game', room.code)
+                host = room.players.get(room.host)
+                sheet_log('ゲーム中断', room, host.name if host else '', 'ホストがロビーに戻した')
             return await broadcast(room)
 
     async for msg in ws:
@@ -997,6 +1128,7 @@ async def ws_session(ws):
         log.info('room %s disconnect %s (phase=%s)', room.code, p.name, room.phase)
         if room.phase == 'lobby':
             room.remove_player(pid)
+            sheet_log('切断', room, p.name, 'ロビーで接続が切れた（戻ると入室になる）')
         await after_player_gone(room, None)
     return ws
 
@@ -1122,12 +1254,18 @@ async def api_visit(request):
     if not mode or event not in ('start', 'ping', 'leave'):
         return web.json_response({'ok': False}, status=400)
     name = ''.join(ch for ch in str(data.get('name') or '') if ch.isprintable()).strip()[:20] or '(名前なし)'
+    if name != '(名前なし)' and not check_name(name)[0]:   # 部屋に入るときに断られる名前（電話番号・SNS の ID・不適切な言葉など）は残さない
+        name = '(名前なし)'
     vid = ''.join(ch for ch in str(data.get('id') or '') if ch.isalnum())[:12]
     sec = to_int(data.get('sec'), 0, 24 * 3600, 0)
     label = {'start': '開始', 'ping': '滞在中', 'leave': '離脱'}[event]
     log.info('visit %s %s name=%s 滞在=%d分%02d秒 id=%s', mode, label, name, sec // 60, sec % 60, vid)
-    # 管理者ページ用にメモリにも残す（サーバー再起動で消える。長期の記録は Render のログ）
     v = VISITS.get(vid)
+    # スプレッドシートには、1回の訪問（id）につき「開いた」「離れた」を1行ずつだけ（5分ごとの「滞在中」や、同じ訪問の送り直しは残さない）
+    if (event == 'start' and v is None) or (event == 'leave' and (v is None or v['state'] != '離脱')):
+        sheet_log(f'{mode}を開いた' if event == 'start' else f'{mode}を離れた', None, name,
+                  f'滞在 {sec // 60}分{sec % 60:02d}秒／id={vid}' if event == 'leave' else f'id={vid}', kind='visit')
+    # 管理者ページ用にメモリにも残す（サーバー再起動で消える。長期の記録は Render のログ）
     if v is None:
         if len(VISITS) >= 3000:
             del VISITS[next(iter(VISITS))]
@@ -1231,7 +1369,9 @@ def make_app():
     app = web.Application(middlewares=[security_headers], client_max_size=64 * 1024)
     app.cleanup_ctx.append(periodic_cleanup)
     app.cleanup_ctx.append(migrate_watch)
+    app.cleanup_ctx.append(sheet_log_ctx)
     app.on_shutdown.append(migrate_on_shutdown)
+    app.on_shutdown.append(sheet_log_on_shutdown)
     app.router.add_get('/', index)
     app.router.add_get('/healthz', healthz)
     app.router.add_get('/robots.txt', robots_txt)

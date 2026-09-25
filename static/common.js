@@ -164,7 +164,7 @@ if ($('#modalClose')) $('#modalClose').onclick = () => { $('#modal').classList.a
 
 // ---------- 利用ログ（ざっくり）: 開いた時・5分ごと・離れた時に、画面の種類とニックネーム・滞在秒数をサーバーへ送る
 function trackVisit(mode) {
-  const id = Math.random().toString(36).slice(2, 10), t0 = Date.now();
+  let id, t0;
   const post = (event) => {
     const body = JSON.stringify({ id, mode, event, name: localStorage.getItem('geoking_name') || '', sec: Math.round((Date.now() - t0) / 1000) });
     try {
@@ -172,12 +172,13 @@ function trackVisit(mode) {
       else fetch(API + '/api/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
     } catch {}
   };
-  post('start');
+  const begin = () => { id = Math.random().toString(36).slice(2, 10); t0 = Date.now(); post('start'); };   // ほかのアプリから戻ったときも新しい訪問として数える（滞在時間にほかのアプリにいた時間を入れない）
+  begin();
   setInterval(() => { if (document.visibilityState !== 'hidden') post('ping'); }, 5 * 60 * 1000);
   let hidden = false;
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') { if (!hidden) { hidden = true; post('leave'); } }
-    else hidden = false;
+    else if (hidden) { hidden = false; begin(); }
   });
   window.addEventListener('pagehide', () => { if (!hidden) { hidden = true; post('leave'); } });
   window.addEventListener('beforeunload', () => { if (!hidden) { hidden = true; post('leave'); } });
