@@ -25,6 +25,10 @@ FRAMES = [
      [('7ラウンドで最多得点が地理王。', True), ('友だちとは招待リンクで、', False), ('公開部屋で世界の誰かとも。', False)], ['jp', 'eg', 'br']),
     (('android-5-modal.png', 'ios-4-modal.png'),   ['出した国の', 'ことが分かる'],
      [('197の国旗と国のデータ、', False), ('首都・気候・宗教まで丸わかり。', True), ('遊ぶほど、世界に強くなる。', False)], ['ke', 'no', 'ar']),
+    ((None, 'ios-5-zukan.png'),                    ['図鑑で', '世界を知る'],
+     [('お題ごとの世界ランキング。', True), ('197の国旗を一覧で見られる。', False), ('国名で検索、地域で絞り込み。', False)], ['jp', 'br', 'ar']),
+    ((None, 'ios-6-quiz.png'),                     ['ひとりで', '国旗クイズ'],
+     [('国名から国旗、国旗から国名。', False), ('10問・4択で腕だめし！', True), ('まちがえた国は見直せる。', False)], ['eg', 'ke', 'no']),
 ]
 
 def esc(t):
@@ -149,7 +153,10 @@ def main():
         for tag, W, H in (('play', 1080, 2400), ('appstore', 1290, 2796), ('appstore65', 1284, 2778), ('appstore69', 1320, 2868)):
             if only and not tag.startswith(only):
                 continue
-            src = os.path.join(HERE, shots[0] if tag == 'play' else shots[1])
+            shot = shots[0] if tag == 'play' else shots[1]
+            if shot is None:   # 図鑑・クイズ（5・6枚目）は App Store 用だけ
+                continue
+            src = os.path.join(HERE, shot)
             out = os.path.join(OUT, f'{tag}-{i}.png')
             render(build_svg(src, head, desc, flags, i, W, H), out, W, H)
             print('wrote', out)
