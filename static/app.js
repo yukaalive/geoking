@@ -568,11 +568,10 @@ async function loadRooms() {
     const { rooms } = await (await fetch(API + '/api/rooms')).json();
     ul.innerHTML = '';
     if (!rooms.length) { ul.innerHTML = `<li class="muted">${t('no_public_rooms')}</li>`; return; }
-    for (const r of rooms) {
-      const cats = r.categories.map(c => ico(META.categories[c]?.icon || 'flag', 'sm')).join('');
-      const status = r.phase === 'lobby' ? `<span class="tag">${ico('clock')}${t('recruiting')}</span>` : `<span class="tag live">${ico('cards')}${t('in_progress', { n: r.round })}</span>`;
-      const li = el('li', '', `<span><b>${escapeHtml(r.title_raw || t('room_of', { name: r.host }))}</b> <span class="muted small">${t('by')} ${escapeHtml(r.host)}</span> ${status} <span class="tag">${t('players_n', { n: r.players })}</span> <span class="tag">${t('rounds_short', { n: r.rounds })} ${cats}</span></span>`);
-      const b = el('button', 'mini primary', t('join')); b.onclick = () => { $('#codeInput').value = r.room; $('#joinBtn').click(); };
+    for (const r of rooms) {   // 1行目に部屋名、2行目に人数と「募集中／対戦中」だけ（ホスト名・ラウンド数・お題の種類は出さない）
+      const status = r.phase === 'lobby' ? `<span class="proom-st">${t('recruiting')}</span>` : `<b class="proom-st live">${t('playing')}</b>`;
+      const li = el('li', '', `<span class="proom"><b class="proom-name">${escapeHtml(r.title_raw || t('room_of', { name: r.host }))}</b><span class="proom-sub muted small">${ico('person', 'sm')} ${t('players_n', { n: r.players })}${status}</span></span>`);
+      const b = el('button', 'mini primary', t('join_short')); b.onclick = () => { $('#codeInput').value = r.room; $('#joinBtn').click(); };
       li.appendChild(b); ul.appendChild(li);
     }
   } catch { ul.innerHTML = `<li class="muted">${t('rooms_fetch_failed')}</li>`; }

@@ -73,6 +73,8 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .tag.host{background:var(--accent)}.tag.off{background:var(--accent-2);color:#fff}.tag.live{background:var(--primary);color:var(--primary-ink)}
 .players,.scores{padding:0;margin:0}
 .players li,.scores li{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:2px dashed var(--line-soft)}
+/* 公開中の部屋: 1行目に部屋名、2行目に小さく人数と「募集中／対戦中」。ボタンは折り返さない */
+#publicRoomList .proom{display:flex;flex-direction:column;gap:2px;min-width:0}#publicRoomList .proom-name{font-size:16px;overflow-wrap:anywhere}#publicRoomList .proom-sub{white-space:nowrap}#publicRoomList .proom-st{margin-left:12px}#publicRoomList .proom-st.live{color:var(--primary)}#publicRoomList li>button{white-space:nowrap;flex:none;margin-left:10px}
 .guest .hostonly{display:none!important}.host .guestonly{display:none!important}
 .guest .hostonly-disable{pointer-events:none;opacity:.7}
 
@@ -457,4 +459,5 @@ body.framed{overflow:hidden}
   .floatmsg.sys b{color:#1f6f4a}   /* 流れるチャットの「システム」（クリーム色の吹き出し） */
   .rev .wrank.bronze .ico{color:#6b3a14}.rev .wrank.silver .ico{color:#374151}   /* 結果の銅・銀の世界順位バッジのアイコンは、バッジの文字と同じ色 */
   button.pref.off .ico,button.mini:hover .ico{color:#1c2b22}   /* 効果音を切ったとき（薄い灰色）・上のボタンに指を乗せたとき（黄色）のアイコン */
+  #publicRoomList .proom-st.live{color:#52b47f}   /* 公開中の部屋の「対戦中」: 小さい字なので、濃い背景の上で少し明るい緑に（いつもの緑だと見にくい） */
 }
