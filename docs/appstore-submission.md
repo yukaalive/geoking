@@ -76,7 +76,8 @@ https://geoking-vlgh.onrender.com
 2026 yukaalive
 
 ### バージョン
-1.1（ビルド 7。1.0 はビルド 5 で公開＝アイコンに黒い枠あり）
+1.1（ビルド 8。1.0 はビルド 5 で公開＝アイコンに黒い枠あり）
+- ビルド 8 から、App Store の「言語」に日本語と英語が出る（アプリに ja.lproj / en.lproj と CFBundleLocalizations を入れた。ゲームの言語の選び方は変わらない。日本語の端末では iOS のメニュー・共有シートなども日本語になる）
 
 ## 5. App Review に関する情報
 - サインインが必要: **いいえ**
@@ -116,16 +117,16 @@ Native features: haptic feedback (on/off with the sound button at the top right)
 
 ### A. アプリをアップロードする（Xcode、5分＋待ち時間）
 1. Xcode を開く → 上のメニュー「Window」→「Organizer」
-2. 左の「Archives」→「地理王」→ 一覧から **「地理王 1.1 (7)」**（2026/09/26）を選ぶ
-   - アーカイブは `~/Library/Developer/Xcode/Archives/2026-09-26/地理王 1.1 (7).xcarchive`（作り方: `mobile/` で `bash build_www.sh` → `npx cap copy ios` → `xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath <上の場所> CODE_SIGNING_ALLOWED=NO archive`）
+2. 左の「Archives」→「地理王」→ 一覧から **「地理王 1.1 (8)」**（2026/09/26）を選ぶ（1.1 (7) は日本語の設定を入れる前のものなので使わない）
+   - アーカイブは `~/Library/Developer/Xcode/Archives/2026-09-26/地理王 1.1 (8).xcarchive`（作り方: `mobile/` で `bash build_www.sh` → `npx cap copy ios` → `xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath <上の場所> CODE_SIGNING_ALLOWED=NO archive`）
 3. 右の「Distribute App」→「App Store Connect」→「Distribute」（途中で聞かれることは、そのまま「Next」でよい）
-4. 「Uploaded」と出たら完了。App Store Connect の「TestFlight」に 1.1 (7) が出るまで 10〜30分かかる（「処理中」の間は選べない）
+4. 「Uploaded」と出たら完了。App Store Connect の「TestFlight」に 1.1 (8) が出るまで 10〜30分かかる（「処理中」の間は選べない）
 
 ### B. App Store Connect で新しい版を作る（15分）
 1. App Store Connect →「アプリ」→ 地理王 → 左の「iOS アプリ」の横の「＋」（「バージョンまたはプラットフォームを追加」）→「iOS」→ バージョン「1.1」→「作成」
 2. 「プレビューとスクリーンショット」: 前の版の画像が入っているので、6.9インチ（または6.5インチ）の欄の4枚を消し、新しい6枚（4 の「スクリーンショット」）を 1 → 6 の順にドラッグ
 3. 「プロモーション用テキスト」「概要」「キーワード」「このバージョンの最新情報」に、4 の文をそのまま貼る
-4. 「ビルド」の「＋」→ **1.1 (7)** を選ぶ → 完了（暗号化の質問は、アプリの設定で「使っていない」にしてあるので出ない）
+4. 「ビルド」の「＋」→ **1.1 (8)** を選ぶ → 完了（暗号化の質問は、アプリの設定で「使っていない」にしてあるので出ない）
 5. 下の「App Review に関する情報」の「メモ」を、5 の英文に貼り替える
 6. 右上「保存」→「審査用に追加」→「審査へ提出」
 7. 審査は通常 24〜48 時間。通ると公開される（「このバージョンのリリース」を「自動」にしている場合）
