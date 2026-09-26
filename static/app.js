@@ -243,8 +243,8 @@ function playTransitions() {
       if (me && !isSpectator) setTimeout(() => (me.winner ? sfx.win() : sfx.lose()), 350);
     } else if (state.phase === 'end') {
       scrollTopNext = true;
-      const mine = state.players.find(p => p.pid === pid);
-      const scores = state.players.filter(p => !p.spectator).map(p => p.score);
+      const mine = (state.final || state.players).find(p => p.pid === pid);
+      const scores = (state.final || state.players.filter(p => !p.spectator)).map(p => p.score);
       const top = scores.length ? Math.max(...scores) : 0;
       setTimeout(() => (mine && !mine.spectator && mine.score === top ? sfx.champion() : sfx.reveal()), 200);
     }
@@ -485,7 +485,7 @@ function renderReveal() {
 
 function renderEnd() {
   const ol = $('#finalList'); ol.innerHTML = '';
-  const sorted = state.players.filter(p => !p.spectator).sort((a, b) => b.score - a.score);
+  const sorted = (state.final || state.players.filter(p => !p.spectator)).slice().sort((a, b) => b.score - a.score);   // 終わった時点の順位（そのあと誰かが退出しても変えない）
   const top = sorted[0]?.score;
   // メダル形式: 同点は同じ順位（1,1,3…）。金・銀・銅、4位以下は白。1位はポンと出て光り、紙吹雪
   let rank = 0, prev = null;
