@@ -163,6 +163,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .rev .country{font-weight:900;margin-top:4px;line-height:1.25}
 .rev .country small{display:block;font-weight:600;color:var(--muted);font-size:11px}
 .rev .val{font-size:20px;margin-top:2px}.rev .rank{font-size:12px;color:var(--muted)}
+.rev .gain{font-weight:900;font-size:15px;margin-top:2px}   /* そのラウンドで入った点（順位で点: 1位＝出した人数） */
 .rev .crown{font-size:22px;font-weight:900}
 /* 幅 346〜405px のスマホ（iPhone など）も、幅 412px の Android と同じく結果のカードを2列に（手札が2列になる幅と同じ）。
    上の 180px のままだと幅 406px 未満は1列になり、iPhone では国旗が Android の2倍の大きさになっていた */

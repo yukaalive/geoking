@@ -142,18 +142,18 @@ async def main():
     r.players['c'] = server.Player('c', 'C'); r.order.append('c')
     r.settings.update({'rounds': 3, 'hand_size': 4, 'timer': 30})
     r.start()
-    r.players['b'].score = 5; r.players['a'].score = 1
+    r.players['b'].score = 50; r.players['a'].score = 1   # 残った人は順位で点が入るので、抜ける人は大きめの点数にしておく
     r.players['s'] = server.Player('s', 'S'); r.order.append('s'); r.players['s'].spectator = True
     r.remove_player('s')   # 観戦の人が抜けても順位に入らない
-    r.remove_player('b')   # 5点のまま途中で退出
+    r.remove_player('b')   # 50点のまま途中で退出
     while r.phase != 'end':
         for p in r.players.values():
             p.pick = p.hand[0] if p.hand else None
         r.do_reveal(); r.next_round()
     names_scores = [(e['name'], e['score']) for e in r.final]
-    assert names_scores[0] == ('B', 5), names_scores
+    assert names_scores[0] == ('B', 50), names_scores
     assert sorted(n for n, _ in names_scores) == ['A', 'B', 'C'], names_scores
-    print('OK: 5点のまま途中で退出した人は、5点で順位に入る（観戦の人・ロビーで抜けた人は入らない）:', names_scores)
+    print('OK: 50点のまま途中で退出した人は、50点で順位に入る（観戦の人・ロビーで抜けた人は入らない）:', names_scores)
     print('ALL OK')
 
 asyncio.run(main())

@@ -322,18 +322,21 @@ class Room:
                 wr = better + 1
             rows.append({'pid': pid, 'name': p.name, 'name_en': p.name_en, 'card': p.pick, 'value': 0 if v is None else v, 'missing': v is None,
                          'world_rank': wr, 'world_total': len(WORLD_VALUES[key])})
-        valid = sorted(rows, key=lambda r: r['value'], reverse=(direction == 'max'))
-        best = valid[0]['value'] if valid else None
+        # 順位で点: 出した人がN人なら 1位N点、2位N-1点…（同じ値は同じ順位・同じ点で、次の順位は飛ばす）。
+        # データのない国（バチカンのGDPなど）は順位に入れず1点（以前は0として比べていたので、「低い国は？」で1位になっていた）
+        valid = sorted((r for r in rows if not r['missing']), key=lambda r: r['value'], reverse=(direction == 'max'))
+        n = len(rows)
         rank, prev = 0, object()
-        for r in valid:
+        for i, r in enumerate(valid, 1):
             if r['value'] != prev:
-                rank += 1
-                prev = r['value']
+                rank, prev = i, r['value']
             r['rank'] = rank
         for r in rows:
-            r['winner'] = best is not None and r['value'] == best
+            r.setdefault('rank', None)
+            r['winner'] = r['rank'] == 1
+            r['points'] = 1 if r['rank'] is None else n - r['rank'] + 1
+            self.players[r['pid']].score += r['points']
             if r['winner']:
-                self.players[r['pid']].score += 1
                 self.players[r['pid']].won.append(pr['id'])
         for p in self.players.values():
             if p.pick in p.hand:

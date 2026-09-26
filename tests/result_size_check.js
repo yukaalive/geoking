@@ -78,7 +78,7 @@
       const most = (k) => C.filter(c => c[k] != null).reduce((a, c) => c[k] > a[k] ? c : a);   // 桁のいちばん多い数値（面積・排他的経済水域）
       const scenes = [{ key: longVal.k, star: longVal.c }, { key: longTok.k, star: longTok.c }, { key: 'area', star: most('area') }, { key: 'eez', star: most('eez') }, { key: 'name_len', star: longName }, { key: 'kana_rank', star: longKana }];
       for (const { key, star } of scenes) {
-        const rows = [[star, 1, true], [longName, 7, false], [longKana, 25, false], [C[0], 150, false]].map(([c, rank, win], i) => ({ pid: 'x' + i, name: i % 2 ? 'ながいなまえのプレイヤーさんです'.slice(0, 16) : 'W'.repeat(16), name_en: 'W'.repeat(16),   /* 名前は最大16文字。空白のない幅の広い英字も */ card: c.id, value: c[key], world_rank: rank, world_total: 197, winner: win, missing: false }));
+        const rows = [[star, 1, true], [longName, 7, false], [longKana, 25, false], [C[0], 150, false]].map(([c, rank, win], i) => ({ pid: 'x' + i, name: i % 2 ? 'ながいなまえのプレイヤーさんです'.slice(0, 16) : 'W'.repeat(16), name_en: 'W'.repeat(16),   /* 名前は最大16文字。空白のない幅の広い英字も */ card: c.id, value: c[key], world_rank: rank, world_total: 197, winner: win, missing: false, points: 4 - i }));   // そのラウンドの点（+4点など）の行も入れて測る
         w.eval('state').reveal = { ...orig, prompt: { ...orig.prompt, key }, rows };
         w.renderReveal(); await sleep(100);
         for (const W of [320, 346, 360, 375, 384, 387, 388, 390, 393, 402, 405, 406, 412]) {   // 2列・18px に切り替わる境目の前後も
