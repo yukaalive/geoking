@@ -245,6 +245,7 @@ class Room:
         self.deck = []
         self.history = []   # 各ラウンドの公開結果（最終結果の一覧用）
         self.final = None   # ゲームが終わった時点の順位 [{pid, name, name_en, score, is_bot}]。結果画面で誰かが退出しても、この順位のまま見せる
+        self.departed = {}  # ゲームの途中で退出した（退出させられた）人の、そのときの点数 pid -> {name, name_en, score, is_bot}。最後の順位に入れる
         self.timer_task = None
         self.reveal_task = None
         self.deadline = None
@@ -281,7 +282,7 @@ class Room:
             p.score, p.won, p.pick = 0, [], None
         self.deck = deck   # 途中参加者に配る残り山札
         self.history = []
-        self.final = None
+        self.final, self.departed = None, {}
         self.round = 0
         log.info('room %s start: players=%s rounds=%d cats=%s', self.code,
                  [self.players[x].name + ('(bot)' if self.players[x].is_bot else '') for x in self.order], s['rounds'], ','.join(s['categories']))
@@ -349,13 +350,15 @@ class Room:
         if self.round >= len(self.prompts):
             self.phase = 'end'
             log.info('room %s end: %s', self.code, {self.players[x].name: self.players[x].score for x in self.order})
-            ranked = sorted((x for x in self.order if not self.players[x].spectator), key=lambda x: -self.players[x].score)   # 途中から観戦で入った人は遊んでいないので入れない
-            self.final = [{'pid': x, 'name': self.players[x].name, 'name_en': self.players[x].name_en, 'score': self.players[x].score,
-                           'is_bot': self.players[x].is_bot} for x in ranked]
-            top = self.players[ranked[0]].score if ranked else 0
-            nm = lambda x: self.players[x].name + ('（ボット）' if self.players[x].is_bot else '')
-            sheet_log('ゲーム終了', self, '・'.join(nm(x) for x in ranked if self.players[x].score == top),
-                      '、'.join(f'{nm(x)} {self.players[x].score}点' for x in ranked))
+            # 最後の順位: 今いる人（途中から観戦で入った人は遊んでいないので入れない）と、途中で退出した人（そのときの点数）
+            players = [{'pid': x, 'name': self.players[x].name, 'name_en': self.players[x].name_en, 'score': self.players[x].score,
+                        'is_bot': self.players[x].is_bot} for x in self.order if not self.players[x].spectator]
+            gone = [{'pid': x, **d} for x, d in self.departed.items() if x not in self.players]
+            self.final = sorted(players + gone, key=lambda e: -e['score'])
+            top = self.final[0]['score'] if self.final else 0
+            nm = lambda e: e['name'] + ('（ボット）' if e['is_bot'] else '')
+            sheet_log('ゲーム終了', self, '・'.join(nm(e) for e in self.final if e['score'] == top),
+                      '、'.join(f'{nm(e)} {e["score"]}点' for e in self.final))
         else:
             self.begin_round()
 
@@ -381,12 +384,15 @@ class Room:
             if task:
                 task.cancel()
         self.phase, self.round, self.reveal, self.next_at, self.deadline = 'lobby', 0, None, None, None
-        self.history, self.prompts, self.final = [], [], None
+        self.history, self.prompts, self.final, self.departed = [], [], None, {}
         for p in self.players.values():
             p.hand, p.pick, p.selecting, p.score, p.won, p.spectator = [], None, None, 0, [], False
         self.history = []
 
     def remove_player(self, pid):
+        p = self.players.get(pid)
+        if p and not p.spectator and self.phase in ('pick', 'reveal'):   # ゲームの途中で抜けた人も、最後の順位にそのときの点数で出す
+            self.departed[pid] = {'name': p.name, 'name_en': p.name_en, 'score': p.score, 'is_bot': p.is_bot}
         self.players.pop(pid, None)
         if pid in self.order:
             self.order.remove(pid)
@@ -572,7 +578,7 @@ def player_to_dict(p):
 def room_to_dict(r, now):
     """部屋の中身を送れる形に。時刻は「あと何秒」で送る（サーバーどうしの時計のずれに左右されない）。"""
     return {'code': r.code, 'host': r.host, 'order': list(r.order), 'settings': r.settings, 'phase': r.phase, 'round': r.round,
-            'prompts': r.prompts, 'reveal': r.reveal, 'chat': r.chat, 'title': r.title, 'deck': list(r.deck), 'history': r.history, 'final': r.final,
+            'prompts': r.prompts, 'reveal': r.reveal, 'chat': r.chat, 'title': r.title, 'deck': list(r.deck), 'history': r.history, 'final': r.final, 'departed': r.departed,
             'deadline_in': (r.deadline - now) if (r.phase == 'pick' and r.deadline) else None,
             'next_in': (r.next_at - now) if (r.phase == 'reveal' and r.next_at) else None,
             'age': now - r.created, 'empty_for': (now - r.empty_since) if r.empty_since else None,
@@ -597,6 +603,9 @@ def room_from_dict(d, now, source=None):
     f = d.get('final')   # 前の版のサーバーからは届かない（そのときは画面が今いる人から順位を作る）
     r.final = [{'pid': str(x['pid']), 'name': str(x['name']), 'name_en': x.get('name_en'), 'score': int(x['score']), 'is_bot': bool(x.get('is_bot'))}
                for x in f] if isinstance(f, list) else None
+    dep = d.get('departed')
+    r.departed = {str(k)[:12]: {'name': str(v['name']), 'name_en': v.get('name_en'), 'score': int(v['score']), 'is_bot': bool(v.get('is_bot'))}
+                  for k, v in dep.items()} if isinstance(dep, dict) else {}
     r.deck = [c for c in d['deck'] if c in COUNTRY_BY_ID]
     old = rooms.get(code)
     r.title = d['title'] if not find_room_by_title(d['title'], exclude=old) else unique_title(d['title'], exclude=old)   # 同じ名前の部屋が新しいサーバーで先にできていたら番号を付ける
