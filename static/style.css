@@ -329,20 +329,20 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .wrank .confetti{position:absolute;inset:-40px -20px;pointer-events:none;overflow:visible}
 .wrank .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;left:50%;top:60%;opacity:0;animation:conf 1.4s ease-out forwards}
 @keyframes conf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
-/* 銅：11〜30位 */
+/* 銅：21〜30位 */
 .rev .wrank.bronze{background:linear-gradient(135deg,#f7dcc3,#e0a878);border-color:#9a5b2c;padding:4px 12px;font-size:13px;box-shadow:2px 2px 0 #9a5b2c;color:#6b3a14}
 .rev .wrank.bronze b{font-size:19px;color:#6b3a14}
 .rev .wrank.bronze em{color:#6b3a14;font-size:13px}
 .rev .wrank.bronze span{color:#8a5a34}
-/* 銀：2〜10位 */
+/* 銀：11〜20位 */
 .rev .wrank.silver{background:linear-gradient(135deg,#fafafa,#d5dae2);border-color:#6b7280;padding:4px 12px;font-size:13px;box-shadow:2px 2px 0 #6b7280;color:#374151}
 .rev .wrank.silver b{font-size:20px;color:#374151}
 .rev .wrank.silver em{color:#374151;font-size:14px}
 .rev .wrank.silver span{color:#4b5563}
-/* 金：世界1位。ポンと出て光る */
+/* 金：世界1〜10位。ポンと出て光る */
 .rev .wrank.gold{background:linear-gradient(135deg,#ffe58a,var(--accent) 60%,#ffd25e);border-color:var(--ink);padding:6px 14px;font-size:14px;box-shadow:3px 3px 0 var(--ink);animation:wrankPop .6s cubic-bezier(.2,1.6,.4,1) both,wrankGlow 1.6s ease-in-out 1s infinite}
 .rev .wrank.gold b{font-size:24px}
-.rev .wrank.gold em{font-size:16px}
+.rev .wrank.gold em{font-size:14px}   /* 「トップ10！」が2列のカードで折り返さない大きさ（2026-09-27 まで金は「世界1位！」で16px） */
 .rev .wrank.gold span{color:#5a4a10}
 /* 同じ結果を描き直すとき（チャットやつなぎ直しで画面が更新されたとき）は、めくる・飛び出す動きをやり直さない。金の光り方はそのまま */
 #revealRows.still .rev,#revealRows.still .rev .wrank.bronze,#revealRows.still .rev .wrank.silver{animation:none}
@@ -461,6 +461,7 @@ body.framed{overflow:hidden}
   .qres-disc.g .ico,.qres-disc.s .ico,.qres-disc.b .ico{color:#1c2b22}   /* クイズの結果の金銀銅のメダル */
   .floatmsg.sys b{color:#1f6f4a}   /* 流れるチャットの「システム」（クリーム色の吹き出し） */
   .rev .wrank.bronze .ico{color:#6b3a14}.rev .wrank.silver .ico{color:#374151}   /* 結果の銅・銀の世界順位バッジのアイコンは、バッジの文字と同じ色 */
+  .rev .wrank.gold,.rev .wrank.gold b,.rev .wrank.gold em,.rev .wrank.gold .ico{color:#1c2b22}   /* 金の世界順位バッジ（1〜10位）は1位以外のカードにも出るので、カードの色によらず濃い文字に（明るい文字のままだと金の上で読めない） */
   button.pref.off .ico,button.mini:hover .ico{color:#1c2b22}   /* 効果音を切ったとき（薄い灰色）・上のボタンに指を乗せたとき（黄色）のアイコン */
   #publicRoomList .proom-st.live{color:#52b47f}   /* 公開中の部屋の「対戦中」: 小さい字なので、濃い背景の上で少し明るい緑に（いつもの緑だと見にくい） */
 }

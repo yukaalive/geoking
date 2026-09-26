@@ -417,9 +417,9 @@ function renderOthersHands() {
 }
 
 // 世界順位を金・銀・銅で強調（1位／2〜10位／11〜30位）
-function wrankTier(rank) {
-  if (rank === 1) return { cls: ' gold', tag: `${ico('crown', 'sm')} ${t('world_first')}` };
-  if (rank <= 10) return { cls: ' silver', tag: `${ico('trophy', 'sm')} ${t('top10')}` };
+function wrankTier(rank) {   // 金＝世界1〜10位「トップ10！」、銀＝11〜20位、銅＝21〜30位（2026-09-27 に 金＝世界1位だけ・銀2〜10位・銅11〜30位 から変更。金がほとんど出なかった）
+  if (rank <= 10) return { cls: ' gold', tag: `${ico('crown', 'sm')} ${t('top10')}` };
+  if (rank <= 20) return { cls: ' silver', tag: `${ico('trophy', 'sm')} ${t('top20')}` };
   if (rank <= 30) return { cls: ' bronze', tag: `${ico('star', 'sm')} ${t('top30')}` };
   return { cls: '', tag: '' };
 }

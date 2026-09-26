@@ -60,7 +60,7 @@
       const img = cards[0].querySelector('img').getBoundingClientRect(), card = cards[0].getBoundingClientRect();
       sizes.push({ 幅: W, 列: new Set(cards.map(c => Math.round(c.getBoundingClientRect().left))).size, カード幅: Math.round(card.width), 国旗の幅: Math.round(img.width), 国旗の高さ: Math.round(img.height), ページ幅: d.documentElement.scrollWidth, 広い要素: widest(W), はみ出し: overflowOf() });
     }
-    // いちばん長い文字を入れた結果（4人分: 金・銀・銅・順位なし。名前は16文字の日本語と、空白のない英字 W×16）
+    // いちばん長い文字を入れた結果（4人分: 金（1位と7位）・銀・銅。2026-09-27 から 金＝1〜10位「トップ10！」・銀＝11〜20位・銅＝21〜30位。名前は16文字の日本語と、空白のない英字 W×16）
     const orig = S().reveal;
     for (const lang of ['ja', 'en']) {
       w.setLang(lang); await sleep(200);
@@ -78,7 +78,7 @@
       const most = (k) => C.filter(c => c[k] != null).reduce((a, c) => c[k] > a[k] ? c : a);   // 桁のいちばん多い数値（面積・排他的経済水域）
       const scenes = [{ key: longVal.k, star: longVal.c }, { key: longTok.k, star: longTok.c }, { key: 'area', star: most('area') }, { key: 'eez', star: most('eez') }, { key: 'name_len', star: longName }, { key: 'kana_rank', star: longKana }];
       for (const { key, star } of scenes) {
-        const rows = [[star, 1, true], [longName, 7, false], [longKana, 25, false], [C[0], 150, false]].map(([c, rank, win], i) => ({ pid: 'x' + i, name: i % 2 ? 'ながいなまえのプレイヤーさんです'.slice(0, 16) : 'W'.repeat(16), name_en: 'W'.repeat(16),   /* 名前は最大16文字。空白のない幅の広い英字も */ card: c.id, value: c[key], world_rank: rank, world_total: 197, winner: win, missing: false, points: 4 - i }));   // そのラウンドの点（+4点など）の行も入れて測る
+        const rows = [[star, 1, true], [longName, 7, false], [longKana, 15, false], [C[0], 25, false]].map(([c, rank, win], i) => ({ pid: 'x' + i, name: i % 2 ? 'ながいなまえのプレイヤーさんです'.slice(0, 16) : 'W'.repeat(16), name_en: 'W'.repeat(16),   /* 名前は最大16文字。空白のない幅の広い英字も */ card: c.id, value: c[key], world_rank: rank, world_total: 197, winner: win, missing: false, points: 4 - i }));   // そのラウンドの点（+4点など）の行も入れて測る
         w.eval('state').reveal = { ...orig, prompt: { ...orig.prompt, key }, rows };
         w.renderReveal(); await sleep(100);
         for (const W of [320, 346, 360, 375, 384, 387, 388, 390, 393, 402, 405, 406, 412]) {   // 2列・18px に切り替わる境目の前後も
