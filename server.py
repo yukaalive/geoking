@@ -655,10 +655,12 @@ async def migrated_grace(room):
     gone = [p for p in room.players.values() if not p.is_bot and p.connected and p.ws is None]
     for p in gone:
         p.connected = False
-        if room.phase == 'lobby':
-            room.remove_player(p.pid)
-    if gone:
-        log.info('room %s migrated: %d player(s) did not reconnect', room.code, len(gone))
+    # ロビーでは、つなぎ直さなかった人も、前のサーバーで切断のまま残っていた人（2026-09-27 より前の版は「ロビーへ」で切断の人を外さなかった）も外す
+    stale = [p for p in room.players.values() if not p.is_bot and not p.connected and p.ws is None] if room.phase == 'lobby' else []
+    for p in stale:
+        room.remove_player(p.pid)
+    if gone or stale:
+        log.info('room %s migrated: %d player(s) did not reconnect, %d removed from lobby', room.code, len(gone), len(stale))
         await after_player_gone(room, None)
 
 
@@ -914,6 +916,8 @@ async def ws_session(ws):
                 log.info('room %s reconnect %s', r.code, p.name)
             else:
                 if len(r.players) >= MAX_PLAYERS:
+                    if want_pid:   # 戻ってきた人（前の pid あり）: ロビーに戻るときに切断で外れ、その間に席が埋まった。画面はホームに戻る（room_full のままだと前の画面で止まる）
+                        return await error('部屋が満員になったため、戻れませんでした', 'rejoin_full')
                     return await error('満員です（最大8人）', 'room_full')
                 name = clean_name(data.get('name'))
                 ok, why, why_code = check_name(name)
@@ -1102,6 +1106,12 @@ async def ws_session(ws):
                 return
             was_playing = room.phase in ('pick', 'reveal')
             room.reset_to_lobby()
+            # 対戦中に接続が切れたままの人は、ロビーに戻るときに退出させる（ロビーで切れた人はすぐ抜けるのと同じ。戻ってくると、もう一度「入室」になる）。
+            # 引っ越しのあとまだつなぎ直していない人（connected のまま ws がない）は、migrated_grace が待ってから外すので、ここでは外さない
+            for gp in [x for x in room.players.values() if not x.is_bot and not x.connected]:
+                room.remove_player(gp.pid)
+                log.info('room %s removed offline %s on return to lobby', room.code, gp.name)
+                sheet_log('切断', room, gp.name, 'ロビーに戻ったとき接続が切れていたので退出（戻ると入室になる）')
             if was_playing:
                 room.chat.append({'name': 'システム', 'key': 'host_lobby', 'params': {}, 'text': 'ホストがゲームを中断してロビーに戻りました', 'ts': time.time()})
                 log.info('room %s host returned to lobby mid-game', room.code)

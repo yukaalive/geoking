@@ -37,10 +37,10 @@ function connect(onOpen) {
     else if (msg.type === 'error') {
       sfx.error();
       msg.message = tServer('e_', msg.code, msg.message);
-      if (msg.code === 'room_not_found' || msg.code === 'reauth_failed') {
+      if (msg.code === 'room_not_found' || msg.code === 'reauth_failed' || msg.code === 'rejoin_full') {   // rejoin_full: 切断中にロビーで外れ、戻る前に席が埋まった
         sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token');
         if (state) { stopTimer(); state = null; $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll(); }   // 部屋が消えた → ホームへ
-        else if (!manualJoin) return;
+        else if (!manualJoin && msg.code !== 'rejoin_full') return;
       }
       toast(msg.message);
     }
@@ -487,12 +487,13 @@ function renderEnd() {
   const ol = $('#finalList'); ol.innerHTML = '';
   const sorted = (state.final || state.players.filter(p => !p.spectator)).slice().sort((a, b) => b.score - a.score);   // 終わった時点の順位（そのあと誰かが退出しても変えない）
   const top = sorted[0]?.score;
-  // メダル形式: 同点は同じ順位（1,1,3…）。金・銀・銅、4位以下は白。1位はポンと出て光り、紙吹雪
+  // メダル形式: 同点は同じ順位（1,1,3…）。金・銀・銅、4位以下は白。1位はポンと出て光り、紙吹雪。
+  // 1位の行の名前は champ（2026-09-27 まで top で、ヘッダーの .top の「上に貼り付く」が効き、スクロールしても1位の行だけ動かなかった）
   let rank = 0, prev = null;
   sorted.forEach((p, i) => {
     if (p.score !== prev) { rank = i + 1; prev = p.score; }
     const cls = rank === 1 ? 'g' : rank === 2 ? 's' : rank === 3 ? 'b' : 'n';
-    const li = el('li', 'm' + (rank === 1 ? ' top' : ''), `<div class="disc ${cls}">${rank}</div><div class="nm">${rank === 1 ? ico('crown') + ' ' : ''}${escapeHtml(pname(p))}</div><div class="sc">${p.score}<small>${t('pts')}</small></div>`);
+    const li = el('li', 'm' + (rank === 1 ? ' champ' : ''), `<div class="disc ${cls}">${rank}</div><div class="nm">${rank === 1 ? ico('crown') + ' ' : ''}${escapeHtml(pname(p))}</div><div class="sc">${p.score}<small>${t('pts')}</small></div>`);
     li.style.animationDelay = (0.15 * i) + 's';
     ol.appendChild(li);
     if (rank === 1) setTimeout(() => spawnConfetti(li.querySelector('.disc'), 'gold'), 400 + 150 * i);

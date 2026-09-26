@@ -203,8 +203,8 @@ body.composing #chatForm button{white-space:nowrap}
 .final .disc.s{background:linear-gradient(135deg,#fafafa,#d5dae2);color:var(--ink)}
 .final .disc.b{background:linear-gradient(135deg,#f7dcc3,#e0a878);color:var(--ink)}
 .final .nm{font-weight:900;font-size:17px;flex:1;line-height:1.2}
-.final li.top .nm{font-family:var(--font-head);font-weight:400;font-size:22px}
-.final li.top .nm .ico{color:var(--accent);filter:drop-shadow(1px 1px 0 var(--ink));width:1.1em;height:1.1em;vertical-align:-.15em}
+.final li.champ .nm{font-family:var(--font-head);font-weight:400;font-size:22px}
+.final li.champ .nm .ico{color:var(--accent);filter:drop-shadow(1px 1px 0 var(--ink));width:1.1em;height:1.1em;vertical-align:-.15em}
 .final .sc{font-family:var(--font-head);font-size:22px;white-space:nowrap}
 .final .sc small{font-family:var(--font-body);font-weight:800;font-size:12px;color:var(--muted);margin-left:3px}
 @keyframes medalIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}

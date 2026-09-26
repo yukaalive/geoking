@@ -43,7 +43,7 @@ const I18N = {
     status_round: 'ラウンド{n}進行中（観戦で入ります）', join_room_q: 'この部屋に参加しますか？', host_label: 'ホスト', people: ' 人', invite_cancel: 'やめる',
     // サーバーからのメッセージ（code で切り替え）
     e_room_full_global: '現在満室です。しばらくしてからお試しください', e_room_not_found: 'その名前の部屋は見つかりません（名前を確かめてください）', e_title_taken: 'その部屋名はすでに使われています。別の名前にしてください', e_reauth_failed: '再接続の認証に失敗しました',
-    e_room_full: '満員です（最大8人）', e_join_first: '先に部屋を作成または参加してください', e_bad_input: '入力値が不正です', e_bad_title: 'その部屋名は使えません（不適切な表現や連絡先を含みます）',
+    e_room_full: '満員です（最大8人）', e_rejoin_full: '部屋が満員になったため、戻れませんでした', e_join_first: '先に部屋を作成または参加してください', e_bad_input: '入力値が不正です', e_bad_title: 'その部屋名は使えません（不適切な表現や連絡先を含みます）',
     e_need_two: '2人以上（ボット可）で開始できます', e_chat_banned: '通報が複数あったため、この部屋ではチャットできません', e_msg_big: 'メッセージが大きすぎます', e_failed: '処理に失敗しました',
     e_chat_empty: '空のメッセージです', e_chat_long: 'メッセージが長すぎます（80文字まで）', e_ng_word: '不適切な表現が含まれているため送信できません',
     e_link_or_personal: 'URL・連絡先・IDなどは送信できません', e_name_empty: '名前を入力してください', e_name_bad: 'その名前は使えません（不適切な表現や連絡先を含みます）',
@@ -110,7 +110,7 @@ const I18N = {
     room_not_found_toast: 'Room not found (it may have ended, or the code is wrong)', status_recruiting: 'Open', status_end: 'Showing results (join from the next game)',
     status_round: 'Round {n} in progress (you will join as a spectator)', join_room_q: 'Join this room?', host_label: 'Host', people: ' players', invite_cancel: 'Cancel',
     e_room_full_global: 'The server is full right now. Please try again later.', e_room_not_found: 'No room with that name was found (check the spelling)', e_title_taken: 'That room name is already in use. Please pick another.', e_reauth_failed: 'Reconnection failed',
-    e_room_full: 'This room is full (max 8)', e_join_first: 'Create or join a room first', e_bad_input: 'Invalid input', e_bad_title: 'That room name is not allowed (inappropriate words or contact info)',
+    e_room_full: 'This room is full (max 8)', e_rejoin_full: 'The room is now full, so you could not rejoin', e_join_first: 'Create or join a room first', e_bad_input: 'Invalid input', e_bad_title: 'That room name is not allowed (inappropriate words or contact info)',
     e_need_two: 'You need 2 or more players (bots count)', e_chat_banned: 'You were reported by several players and cannot chat in this room', e_msg_big: 'Message too large', e_failed: 'Something went wrong',
     e_chat_empty: 'Empty message', e_chat_long: 'Message too long (80 characters max)', e_ng_word: 'Your message contains inappropriate words',
     e_link_or_personal: 'URLs, contact info and IDs cannot be sent', e_name_empty: 'Please enter your name', e_name_bad: 'That name is not allowed (inappropriate words or contact info)',
