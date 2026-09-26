@@ -2,7 +2,7 @@
    - 国旗モード: 国名 → 国旗を4枚から選ぶ
    - 国名モード: 国旗 → 国名を4つから選ぶ
    10問・4択。むずかしさ「ふつう」はまちがい選択肢を同じ地域の国から優先して選ぶ。
-   「激ムズ」は、似ている国旗のグループ（SIMILAR_FLAGS）から4つを選択肢にする（1問ごとに別のグループ） */
+   「激ムズ」は、似ている国旗のグループ（SIMILAR_FLAGS）と名前が似ている国のグループ（SIMILAR_NAMES）をまぜて、1問ごとに別のグループから4つを選択肢にする。どちらのモードも同じ */
 const Q_TOTAL = 10;
 let qMode = 'flag', qHard = false, qList = [], qIdx = 0, qScore = 0, qWrong = [], qLocked = false;
 
@@ -49,12 +49,41 @@ const SIMILAR_FLAGS = [
   ['xk', 'ba', 'cy', 'cv'],   // 国の形や星（青地・白地）
 ];
 
+// 名前が似ている国のグループ（激ムズ用。国旗のグループとまぜて使う）。1グループ4か国以上。2026-09-27 に作った一覧（197か国の日本語・英語の名前の見直し）
+const SIMILAR_NAMES = [
+  ['kn', 'lc', 'vc', 'st', 'sm'],   // セント・サンで始まる
+  ['cd', 'cg', 'dm', 'do'],   // 同じ名前で「共和国」だけ違う（コンゴ・ドミニカ）
+  ['gn', 'gq', 'gw', 'pg'],   // ギニアが入る
+  ['at', 'au', 'al', 'am'],   // オーストリア／オーストラリア、アルバニア／アルメニア
+  ['mr', 'mu', 'mv', 'md'],   // モーリタニア／モーリシャス、モルディブ／モルドバ
+  ['sd', 'ss', 'za', 'cf'],   // スーダン／南スーダン、南アフリカ／中央アフリカ
+  ['sk', 'si', 'lv', 'lt'],   // スロバキア／スロベニア、ラトビア／リトアニア
+  ['is', 'ie', 'fi', 'pl', 'nz'],   // 〜ランドで終わる
+  ['ir', 'iq', 'il', 'ye'],   // イラン／イラク
+  ['ne', 'ng', 'dz', 'tn'],   // ニジェール／ナイジェリア／アルジェリア
+  ['gm', 'zm', 'na', 'co'],   // 〜ビアで終わる（ガンビア／ザンビア）
+  ['py', 'uy', 'ni', 'gt'],   // グアが入る（パラグアイ／ウルグアイ）
+  ['af', 'kz', 'pk', 'tj', 'tm', 'uz'],   // 〜スタンで終わる
+  ['tg', 'to', 'ad', 'ao'],   // トーゴ／トンガ、アンドラ／アンゴラ
+  ['bn', 'bi', 'bg', 'bf'],   // ブルで始まる（ブルネイ／ブルンジ）
+  ['ly', 'lr', 'bo', 'lb'],   // リビア／リベリア／ボリビア
+  ['mc', 'ma', 'km', 'xk'],   // モナコ／モロッコ、コモロ／コソボ
+  ['ml', 'mt', 'mw', 'my'],   // マ＋ラ行で始まる（マリ・マルタ・マラウイ・マレーシア）
+  ['ki', 'kg', 'cu', 'cy'],   // キで始まる（キリバス／キルギス）
+  ['ag', 'tt', 'ba', 'kn', 'vc', 'st'],   // 「・」でつないだ長い名前
+  ['tv', 'vu', 'nr', 'nu', 'pw'],   // 太平洋の島国の短い名前（ツバル／バヌアツ）
+  ['rw', 'ug', 'ca', 'gd'],   // 〜ダで終わる（ルワンダ／ウガンダ、カナダ／グレナダ）
+  ['et', 'er', 'ec', 'sv'],   // エチオピア／エリトリア、エクアドル／エルサルバドル
+  ['gh', 'gy', 'ga', 'gm'],   // ガで始まる（ガーナ／ガイアナ）
+  ['ck', 'mh', 'sb', 'fm'],   // 〜諸島（太平洋）
+];
+
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 function makeQuestions(hard) {
   const all = Object.values(META.countries);
-  if (hard) {   // グループをまぜて10個選び、それぞれから答え1つと、同じグループのほかの3つ
-    const groups = shuffle(SIMILAR_FLAGS.map(g => g.filter(id => META.countries[id])).filter(g => g.length >= 4));
+  if (hard) {   // 国旗のグループと名前のグループをまぜて10個選び、それぞれから答え1つと、同じグループのほかの3つ
+    const groups = shuffle([...SIMILAR_FLAGS, ...SIMILAR_NAMES].map(g => g.filter(id => META.countries[id])).filter(g => g.length >= 4));
     const used = new Set(), qs = [];
     for (const g of groups) {
       if (qs.length >= Q_TOTAL) break;

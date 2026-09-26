@@ -1,10 +1,11 @@
 /* クイズの「激ムズ」の確認: 開発サーバーのホーム画面をブラウザで開き、コンソールで実行する（10秒ほど）。
    枠の中にクイズを開き、国旗モード・国名モードの「激ムズ」を何回か始めて、次を見る:
    - 10問あり、答えが重ならない
-   - どの問題も4つの選択肢が、同じ「似ている国旗のグループ」（quiz.js の SIMILAR_FLAGS）から出ている
+   - どの問題も4つの選択肢が、同じ「似ている国旗のグループ」（quiz.js の SIMILAR_FLAGS）か「名前が似ている国のグループ」（SIMILAR_NAMES）から出ている
+   - 国旗のグループの問題も、名前のグループの問題も出る（どちらのモードも）
    - 「同じ問題でもう一度」で、問題と選択肢の並びが同じ。「新しい問題に挑戦」も激ムズのまま
    - 「ふつう」は今までどおり（激ムズのグループに縛られない）
-   2026-09-26: 似ている国旗4つから選ぶ「激ムズ」を追加 */
+   2026-09-26: 似ている国旗4つから選ぶ「激ムズ」を追加。2026-09-27: 名前が似ている国のグループ（25）もまぜる */
 (async () => {
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const fr = document.createElement('iframe');
@@ -14,13 +15,13 @@
   const w = fr.contentWindow, d = w.document;
   for (let i = 0; i < 50 && !(w.eval('typeof META !== "undefined" && META')); i++) await sleep(100);
   const results = {};
-  const groups = w.eval('SIMILAR_FLAGS');
+  const flagGroups = w.eval('SIMILAR_FLAGS'), nameGroups = w.eval('SIMILAR_NAMES'), groups = [...flagGroups, ...nameGroups];
   const bad = groups.flatMap(g => g.filter(id => !w.eval('META').countries[id]));
-  results['グループの国がすべてデータにある'] = bad.length ? 'NG: ' + bad.join(',') : `OK（${groups.length}グループ）`;
-  const inOneGroup = (ids) => groups.some(g => ids.every(id => g.includes(id)));
+  results['グループの国がすべてデータにある'] = bad.length ? 'NG: ' + bad.join(',') : `OK（国旗 ${flagGroups.length}・名前 ${nameGroups.length}グループ）`;
+  const inOneGroup = (ids, gs = groups) => gs.some(g => ids.every(id => g.includes(id)));
   const sig = () => JSON.stringify(w.eval('qList').map(q => [q.answer.id, q.options.map(o => o.id)]));
   for (const mode of ['flag', 'name']) {
-    let ng = '';
+    let ng = '', fromFlags = 0, fromNames = 0;
     for (let n = 0; n < 30 && !ng; n++) {
       d.querySelector(`.qlevel[data-mode="${mode}"][data-level="hard"]`).click(); await sleep(30);
       const qs = w.eval('qList');
@@ -30,10 +31,13 @@
         const ids = q.options.map(o => o.id);
         if (ids.length !== 4 || new Set(ids).size !== 4) ng = '選択肢が4つでない'; else if (!ids.includes(q.answer.id)) ng = '答えが選択肢にない';
         else if (!inOneGroup(ids)) ng = '同じグループでない選択肢: ' + ids.join(',');
+        if (inOneGroup(ids, flagGroups)) fromFlags++;
+        if (inOneGroup(ids, nameGroups)) fromNames++;
       }
       w.eval('renderMenu()');
     }
     results[`${mode === 'flag' ? '国旗' : '国名'}モード・激ムズ: 10問、答えが重ならず、4択がどれも同じグループ（30回）`] = ng ? 'NG: ' + ng : 'OK';
+    results[`${mode === 'flag' ? '国旗' : '国名'}モード・激ムズ: 国旗のグループと名前のグループの両方から出る（300問のうち）`] = fromFlags && fromNames ? `OK（国旗 ${fromFlags}問・名前 ${fromNames}問）` : `NG: 国旗 ${fromFlags}問・名前 ${fromNames}問`;
     d.querySelector(`.qlevel[data-mode="${mode}"][data-level="hard"]`).click(); await sleep(50);
     const s1 = sig(); w.eval('finish()'); d.getElementById('qReplay').click(); await sleep(50);
     const same = sig() === s1 && w.eval('qHard') === true && w.eval('qMode') === mode;

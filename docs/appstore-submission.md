@@ -40,7 +40,7 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 
 ### 概要
 国旗だけで、どんな国かを当てる地理カードゲーム。
-「GDPが高い国は？」「イスラム教徒の割合が高い国は？」…お題に一番合いそうな国旗を1枚出して、いちばん近い人が1点。7ラウンドで最多得点の人が「地理王」。
+「GDPが高い国は？」「イスラム教徒の割合が高い国は？」…お題に一番合いそうな国旗を1枚出して、お題に近い順に点が入ります。7ラウンドの合計で一番の人が「地理王」。
 
 ■ みんなで対戦
 ・友だちと最大8人
@@ -94,7 +94,7 @@ How to test alone (1-2 minutes):
 1. Enter any nickname in 「あなたの名前（必須）」 (Your name (required)) and tap 「部屋を作る」 (Create room).
 2. In the lobby, tap 「botとゲーム開始」 (Start with a bot). One AI player joins and the game starts. Alternatively, tap 「ボットを追加」 (Add bot) one or more times before starting; the start button then reads 「ゲーム開始（7ラウンド）」 (Start game (7 rounds)).
 3. Each round shows a prompt such as 「面積が大きい国は？」 (Which country has the largest area?). Tap one of your flag cards (8 at the start), then tap the same card again to play it. Each round has a 30-second limit; if time runs out, a random card is played.
-4. When everyone has played, the cards are revealed with each country's value and world rank. The closest card scores 1 point (ties all score), and the next round starts automatically after 8 seconds. After 7 rounds the final results screen shows the winner.
+4. When everyone has played, the cards are revealed with each country's value and world rank. Points go by rank: with N players, the closest card scores N points, the next N-1, and so on down to 1 point (ties share the same rank and points; a country with no data scores 1 point). The next round starts automatically after 8 seconds. After 7 rounds the final results screen shows the winner.
 To stop early, tap 「退出」 (Leave) at the top left. The host can also tap 「ロビーへ」 (Lobby) to stop the game and return to the lobby (scores are reset). Both buttons ask for confirmation.
 
 Single-player features on the home screen:
