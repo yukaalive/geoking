@@ -23,14 +23,16 @@
   <section id="qmenu" class="qscreen">
     <h1 data-i18n="quiz_heading">ひとりで国旗クイズ</h1>
     <div class="qmodes">
-      <button class="qmode" data-mode="flag">
+      <div class="qmode">
         <div class="qm-head"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> <span data-i18n="mode_flag">国旗モード</span></div>
         <div class="qm-desc" data-i18n="mode_flag_desc">国名を見て、正しい国旗を4枚から選ぶ</div>
-      </button>
-      <button class="qmode" data-mode="name">
+        <div class="qm-acts"><button class="qlevel" data-mode="flag" data-level="normal" data-i18n="level_normal">ふつう</button><button class="qlevel primary" data-mode="flag" data-level="hard"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> <span data-i18n="level_hard">激ムズ</span></button></div>
+      </div>
+      <div class="qmode">
         <div class="qm-head"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="mode_name">国名モード</span></div>
         <div class="qm-desc" data-i18n="mode_name_desc">国旗を見て、正しい国名を4つから選ぶ</div>
-      </button>
+        <div class="qm-acts"><button class="qlevel" data-mode="name" data-level="normal" data-i18n="level_normal">ふつう</button><button class="qlevel primary" data-mode="name" data-level="hard"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> <span data-i18n="level_hard">激ムズ</span></button></div>
+      </div>
     </div>
     <p class="muted small"><a href="/static/zukan.html" class="muted" data-i18n="learn_first">先に図鑑で覚える</a></p>
   </section>

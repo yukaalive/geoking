@@ -11,7 +11,7 @@
 ## 確認の道具（`tests/`）
 
 - 確認用サーバーは `.claude/launch.json` の `geoking-check`（PORT=8090, GEOKING_DEV=1）。8080 番は別のセッションの古いサーバーのことがある。
-- ブラウザで使うもの（`/dev/tests/…` から読み込む。読み込み方はスキルに書いてある）: `layout_snapshot.js`（変更前後の比較）、`layout_check.js`（横はみ出し）、`contrast_check.js`（文字の見やすさ。ダークモードも）、`app_frame_check.js`（アプリ内フレームの開き方・戻り方）、`result_size_check.js`（結果画面のカード・国旗の大きさを幅ごとに。iPhone はシミュレーターの Safari で `/dev/tests/result_size.html`）、`spectator_check.js`（観戦中の「みんなの手札」。iPhone は `/dev/tests/spectator.html`）、`update_reload_check.js`（更新の自動読み直し）
+- ブラウザで使うもの（`/dev/tests/…` から読み込む。読み込み方はスキルに書いてある）: `layout_snapshot.js`（変更前後の比較）、`layout_check.js`（横はみ出し）、`contrast_check.js`（文字の見やすさ。ダークモードも）、`app_frame_check.js`（アプリ内フレームの開き方・戻り方）、`result_size_check.js`（結果画面のカード・国旗の大きさを幅ごとに。iPhone はシミュレーターの Safari で `/dev/tests/result_size.html`）、`spectator_check.js`（観戦中の「みんなの手札」。iPhone は `/dev/tests/spectator.html`）、`update_reload_check.js`（更新の自動読み直し）、`quiz_hard_check.js`（クイズの「激ムズ」: 似ている国旗のグループから4択）
 - サーバーのテスト: `GEOKING_WS=ws://localhost:8090/ws python3 tests/e2e_two_players.py` と `tests/e2e_solo_bot.py`。更新時の部屋の引っ越し（古いサーバー → 新しいサーバー）は `python3 tests/test_migration.py`（手元で Render の切り替えを再現する。部屋の中身の項目を足したら room_to_dict / room_from_dict にも足す）。別のアプリ（LINE など）に行って戻ったときに部屋に戻れるか（切断の猶予・つなぎ直し）は `python3 tests/test_away_return.py`。出来事を Google スプレッドシートに残すしくみ（`sheet_log`、設定は `docs/sheet-log/README.md`）は `python3 tests/test_sheet_log.py`（サーバー側）と `node tests/sheet_log_gs_test.js`（スプレッドシート側の Code.gs）。結果画面の順位（終わった時点のまま、退出しても変えない）は `GEOKING_WS=ws://localhost:8090/ws python3 tests/test_final_standings.py`。記録する出来事や列を変えたら、プライバシーポリシーとストアの申告（docs/appstore-submission.md・docs/googleplay-submission.md）も合わせる
 
 ## そのほか

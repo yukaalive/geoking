@@ -394,6 +394,8 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .qmode .qm-head{font-family:var(--font-body);font-weight:900;font-size:22px;letter-spacing:.03em;display:flex;align-items:center;gap:10px}
 .qmode .qm-head .ico{width:1.3em;height:1.3em;color:var(--primary)}
 .qmode .qm-desc{font-weight:700;color:var(--muted);font-size:15px;line-height:1.5}
+div.qmode{border:2px solid var(--ink)}div.qmode:hover{transform:none;box-shadow:var(--shadow)}   /* モードの枠（押すのは中の「ふつう」「激ムズ」） */
+.qm-acts{display:flex;gap:10px;margin-top:6px}.qm-acts button{flex:1;padding:10px 8px;white-space:nowrap}.qm-acts .primary .ico{color:var(--primary-ink)}   /* 「激ムズ」の王冠はボタンの文字と同じ色（緑の上で見えるように） */
 .qbar{display:flex;align-items:center;gap:12px;font-weight:800}
 .qbar .qprog b{font-family:var(--font-head);font-size:22px}
 .qbar .qscore{margin-left:auto;font-family:var(--font-head);font-size:18px;color:var(--primary)}

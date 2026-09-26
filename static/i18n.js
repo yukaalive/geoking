@@ -68,7 +68,7 @@ const I18N = {
     zukan_title: '図鑑 - 地理王',
     // クイズ
     quiz: 'クイズ', quiz_title: '国旗クイズ - 地理王', quiz_heading: 'ひとりで国旗クイズ', solo_quiz: 'ひとりで国旗クイズ',
-    mode_flag: '国旗モード', mode_flag_desc: '国名を見て、正しい国旗を4枚から選ぶ', mode_name: '国名モード', mode_name_desc: '国旗を見て、正しい国名を4つから選ぶ',
+    mode_flag: '国旗モード', mode_flag_desc: '国名を見て、正しい国旗を4枚から選ぶ', mode_name: '国名モード', mode_name_desc: '国旗を見て、正しい国名を4つから選ぶ', level_normal: 'ふつう', level_hard: '激ムズ',
     learn_first: '先に図鑑で覚える', question: '問題', quit: 'やめる', which_flag: 'この国の国旗は？', which_name: 'この国旗の国は？',
     correct: '正解！', wrong_answer: 'ざんねん… 正解は {name}', res_perfect: '全問正解！地理王！', res_great: 'すごい！', res_good: 'いいね！', res_tryagain: 'もう一度チャレンジ！',
     review_wrong: 'まちがえた国（タップでデータ）', replay_same: '同じ問題でもう一度', play_again: '新しい問題に挑戦', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
@@ -132,7 +132,7 @@ const I18N = {
     rank_info: '{prompt} Sorted {dir}. {missing}{region}', dir_desc: 'from largest', dir_asc: 'from smallest', excluded_missing: '{n} countries without data excluded. ', only_region: '({r} only)',
     zukan_title: 'Study - GeoKing',
     quiz: 'Quiz', quiz_title: 'Flag Quiz - GeoKing', quiz_heading: 'Solo flag quiz', solo_quiz: 'Solo flag quiz',
-    mode_flag: 'Flag mode', mode_flag_desc: 'See the country name, pick the right flag out of 4', mode_name: 'Name mode', mode_name_desc: 'See the flag, pick the right country name out of 4',
+    mode_flag: 'Flag mode', mode_flag_desc: 'See the country name, pick the right flag out of 4', mode_name: 'Name mode', mode_name_desc: 'See the flag, pick the right country name out of 4', level_normal: 'Normal', level_hard: 'Hard',
     learn_first: 'Study the flags first', question: 'Question', quit: 'Quit', which_flag: 'Which flag is this country?', which_name: 'Which country is this flag?',
     correct: 'Correct!', wrong_answer: 'Not quite… it was {name}', res_perfect: 'Perfect! You are the GeoKing!', res_great: 'Great job!', res_good: 'Nice!', res_tryagain: 'Try again!',
     review_wrong: 'Countries you missed (tap for details)', replay_same: 'Same questions again', play_again: 'New questions', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',

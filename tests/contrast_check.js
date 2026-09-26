@@ -87,8 +87,9 @@
   {
     const fr = await open('/static/quiz.html'); const w = fr.contentWindow;
     audit(w, 'クイズ（メニュー）', out);
-    for (const [i, name] of [[0, '国旗モード'], [1, '国名モード']]) {
-      w.document.querySelectorAll('.qmode')[i].click(); await sleep(800); audit(w, `クイズ（${name}の問題）`, out);
+    for (const [sel, name] of [['[data-mode="flag"][data-level="normal"]', '国旗モード'], ['[data-mode="name"][data-level="normal"]', '国名モード'],
+                               ['[data-mode="flag"][data-level="hard"]', '国旗モード・激ムズ'], ['[data-mode="name"][data-level="hard"]', '国名モード・激ムズ']]) {
+      w.document.querySelector('.qlevel' + sel).click(); await sleep(800); audit(w, `クイズ（${name}の問題）`, out);
       const ans = w.eval('qList[qIdx].answer.id');
       [...w.document.querySelectorAll('.qopt')].find(b => b.dataset.id !== ans).click(); await sleep(250);   // わざと間違えて、正解・不正解の両方を出す
       audit(w, `クイズ（${name}で答えた直後）`, out);
