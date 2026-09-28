@@ -2,7 +2,7 @@
 const sleep = AD.sleep;
 const players = [P(ME, 'はなこ', { score: 4 }), P('p2', 'たろう', { score: 3 }), P('p3', 'ゆうと', { score: 2 }), P('p4', 'さくら', { score: 1 })];
 const hands = [['cn', 'fi', 'ar', 'eg', 'no', 'pe', 'th', 'de'], ['it', 'ng', 'ca', 'vn', 'se', 'cl', 'ma', 'au'], ['is', 'id', 'tr', 'gr', 'za', 'nz', 'in', 'ch']];
-const pr = [PR('pop_max'), PR('life_max'), { id: 'north', cat: 'basic', text: '最も北にある国は？', key: 'lat', dir: 'max', star: 1, hint: '', text_en: 'Which country is the northernmost?' }];
+const pr = [PR('area_max'), PR('life_max'), { id: 'north', cat: 'basic', text: '最も北にある国は？', key: 'lat', dir: 'max', star: 1, hint: '', text_en: 'Which country is the northernmost?' }];
 await Promise.all(hands.flat().map(id => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = flagUrl(id); })));   // 国旗を先に読み込む（出たときに白い枠が見えないように）
 document.documentElement.style.zoom = 1.18;
 SHOW(BASE({ phase: 'pick', round: 2, prompt: pr[0], hand: hands[0], players, deadline: Date.now() / 1000 + 30 }));
