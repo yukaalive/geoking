@@ -1,9 +1,10 @@
-"""場面を決めた長さに切ってつなぎ、スマホの枠と字幕の帯を付けて、音なしの広告用の動画にする。
+"""場面を決めた長さに切ってつなぎ、スマホの枠と字幕の帯と BGM を付けて、広告用の動画にする。
 python3 compose.py 45|916 6|10|15|30 出力.mp4   （45 = 4:5 の 1080×1350、916 = 9:16 の 1080×1920）
-2026-09-28: 音（ナレーション・BGM・効果音）はなし。長さは 6・10・15・30 秒の4つ。バトル（体力を減らし合うゲーム）の場面を足した"""
-import json, os, subprocess, sys
-import imageio_ffmpeg
-H = os.path.dirname(os.path.abspath(__file__)); FF = imageio_ffmpeg.get_ffmpeg_exe()
+2026-09-28: 音は BGM だけ（前と同じ曲・入りと終わり・音量）。ナレーションと効果音はなし。長さは 6・10・15・30 秒の4つ。バトル（体力を減らし合うゲーム）の場面を足した"""
+import json, os, subprocess, sys, wave
+import numpy as np, imageio_ffmpeg
+H = os.path.dirname(os.path.abspath(__file__)); FF = imageio_ffmpeg.get_ffmpeg_exe(); SR = 48000
+BGM = os.path.join(os.path.dirname(H), 'bgm_chiisana_synth_no_niwa.mp3')   # 前の広告と同じ曲
 LAY, VAR, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 L = json.load(open(os.path.join(H, 'assets', 'layouts.json')))[LAY]
 # 長さごとの場面: (場面, 録画の何秒目から, 何秒使うか, 字幕)。録画の頭の 0.2〜0.25 秒は、録り始めてから台本が動くまでの間
@@ -31,15 +32,25 @@ TOTAL = t
 lst = os.path.join(H, 'seg', f'{LAY}_{VAR}_list.txt'); open(lst, 'w').write(''.join(f"file '{p}'\n" for p in parts))
 app = os.path.join(H, 'seg', f'{LAY}_{VAR}_app.mp4')
 run(['-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', app])
-# 絵: クリーム色の地 → スマホの画面 → 枠（角を丸く切る）→ 字幕の帯（場面ごと）。音は入れない（-an）
+# 音: BGM だけ。前の広告と同じく曲の頭から、入りは0.3秒・終わりは1秒で小さく（くり返し再生で頭に戻っても急に変わらない）、音量は -16 LUFS にそろえる
+N = int(round(TOTAL * SR)); bgmwav = os.path.join(H, 'bgm48.wav')
+if not os.path.exists(bgmwav): run(['-i', BGM, '-vn', '-ac', '1', '-ar', str(SR), bgmwav])
+with wave.open(bgmwav) as w: bgm = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float64) / 32768
+bgm = np.pad(bgm[:N], (0, max(0, N - len(bgm))))
+fi, fo = int(0.3 * SR), int(1.0 * SR); bgm[:fi] *= np.linspace(0.15, 1, fi); bgm[-fo:] *= np.linspace(1, 0.15, fo)
+mix = np.tanh(bgm * 0.26 * 1.05) * 0.95
+wav = os.path.join(H, 'seg', f'{LAY}_{VAR}_bgm.wav'); wavn = os.path.join(H, 'seg', f'{LAY}_{VAR}_bgm_n.wav')
+with wave.open(wav, 'wb') as w: w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((mix * 32767).astype(np.int16).tobytes())
+run(['-i', wav, '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11', '-ar', str(SR), '-ac', '2', wavn])
+# 絵: クリーム色の地 → スマホの画面 → 枠（角を丸く切る）→ 字幕の帯（場面ごと）
 inputs = ['-f', 'lavfi', '-i', f"color=c=0xf7f1df:s={L['W']}x{L['H']}:r=30:d={TOTAL}", '-i', app, '-i', os.path.join(H, 'assets', f'frame_{LAY}.png')]
 chain = [f"[0][1]overlay=x={L['ph_x']}:y={L['ph_y']}:shortest=1[a]", "[a][2]overlay=0:0[b]"]; last = 'b'
 for i, (cap, a, b) in enumerate(bands):
     inputs += ['-i', os.path.join(H, 'assets', f'band_{LAY}_{cap}.png')]
     chain.append(f"[{last}][{3 + i}]overlay=0:{L['band_y']}:enable='between(t,{a:.3f},{b - 0.001:.3f})'[c{i}]"); last = f'c{i}'
-run([*inputs, '-filter_complex', ';'.join(chain), '-map', f'[{last}]', '-an',
+run([*inputs, '-i', wavn, '-filter_complex', ';'.join(chain), '-map', f'[{last}]', '-map', f'{3 + len(bands)}:a',
      '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-r', '30', '-crf', '19', '-maxrate', '8M', '-bufsize', '16M', '-preset', 'slow',
-     '-t', f'{TOTAL:.3f}', '-movflags', '+faststart', OUT])
+     '-c:a', 'aac', '-b:a', '128k', '-ar', str(SR), '-t', f'{TOTAL:.3f}', '-movflags', '+faststart', OUT])
 # サムネイル（答え合わせの金のカード）
 rv = next(b for b in bands if b[0] == 'reveal')
 run(['-ss', f'{rv[1] + min(1.4, (rv[2] - rv[1]) * 0.6):.2f}', '-i', OUT, '-frames:v', '1', OUT.replace('.mp4', '_thumb.png')])
