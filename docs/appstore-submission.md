@@ -31,12 +31,12 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 ### スクリーンショット（2026-09-26 に今の画面で撮り直し。`docs/store-assets/make_promo.py appstore` で作る。元の画面は `docs/store-assets/ios-*.png`）
 - iPhone 6.9インチの欄: `docs/store-assets/promo/appstore69-1.png` 〜 `appstore69-6.png`（1320×2868）をこの順で6枚
 - 6.5インチの欄: `appstore65-1.png` 〜 `appstore65-6.png`（1284×2778）。6.7インチ（1290×2796）は `appstore-1..6.png`
-- 1〜4: 対戦（ホーム・お題・答え合わせ・国データ）、5: 図鑑（ランキング）、6: ひとりで国旗クイズ。5・6 は App Store だけ（Play 用は作らない）
+- 1〜4: 対戦（ホーム・お題・答え合わせ・国データ）、5: 図鑑（ランキング）、6: ひとりでクイズ。5・6 は App Store だけ（Play 用は作らない）
 - iPad は対象外（iPhone のみ）
 - 画像の文には「裏」「めくる」を使わない（このゲームは裏返さない。2026-09-26 に直した）
 
 ### プロモーション用テキスト（170字まで。審査なしでいつでも変えられる）
-国旗だけを見て「面積が大きい国は？」「人口密度が高い国は？」に答える、みんなで遊べる地理カードゲーム。知識がなくても勘で勝てるかも？ ひとりでも、ボットとの対戦・国旗クイズ・図鑑で楽しめます。
+国旗だけを見て「面積が大きい国は？」「人口密度が高い国は？」に答える、みんなで遊べる地理カードゲーム。知識がなくても勘で勝てるかも？ ひとりでも、ボットとの対戦・国旗や首都のクイズ・図鑑で楽しめます。
 
 ### 概要
 国旗だけで、どんな国かを当てる地理カードゲーム。
@@ -48,7 +48,7 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 
 ■ ひとりでも
 ・ボットと対戦
-・ひとりで国旗クイズ
+・ひとりでクイズ（国旗・国名・首都）
 ・図鑑：197の国と地域のデータと、お題ごとの世界ランキング
 
 ■ 遊ぶほど、世界に強くなる
@@ -57,7 +57,7 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 
 ### このバージョンの最新情報（1.1）
 ・アイコンの黒い枠をなくしました
-・「ひとりで国旗クイズ」を追加しました
+・「ひとりでクイズ」（国旗・国名・首都）を追加しました
 ・部屋の名前で、友だちの部屋に入れるようになりました
 ・英語の表示に対応しました
 ・ほかのアプリを少し開いても、同じ部屋で続けられるようになりました
@@ -99,7 +99,7 @@ To stop early, tap 「退出」 (Leave) at the top left. The host can also tap �
 
 Single-player features on the home screen:
 - 「図鑑で学ぶ」 (Study mode): all 197 flags with search, rankings for each prompt, and a country sheet with data, world rank and a world map. Tap 「対戦へ戻る」 (Back to game) to return.
-- 「ひとりで国旗クイズ」 (Solo flag quiz): 10 questions with 4 choices each (Flag mode / Name mode).
+- 「ひとりでクイズ」 (Solo quiz): 10 questions with 4 choices each (Flag mode / Name mode / Capital mode, each Normal or Hard).
 
 Playing with others (optional): in the lobby, tap the share icon at the top right to send an invite link with the iOS share sheet. On a second device, either open the link (it opens in Safari; enter a nickname and tap 「参加する」 (Join)), or in the app enter a nickname, type the room name shown in bold in the lobby (by default the host's nickname; a number is added if that name is already taken) into 「友だちの部屋の名前」 (Friend's room name) on the home screen, and tap 「参加する」 (Join). The shared message also shows a 4-letter room code; typing that code instead of the room name also works.
 

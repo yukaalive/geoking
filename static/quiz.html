@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1f6f4a">
-<title data-i18n="quiz_title">国旗クイズ - 地理王</title>
-<meta name="description" content="国旗を見て国名を当てる、ひとりで遊べる国旗クイズ。10問・4択、全197か国から出題。地理王（GeoKing）">
+<title data-i18n="quiz_title">クイズ - 地理王</title>
+<meta name="description" content="国旗・国名・首都を当てる、ひとりで遊べるクイズ。10問・4択、世界の国から出題。地理王（GeoKing）">
 <link rel="canonical" href="https://geoking-vlgh.onrender.com/static/quiz.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,7 @@
 <main>
   <!-- モード選択 -->
   <section id="qmenu" class="qscreen">
-    <h1 data-i18n="quiz_heading">ひとりで国旗クイズ</h1>
+    <h1 data-i18n="quiz_heading">ひとりでクイズ</h1>
     <div class="qmodes">
       <div class="qmode">
         <div class="qm-head"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> <span data-i18n="mode_flag">国旗モード</span></div>
@@ -32,6 +32,11 @@
         <div class="qm-head"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="mode_name">国名モード</span></div>
         <div class="qm-desc" data-i18n="mode_name_desc">国旗を見て、正しい国名を4つから選ぶ</div>
         <div class="qm-acts"><button class="qlevel" data-mode="name" data-level="normal" data-i18n="level_normal">ふつう</button><button class="qlevel primary" data-mode="name" data-level="hard"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> <span data-i18n="level_hard">激ムズ</span></button></div>
+      </div>
+      <div class="qmode">
+        <div class="qm-head"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#city"/></svg> <span data-i18n="mode_capital">首都モード</span></div>
+        <div class="qm-desc" data-i18n="mode_capital_desc">国を見て、正しい首都を4つから選ぶ</div>
+        <div class="qm-acts"><button class="qlevel" data-mode="capital" data-level="normal" data-i18n="level_normal">ふつう</button><button class="qlevel primary" data-mode="capital" data-level="hard"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg> <span data-i18n="level_hard">激ムズ</span></button></div>
       </div>
     </div>
     <p class="muted small"><a href="/static/zukan.html" class="muted" data-i18n="learn_first">先に図鑑で覚える</a></p>

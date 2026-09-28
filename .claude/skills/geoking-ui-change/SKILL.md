@@ -57,6 +57,7 @@ window.__r = null; layoutSnapshot('before').then(r => window.__r = r);
 | 更新の自動読み直し（app.js の checkForUpdate・/api/version） | `tests/update_reload_check.js`（新しい版が見つかったとき、ホームで何もしていなければ読み直し、入力中・操作の直後・小窓や図鑑の枠・部屋にいる間は待つ）。アプリで確かめるなら、裏に回す → 版を変えてサーバーを立て直す（GEOKING_VERSION_SALT）→ 戻す |
 | クイズ（ふつう・激ムズ、似ている国旗のグループ SIMILAR_FLAGS） | `tests/quiz_hard_check.js`（激ムズの4択がどれも同じグループか・10問で答えが重ならないか・同じ問題でもう一度） |
 | 観戦中の画面（みんなの手札・考え中/選択中/勝負の札） | `tests/spectator_check.js`（部屋を作って途中から観戦に入り、幅ごとに国旗の並びとはみ出しを見る）。iPhone は `/dev/tests/spectator.html` |
+| クイズ（モード・問題・選択肢・激ムズのグループ・首都） | `tests/quiz_hard_check.js`（国旗・国名モードの激ムズ）と `tests/quiz_capital_check.js`（首都モード。全部の首都が 320px のボタンに収まるか・出さない国・似ている首都のグループ）。国データの首都を直したときも `quiz_capital_check.js` |
 
 読み込み方（ほかのスクリプトも同じ）:
 

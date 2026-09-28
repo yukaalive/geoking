@@ -1,6 +1,7 @@
-/* ひとりで国旗クイズ（サーバー不要。国データは /api/meta）
+/* ひとりでクイズ（サーバー不要。国データは /api/meta）
    - 国旗モード: 国名 → 国旗を4枚から選ぶ
    - 国名モード: 国旗 → 国名を4つから選ぶ
+   - 首都モード: 国（国旗＋国名）→ 首都を4つから選ぶ（2026-09-28。激ムズは SIMILAR_CAPITALS）
    10問・4択。むずかしさ「ふつう」はまちがい選択肢を同じ地域の国から優先して選ぶ。
    「激ムズ」は、似ている国旗のグループ（SIMILAR_FLAGS）と名前が似ている国のグループ（SIMILAR_NAMES）をまぜて、1問ごとに別のグループから4つを選択肢にする。どちらのモードも同じ */
 const Q_TOTAL = 10;
@@ -78,12 +79,58 @@ const SIMILAR_NAMES = [
   ['ck', 'mh', 'sb', 'fm'],   // 〜諸島（太平洋）
 ];
 
+// 首都モードで出さない国（はずれの選択肢にも使わない）: 首都が国名と同じ・国名＋シティ・国名の一部で答えが見える国、首都の考え方が国によって分かれる国（イスラエル）、法律で決めた首都がない国（ナウル）
+const CAPITAL_SKIP = new Set(['sg', 'kw', 'dj', 'mc', 'lu', 'sm', 'va', 'mx', 'gt', 'pa', 'ad', 'st', 'gw', 'dz', 'il', 'nr']);
+// 首都が似ていて、ふつうでは同じ問題に並べない組（激ムズの「〜タウン」「カリブの島」のグループには入れる）
+const CAPITAL_TWINS = [['jm', 'vc'], ['ag', 'gd']];
+// 似ている首都のグループ（首都モードの激ムズ用。国旗・国名のグループとはまぜない）。1グループ4か国以上。2026-09-28 に作った一覧
+const SIMILAR_CAPITALS = [
+  ['jm', 'vc', 'gy', 'bb', 'sl'],   // 〜トン・〜タウン（キングストン・キングスタウン・ジョージタウン…）
+  ['ag', 'gd', 'kn', 'lc', 'dm'],   // カリブの島（セントジョンズ・セントジョージズ…）
+  ['mu', 'pg', 'vu', 'tt', 'ht', 'bj'],   // ポート〜・ポルト〜
+  ['cl', 'cr', 'do', 'sv', 'ba', 'ye'],   // サン〜・サント〜
+  ['hu', 'ro', 'sk', 'be'],   // ブダペスト・ブカレスト・ブラチスラバ・ブリュッセル
+  ['de', 'ch', 'bz', 'rs', 'lb'],   // ベルリン・ベルン・ベルモパン・ベオグラード・ベイルート
+  ['bd', 'sn', 'sy', 'ie'],   // ダッカ・ダカール・ダマスカス・ダブリン
+  ['ae', 'ng', 'jo', 'tr'],   // アブダビ・アブジャ・アンマン・アンカラ
+  ['ni', 'bh', 'ph', 'mh', 'mz'],   // マナグア・マナーマ・マニラ・マジュロ・マプト
+  ['uy', 'lr', 'km', 'ru', 'so', 'me'],   // モンテビデオ・モンロビア・モロニ・モスクワ・モガディシュ・ポドゴリツァ
+  ['pe', 'lv', 'tg', 'fj', 'ec', 'mv'],   // 2文字の首都（リマ・リガ・ロメ・スバ・キト・マレ）
+  ['mv', 'ml', 'my', 'mt'],   // マレ ≒ マリ・マレーシア・マルタ
+  ['ao', 'zm', 'mw', 'rw'],   // ルアンダ ≒ ルワンダ
+  ['lr', 'sl', 'ga', 'gn', 'ci', 'cm'],   // ギニア湾ぞい（モンロビア・フリータウン・リーブルビル…）
+  ['br', 'cg', 'sk', 'bb'],   // ブラジリア・ブラザビル・ブラチスラバ・ブリッジタウン
+  ['ly', 'ge', 'al', 'ir'],   // トリポリ・トビリシ・ティラナ・テヘラン
+  ['kz', 'er', 'py', 'tm'],   // アスタナ・アスマラ・アスンシオン・アシガバット
+  ['ne', 'td', 'mr', 'ng', 'bf'],   // ニアメ・ンジャメナ・ヌアクショット・アブジャ・ワガドゥグ
+  ['cz', 'cv', 'xk', 'za', 'kh'],   // プラハ・プライア・プリシュティナ・プレトリア・プノンペン
+  ['ws', 'nu', 'ck', 'to', 'tv'],   // 太平洋（アピア・アロフィ・アバルア・ヌクアロファ・フナフティ）
+  ['th', 'bn', 'cf', 'gm', 'ml'],   // バン〜（バンコク・バンダルスリブガワン・バンギ・バンジュール・バマコ）
+  ['cd', 'cg', 'cf', 'cm', 'ao'],   // 2つのコンゴ（キンシャサ・ブラザビル…）
+  ['sk', 'si', 'lv', 'lt'],   // スロバキア／スロベニア・ラトビア／リトアニア
+  ['at', 'au', 'al', 'am'],   // オーストリア／オーストラリア
+  ['py', 'uy', 'ar', 'cl', 'pe'],   // 南アメリカ
+  ['dm', 'do', 'cu', 'ht', 'bs', 'jm'],   // 2つのドミニカとカリブ
+  ['kz', 'uz', 'kg', 'tj', 'tm', 'af', 'pk'],   // 〜スタン
+  ['lv', 'ee', 'lt', 'fi', 'by'],   // バルト三国とまわり
+  ['au', 'ca', 'nz', 'za'],   // 大都市が首都ではない国
+  ['ir', 'iq', 'sy', 'sa'],   // イラン／イラクとまわり
+  ['sd', 'ss', 'et', 'er', 'so'],   // スーダン／南スーダンとまわり
+  ['vn', 'cu', 'zw', 'fi', 'sb'],   // ハノイ・ハバナ・ハラレ・ヘルシンキ・ホニアラ
+  ['md', 'ua', 'rw', 'ec', 'cd'],   // キ〜（キシナウ・キーウ・キガリ・キト・キンシャサ）
+  ['af', 'np', 've', 'lc', 'eg'],   // カブール・カトマンズ・カラカス・カストリーズ・カイロ
+  ['ke', 'ug', 'tz', 'rw', 'bi'],   // 東アフリカ
+];
+const capName = (c) => (LANG === 'en' ? c.capital : (c.capital_ja || c.capital)) || '';
+const capitalOk = (c) => !!c && !CAPITAL_SKIP.has(c.id) && !!c.capital && !!c.capital_ja;
+
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-function makeQuestions(hard) {
-  const all = Object.values(META.countries);
-  if (hard) {   // 国旗のグループと名前のグループをまぜて10個選び、それぞれから答え1つと、同じグループのほかの3つ
-    const groups = shuffle([...SIMILAR_FLAGS, ...SIMILAR_NAMES].map(g => g.filter(id => META.countries[id])).filter(g => g.length >= 4));
+function makeQuestions(hard, mode) {
+  const cap = mode === 'capital';
+  const all = Object.values(META.countries).filter(c => !cap || capitalOk(c));   // 首都モードは、出さない国をはずれにも使わない
+  if (hard) {   // グループをまぜて10個選び、それぞれから答え1つと、同じグループのほかの3つ（首都モードは似ている首都のグループだけ）
+    const groups = shuffle((cap ? SIMILAR_CAPITALS : [...SIMILAR_FLAGS, ...SIMILAR_NAMES]).map(g => g.filter(id => META.countries[id] && (!cap || capitalOk(META.countries[id])))).filter(g => g.length >= 4));
     const used = new Set(), qs = [];
     for (const g of groups) {
       if (qs.length >= Q_TOTAL) break;
@@ -96,11 +143,13 @@ function makeQuestions(hard) {
     }
     return qs;
   }
+  const twin = (a, b) => cap && CAPITAL_TWINS.some(([x, y]) => (a === x && b === y) || (a === y && b === x));   // 首都モードのふつう: キングストンとキングスタウンのような組は並べない
   const picked = shuffle([...all]).slice(0, Q_TOTAL);
   return picked.map(c => {
-    const same = all.filter(x => x.id !== c.id && x.region === c.region);
-    const pool = same.length >= 3 ? same : all.filter(x => x.id !== c.id);
-    const wrong = shuffle([...pool]).slice(0, 3);
+    const same = all.filter(x => x.id !== c.id && x.region === c.region && !twin(x.id, c.id));
+    const pool = same.length >= 3 ? same : all.filter(x => x.id !== c.id && !twin(x.id, c.id));
+    const wrong = [];
+    for (const x of shuffle([...pool])) { if (wrong.length >= 3) break; if (!wrong.some(w => twin(w.id, x.id))) wrong.push(x); }
     return { answer: c, options: shuffle([c, ...wrong]) };
   });
 }
@@ -112,7 +161,7 @@ function renderMenu() {
 }
 
 function startQuiz(mode, same = false, hard = false) {   // same: 直前と全く同じ問題（問題の順番・4つの選択肢と並びも同じ）でもう一度。hard: 激ムズ
-  qMode = mode; qHard = hard; if (!same || !qList.length) qList = makeQuestions(hard); qIdx = 0; qScore = 0; qWrong = [];
+  qMode = mode; qHard = hard; if (!same || !qList.length) qList = makeQuestions(hard, mode); qIdx = 0; qScore = 0; qWrong = [];
   $('#qTotal').textContent = Q_TOTAL;
   sfx.start();
   showScreen('qplay');
@@ -132,6 +181,13 @@ function renderQuestion() {
     for (const c of q.options) {
       const b = el('button', 'qopt flag'); b.dataset.id = c.id;
       b.innerHTML = `<img src="${flagUrl(c.id, 320)}" alt="">`;
+      b.onclick = () => answer(c.id, b); box.appendChild(b);
+    }
+  } else if (qMode === 'capital') {   // 国（小さめの国旗＋国名）を見て首都を選ぶ。どの首都の国かは、答えたあとにボタンの中に出す（はじめから場所を取っておき、形が変わらないように）
+    pr.innerHTML = `<div class="qp-label">${t('which_capital')}</div><img class="qp-flag qp-small" src="${flagUrl(q.answer.id, 640)}" alt=""><div class="qp-name qp-country">${escapeHtml(cname(q.answer))}</div>`;
+    box.className = 'qoptions names capitals';
+    for (const c of q.options) {
+      const b = el('button', 'qopt name capital', `${escapeHtml(capName(c))}<span class="qopt-nm later">${escapeHtml(cname(c))}</span>`); b.dataset.id = c.id;
       b.onclick = () => answer(c.id, b); box.appendChild(b);
     }
   } else {
@@ -154,10 +210,11 @@ function answer(id, btn) {
     else if (b === btn) b.classList.add('wrong');
     else b.classList.add('dim');
     if (qMode === 'flag') b.insertAdjacentHTML('beforeend', `<span class="qopt-nm">${escapeHtml(cname(META.countries[b.dataset.id]))}</span>`);
+    const later = b.querySelector('.qopt-nm.later'); if (later) later.classList.remove('later');   // 首都モード: どの国の首都かを出す
   });
   const fb = $('#qFeedback');
   if (ok) { qScore++; fb.textContent = t('correct'); fb.className = 'qfeedback ok'; sfx.win(); }
-  else { qWrong.push(q.answer); fb.textContent = t('wrong_answer', { name: cname(q.answer) }); fb.className = 'qfeedback ng'; sfx.error(); }
+  else { qWrong.push(q.answer); fb.textContent = t('wrong_answer', { name: qMode === 'capital' ? capName(q.answer) : cname(q.answer) }); fb.className = 'qfeedback ng'; sfx.error(); }
   $('#qScore').textContent = qScore;
   setTimeout(() => { qIdx++; if (qIdx >= Q_TOTAL) finish(); else renderQuestion(); }, ok ? 1000 : 1700);
 }
@@ -175,7 +232,7 @@ function finish() {
   const wrap = $('#qWrongWrap'), box = $('#qWrong'); box.innerHTML = '';
   wrap.classList.toggle('hidden', qWrong.length === 0);
   for (const c of qWrong) {
-    const d = el('div', 'qw'); d.innerHTML = `<img src="${flagUrl(c.id, 160)}" alt=""><div>${escapeHtml(cname(c))}</div>`;
+    const d = el('div', 'qw'); d.innerHTML = `<img src="${flagUrl(c.id, 160)}" alt=""><div>${escapeHtml(cname(c))}</div>${qMode === 'capital' ? `<div class="qw-cap">${escapeHtml(capName(c))}</div>` : ''}`;
     d.onclick = () => { sfx.select(); showCountry(c.id); }; box.appendChild(d);
   }
   showScreen('qresult');
@@ -208,6 +265,6 @@ function spawnConfetti(target, tier) {
   $('#modal').onclick = (e) => { if (e.target.id === 'modal') { $('#modal').classList.add('hidden'); sfx.close(); } };
   window.onLangChange = () => { document.title = t('quiz_title'); if (!$('#qmenu').classList.contains('hidden')) renderMenu(); renderPrefs(); };
   const q = new URLSearchParams(location.search);
-  if (q.get('mode') === 'flag' || q.get('mode') === 'name') startQuiz(q.get('mode'), false, q.get('level') === 'hard'); else renderMenu();
+  if (['flag', 'name', 'capital'].includes(q.get('mode'))) startQuiz(q.get('mode'), false, q.get('level') === 'hard'); else renderMenu();
   frameReady();
 })();

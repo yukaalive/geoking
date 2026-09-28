@@ -386,7 +386,7 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .dl .r{color:var(--muted);font-size:11px;margin-left:6px;font-weight:700}
 @media(max-width:560px){.rank-list li{gap:8px;padding:8px 2px}.rank-list img{width:44px;height:30px;flex:none}.rank-list .rk{width:30px;font-size:15px;flex:none}.rank-list .nm{min-width:0;font-size:14px;line-height:1.25}.rank-list .val{white-space:normal;text-align:right;max-width:38%;font-size:14px;line-height:1.2}}
 
-/* ---------- ひとりで国旗クイズ */
+/* ---------- ひとりでクイズ（国旗・国名・首都） */
 .qscreen h1{font-size:28px;font-weight:400;letter-spacing:.02em}
 .qmodes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
 @media(max-width:600px){.qmodes{grid-template-columns:1fr}}
@@ -416,6 +416,9 @@ div.qmode{border:2px solid var(--ink)}div.qmode:hover{transform:none;box-shadow:
 .qopt.wrong{background:#ffe1d9;border-color:var(--accent-2);box-shadow:3px 3px 0 var(--accent-2);animation:shakeX .4s}
 .qopt.dim{opacity:.45}
 .qopt-nm{font-size:12px;font-weight:800;color:var(--muted)}
+.qp-flag.qp-small{width:min(40vw,190px)}.qp-name.qp-country{font-size:clamp(22px,5.5vw,32px);margin-top:8px}   /* 首都モード: 国は小さめの国旗＋国名で出す（4つのボタンまで動かさずに見えるように） */
+.qopt.capital{min-height:78px;padding-bottom:24px;overflow-wrap:anywhere;font-size:clamp(14px,4.4vw,17px)}.qopt.capital .qopt-nm{position:absolute;left:6px;right:6px;bottom:7px;line-height:1.2}.qopt-nm.later{visibility:hidden}   /* 首都のボタン: どの国の首都かは答えたあとに下の段に出す（下の段ははじめから空けておき、形が変わらない）。字は狭い画面では少し小さく（320px で14px。英語の長い1語 Yamoussoukro なども1行に入る）。それでも入らなければ折り返す */
+.qw .qw-cap{font-weight:700;color:var(--muted)}   /* 結果の「まちがえた国」: 首都モードでは首都も出す */
 .qopt.correct .qopt-nm{color:var(--primary)}
 @keyframes shakeX{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .qfeedback{text-align:center;font-family:var(--font-head);font-size:22px;min-height:34px;margin-top:14px}
