@@ -318,7 +318,7 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .chatlog{height:150px}
 .chatlog .who,.scores .who{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 .chatlog{height:130px}
-.history .hcard.rest{opacity:.85}   /* 使わなかった手札（外側の枠と地の色はなし）
+.history .hcard.rest{opacity:.85}   /* 使わなかった手札（外側の枠と地の色はなし） */
 .rev .wrank{margin-top:6px;display:inline-block;padding:2px 10px;border-radius:999px;border:2px solid var(--ink);background:var(--card);font-size:12px;font-weight:800}
 .rev .wrank b{font-family:var(--font-head);font-size:16px}
 .rev .wrank span{color:var(--muted);font-weight:700}
