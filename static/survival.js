@@ -223,7 +223,6 @@ const SV = (() => {
     if (r.damage == null) return '';
     return `<div class="sv-hdmg${r.damage ? '' : ' safe'}">${r.damage ? '−' + r.damage : '±0'}${r.out ? `<span class="tag sv-outtag">${t('sv_out')}</span>` : ''}</div>`;
   }
-  const ruleLine = () => t('sv_rule_line', { hp: maxHp(), max: maxDmg() });
 
-  return { on, bar, hpOf, renderStatus, renderScores, renderReveal, spectateText, renderFinal, endTitle, historyDamage, ruleLine };
+  return { on, bar, hpOf, renderStatus, renderScores, renderReveal, spectateText, renderFinal, endTitle, historyDamage };
 })();

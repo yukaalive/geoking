@@ -75,7 +75,6 @@ const I18N = {
     // 確認の小窓（common.js の askConfirm）
     ask_leave_ok: '退出する', ask_lobby_ok: 'ロビーに戻る', ask_quit_ok: 'やめる', ask_cancel: 'キャンセル', ask_continue: '続ける',
     // サバイバル（体力を減らし合う試作のルール。survival.js）
-    sv_rule_line: '<b>サバイバル</b>　体力{hp}。1位は減らず、最下位は{max}減る。0で脱落、最後の1人が勝ち',
     sv_start: 'サバイバル開始', sv_start_bot: 'botとサバイバル開始', sv_hp: '体力', sv_alive: 'のこり{n}人',
     sv_no_damage: 'ノーダメージ', sv_out: '脱落', sv_out_round: '{n}ラウンドで脱落',
     sv_next_label: '次のラウンド', sv_knocked: '{names} が脱落！', sv_decided: '決着！ {name} が最後の1人', sv_time_up: '時間切れ！ 体力の多い人の勝ち',
@@ -146,8 +145,7 @@ const I18N = {
     correct: 'Correct!', wrong_answer: 'Not quite… it was {name}', res_perfect: 'Perfect! You are the GeoKing!', res_great: 'Great job!', res_good: 'Nice!', res_tryagain: 'Try again!',
     review_wrong: 'Countries you missed', replay_same: 'Same questions again', play_again: 'New questions', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
     ask_leave_ok: 'Leave', ask_lobby_ok: 'Go to lobby', ask_quit_ok: 'Quit', ask_cancel: 'Cancel', ask_continue: 'Keep playing',
-    sv_rule_line: '<b>Survival</b>  {hp} HP. 1st place loses nothing, last place loses {max}. At 0 you are out; the last one standing wins',
-    sv_start: 'Start survival', sv_start_bot: 'Start survival with a bot', sv_hp: 'HP', sv_alive: '{n} left',
+    sv_start: 'Start survival', sv_start_bot: 'Start survival with bots', sv_hp: 'HP', sv_alive: '{n} left',
     sv_no_damage: 'No damage', sv_out: 'OUT', sv_out_round: 'Out in round {n}',
     sv_next_label: 'next round', sv_knocked: 'Out: {names}', sv_decided: 'Game over! {name} is the last one standing', sv_time_up: "Time's up! Most HP wins",
     sv_champion: '{names} survived — the GeoKing!',

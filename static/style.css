@@ -494,9 +494,6 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .sv-hp .sv-hpnum{position:absolute;left:8px;top:50%;z-index:1;transform:translateY(-50%);font-family:var(--font-head);font-weight:400;font-size:15px;line-height:1;color:#1c2b22;font-variant-numeric:tabular-nums}
 .sv-hpbox.small .sv-hp{width:84px;height:18px;border-width:1.5px}.sv-hpbox.small .sv-hpnum{left:6px;font-size:12px}
 .tag.sv-outtag{background:var(--ink);color:var(--card);letter-spacing:.05em}
-/* ロビー: ルールを1行 */
-.sv-rule{margin:12px 0 0;padding:8px 12px;border:2px dashed var(--line-soft);border-radius:12px;font-size:13px;font-weight:700;line-height:1.55;color:var(--ink)}
-.sv-rule b{color:var(--sv-red);font-weight:900;margin-right:2px}
 /* 「ラウンド 3」の下: 自分の体力と残りの人数 */
 .roundlabel .sv-status{display:flex;align-items:center;gap:6px;margin-top:4px;color:var(--ink)}
 .sv-status .sv-alive{font-size:12px;font-weight:900;padding:2px 9px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);margin-left:4px}

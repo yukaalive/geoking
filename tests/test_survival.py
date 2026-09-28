@@ -2,7 +2,8 @@
 1. 減り方の計算（サーバーの Room を直接動かす）: 1位は0・最下位は30・あいだは順位に合わせて四捨五入、同じ値は同じだけ、データのない国は最下位と同じ、
    全員データなしなら誰も減らない、体力0で脱落して手札を捨てる、残りが1人で決着、最後の順位（残った人 → あとまで残った人）
 2. 部屋で遊ぶ（WebSocket）: ロビーでルールをサバイバルにして（試作用のサーバーは最初から）、ボット3体と最後まで。毎ラウンドの減り方・手札が8枚のまま（1枚引く）・
-   脱落した人は出さない・最後の1人で終わる・もう一戦で体力が戻る。2人なら負けた方が30減る。ほかの人が抜けて1人になったら、その場で終わる"""
+   脱落した人は出さない・最後の1人で終わる・もう一戦で体力が戻る。2人なら負けた方が30減る。ほかの人が抜けて1人になったら、その場で終わる。
+   ひとりで「botとサバイバル開始」を押すとボットが2体入って3人で始まる（点のルールは1体）"""
 import asyncio, json, os, sys
 import aiohttp
 
@@ -241,6 +242,21 @@ async def last_one_by_leaving(s):
     print('OK leaving: the last one wins at once')
 
 
+async def solo_start_adds_two_bots(s):
+    a, room, me = await make_room(s, 'Fay', 0)
+    await a.send_json({'type': 'start', 'with_bot': True})   # ひとりで「botとサバイバル開始」→ ボット2体で3人（2人だと4回ほどで終わるので）
+    st = await recv_state(a, lambda d: d['phase'] == 'pick')
+    bots = [p for p in st['players'] if p['is_bot']]
+    assert len(st['players']) == 3 and len(bots) == 2 and len({p['name'] for p in st['players']}) == 3, st['players']
+    await a.close()
+    b, room2, _ = await make_room(s, 'Gus', 0, survival=False)   # 点のルールは今までどおり1体
+    await b.send_json({'type': 'start', 'with_bot': True})
+    st = await recv_state(b, lambda d: d['phase'] == 'pick')
+    assert len(st['players']) == 2 and sum(p['is_bot'] for p in st['players']) == 1, st['players']
+    await b.close()
+    print('OK solo start: survival adds 2 bots (3 players), points adds 1')
+
+
 async def points_unchanged(s):
     a, room, me = await make_room(s, 'Eve', 1, survival=False)
     await a.send_json({'type': 'start'})
@@ -259,6 +275,7 @@ async def main():
         await full_game(s)
         await two_players(s)
         await last_one_by_leaving(s)
+        await solo_start_adds_two_bots(s)
         await points_unchanged(s)
 
 

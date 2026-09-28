@@ -37,6 +37,7 @@ BOT_NAMES_EN = ['Emily', 'Michael', 'Olivia', 'James', 'Sophia', 'Noah', 'Emma',
 RULES = ('points', 'survival')
 SURV_HP = 100
 SURV_MAX_DAMAGE = 30
+SURV_SOLO_BOTS = 2     # ひとりで「botとサバイバル開始」を押したときに入れるボットの数（2人だと負けた方が30ずつ減り、4回ほどで終わってしまうので3人に）
 SURV_MAX_ROUNDS = 20
 TEST_SERVER = os.environ.get('GEOKING_RULE') == 'survival'   # 試作用のサーバー。検索エンジンには載せない（security_headers・robots.txt）
 
@@ -1182,7 +1183,8 @@ async def ws_session(ws):
             if len(room.players) < 2:
                 if not data.get('with_bot'):
                     return await error('2人以上（ボット可）で開始できます', 'need_two')
-                add_bot(room)   # 「botとゲーム開始」: ひとりのときはボットを1体入れて始める
+                for _ in range(SURV_SOLO_BOTS if room.survival() else 1):   # 「botとゲーム開始」: ひとりのときはボットを1体（サバイバルは2体）入れて始める
+                    add_bot(room)
             room.start()
             return await enter_pick_phase(room)
 

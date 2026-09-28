@@ -331,7 +331,6 @@ function renderLobby() {
   }
   $('#startBtn').textContent = SV.on() ? t(state.players.length < 2 ? 'sv_start_bot' : 'sv_start')
     : (state.players.length < 2 ? t('start_with_bot') : t('start_rounds', { n: state.settings.rounds }));
-  const rl = $('#svRule'); rl.classList.toggle('hidden', !SV.on()); rl.innerHTML = SV.on() ? SV.ruleLine() : '';   // サバイバルの部屋だけ: ルールを1行
 }
 
 function renderGame() {
