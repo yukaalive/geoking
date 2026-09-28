@@ -2,7 +2,7 @@
 """mledoze/countries + World Bank API + 手動データ を統合して countries.json を生成する。"""
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from manual_data import TEMP, RELIGION, CLIMATE, CAPITAL_JA
+from manual_data import TEMP, RELIGION, CLIMATE, CAPITAL_JA, CAPITAL_EN_OVERRIDES
 
 RAW = os.path.join(os.path.dirname(__file__), 'raw')
 OUT = os.path.join(os.path.dirname(__file__), 'countries.json')
@@ -124,7 +124,7 @@ def main():
             'name_official_en': c['name']['official'],
             'region': c['region'],
             'subregion': c.get('subregion', ''),
-            'capital': (c.get('capital') or [''])[0],
+            'capital': CAPITAL_EN_OVERRIDES.get(c['cca2']) or (c.get('capital') or [''])[0],   # 首都の英語名は外務省の首都に合わせて補正（manual_data.py）
             'capital_ja': CAPITAL_JA.get(c['cca2'], ''),
             'lat': c['latlng'][0], 'lng': c['latlng'][1],
             'area': c['area'],
