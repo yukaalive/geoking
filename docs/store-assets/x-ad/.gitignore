@@ -1,0 +1,7 @@
+frames/
+clips/
+seg/
+assets/
+*.wav
+vs_*.js
+*.mp4
