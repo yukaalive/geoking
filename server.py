@@ -27,6 +27,19 @@ BOT_NAMES_EN = ['Emily', 'Michael', 'Olivia', 'James', 'Sophia', 'Noah', 'Emma',
                 'Mia', 'Jacob', 'Isabella', 'Mason', 'Charlotte', 'Lucas', 'Amelia', 'Benjamin', 'Harper', 'Logan',
                 'Evelyn', 'Alexander', 'Abigail', 'Daniel', 'Emilia', 'Henry', 'Ella', 'Jackson', 'Grace', 'Samuel']
 
+# ---------- サバイバル（体力を減らし合う試作のルール）
+# 部屋の settings['rule'] が 'survival' のとき、点のかわりに体力（SURV_HP）を減らし合う。お題に合う国旗を全員が同時に1枚出すのは同じ。
+# めくったあと、1位は減らず、最下位は SURV_MAX_DAMAGE 減る（あいだは順位に合わせて。人数が減っても最下位はいつも同じだけ減る。4人なら 0・10・20・30）。
+# データのない国は最下位と同じ。体力0で脱落（そのゲームは観戦）。最後の1人が勝ち。毎ラウンド1枚引くので手札は減らない。
+# 長引いたときは SURV_MAX_ROUNDS で打ち切り、体力の多い人が勝ち（4人でふつう7〜8ラウンド、長くても10ラウンドほどで終わる）。
+# 2026-09-28: 体力 20・最下位 6 から、体力 100・最下位 30 に（ゲームの長さは同じ。数字が大きいほうが「ダメージ」らしい）
+# 試作用のサーバー（環境変数 GEOKING_RULE=survival）では、どの部屋もこのルールで始まる。本番（未設定）はこれまでどおり 'points'
+RULES = ('points', 'survival')
+SURV_HP = 100
+SURV_MAX_DAMAGE = 30
+SURV_MAX_ROUNDS = 20
+TEST_SERVER = os.environ.get('GEOKING_RULE') == 'survival'   # 試作用のサーバー。検索エンジンには載せない（security_headers・robots.txt）
+
 DEFAULT_SETTINGS = {
     'categories': ['basic', 'climate', 'religion', 'society'],
     'rounds': 7,
@@ -35,6 +48,7 @@ DEFAULT_SETTINGS = {
     'timer': 30,           # 回答の制限時間（秒）。0で無制限。時間切れは手札からランダムに出る
     'max_star': 3,         # 出題する難易度の上限
     'public': False,       # 公開部屋一覧に載せる（世界の誰かと遊ぶ）
+    'rule': 'survival' if TEST_SERVER else 'points',   # 'points'（順位で点）| 'survival'（体力を減らし合う）
 }
 
 MAX_ROOMS = 300
@@ -228,6 +242,9 @@ class Player:
         self.muted = set()       # 自分が非表示にした相手の pid
         self.reported_by = set() # 自分を通報した人の pid
         self.chat_banned = False # 通報が重なりチャット禁止
+        self.hp = None           # サバイバルの体力（ほかのルールでは None）
+        self.out_round = None    # サバイバルで脱落したラウンド（残っている間は None）。脱落した人はそのゲームは観戦
+        self.new_card = None     # サバイバルで、このラウンドの前に引いた国旗（手札の「NEW」）
 
 
 class Room:
@@ -254,14 +271,22 @@ class Room:
         self.created = time.time()
 
     # ---------- game flow
+    def survival(self):
+        return self.settings.get('rule') == 'survival'
+
+    def alive(self):
+        """サバイバルで、まだ脱落していないプレイヤー（途中から観戦で入った人は入れない）。つながっていない人も入る"""
+        return [self.players[x] for x in self.order if not self.players[x].spectator and not self.players[x].out_round]
+
     def start(self):
         s = self.settings
+        rounds = SURV_MAX_ROUNDS if self.survival() else s['rounds']   # サバイバルは最後の1人になるまで（打ち切りの上限まで、お題を用意しておく）
         pool = [p for p in PROMPTS if p['cat'] in s['categories'] and p['star'] <= s['max_star']]
         if not pool:
             pool = [p for p in PROMPTS if p['cat'] in s['categories']] or list(PROMPTS)
-        if len(pool) < s['rounds']:
-            pool = pool * ((s['rounds'] // len(pool)) + 1)
-        self.prompts = random.sample(pool, s['rounds'])
+        if len(pool) < rounds:
+            pool = pool * ((rounds // len(pool)) + 1)
+        self.prompts = random.sample(pool, rounds)
         deck = [c['id'] for c in COUNTRIES]
         random.shuffle(deck)
         # 撮影用デモ（環境変数 GEOKING_DEMO="お題id:国コード,国コード,…"）: 1問目のお題と各プレイヤーの手札に入れる国を固定。本番では未設定
@@ -280,15 +305,16 @@ class Room:
             if i < len(fixed):
                 p.hand[random.randrange(len(p.hand))] = fixed[i]
             p.score, p.won, p.pick = 0, [], None
-        self.deck = deck   # 途中参加者に配る残り山札
+            p.hp, p.out_round, p.new_card = (SURV_HP if self.survival() else None), None, None
+        self.deck = deck   # 途中参加者に配る残り山札（サバイバルは毎ラウンドここから引く）
         self.history = []
         self.final, self.departed = None, {}
         self.round = 0
-        log.info('room %s start: players=%s rounds=%d cats=%s', self.code,
-                 [self.players[x].name + ('(bot)' if self.players[x].is_bot else '') for x in self.order], s['rounds'], ','.join(s['categories']))
+        log.info('room %s start: players=%s rounds=%d cats=%s rule=%s', self.code,
+                 [self.players[x].name + ('(bot)' if self.players[x].is_bot else '') for x in self.order], len(self.prompts), ','.join(s['categories']), s.get('rule'))
         host = self.players.get(self.host)
         sheet_log('ゲーム開始', self, host.name if host else '',
-                  '、'.join(self.players[x].name + ('（ボット）' if self.players[x].is_bot else '') for x in self.order) + f'／{s["rounds"]}ラウンド')
+                  '、'.join(self.players[x].name + ('（ボット）' if self.players[x].is_bot else '') for x in self.order) + ('／サバイバル' if self.survival() else f'／{s["rounds"]}ラウンド'))
         self.begin_round()
 
     def begin_round(self):
@@ -304,11 +330,15 @@ class Room:
         return self.prompts[self.round - 1] if 0 < self.round <= len(self.prompts) else None
 
     def all_picked(self):
-        return all(p.pick is not None for p in self.players.values() if (p.connected or p.is_bot) and not p.spectator)
+        return all(p.pick is not None for p in self.players.values() if (p.connected or p.is_bot) and not p.spectator and not p.out_round)
 
     def do_reveal(self):
         pr = self.current_prompt()
         key, direction = pr['key'], pr['dir']
+        if self.survival():   # つながっていない人も、時間切れと同じく手札からランダムに出す（切れている間は体力が減らない、にならないように）
+            for p in self.alive():
+                if p.pick is None and p.hand:
+                    p.pick = random.choice(p.hand)
         rows = []
         for pid in self.order:
             p = self.players[pid]
@@ -331,39 +361,105 @@ class Room:
             if r['value'] != prev:
                 rank, prev = i, r['value']
             r['rank'] = rank
+        surv = self.survival()
+        anyone = any(not r['missing'] for r in rows)
         for r in rows:
             r.setdefault('rank', None)
             r['winner'] = r['rank'] == 1
-            r['points'] = 1 if r['rank'] is None else n - r['rank'] + 1
-            self.players[r['pid']].score += r['points']
+            p = self.players[r['pid']]
+            if surv:   # サバイバル: 1位は減らず、最下位は SURV_MAX_DAMAGE（あいだは順位に合わせて四捨五入）。データのない国は最下位と同じ。全員データなしなら誰も減らない
+                if not anyone or n < 2:
+                    dmg = 0
+                elif r['rank'] is None:
+                    dmg = SURV_MAX_DAMAGE
+                else:
+                    dmg = int(SURV_MAX_DAMAGE * (r['rank'] - 1) / (n - 1) + 0.5)
+                r['points'], r['damage'], r['hp_before'] = None, dmg, p.hp or 0
+                p.hp = max(0, (p.hp or 0) - dmg)
+                r['hp'], r['out'] = p.hp, p.hp == 0
+                if r['out']:
+                    p.out_round = self.round
+            else:
+                r['points'] = 1 if r['rank'] is None else n - r['rank'] + 1
+                p.score += r['points']
             if r['winner']:
-                self.players[r['pid']].won.append(pr['id'])
+                p.won.append(pr['id'])
         for p in self.players.values():
             if p.pick in p.hand:
                 p.hand.remove(p.pick)
+            if surv and p.out_round:   # 脱落した人の残りの手札は捨てる（そのゲームはもう出さない）
+                p.hand = []
         self.reveal = {'prompt': pr, 'rows': sorted(rows, key=lambda r: (r['rank'] is None, r['rank'] or 0))}
+        if surv:   # 残りの人数と、このラウンドで決着したか（画面の「次のラウンドへ／結果発表へ」と、最後の1人の見せ方に使う）
+            self.reveal['alive'] = len(self.alive())
+            self.reveal['last'] = self.reveal['alive'] <= 1 or self.round >= len(self.prompts)
         self.history.append({'round': self.round, **self.reveal})
         log.info('room %s R%d %s -> %s', self.code, self.round, pr['text'],
-                 ' | '.join(f"{r['name']}:{r['card']}={r['value']}{'*' if r['winner'] else ''}" for r in rows))
+                 ' | '.join(f"{r['name']}:{r['card']}={r['value']}{'*' if r['winner'] else ''}" + (f" -{r['damage']}={r['hp']}" if surv else '') for r in rows))
         self.phase = 'reveal'
         self.deadline = None
         self.next_at = time.time() + REVEAL_SECONDS
 
     def next_round(self):
+        if self.survival():   # 最後の1人になった（または打ち切りのラウンド）なら終わり。続くなら、残っている人が1枚ずつ引いてから次のお題
+            if len(self.alive()) <= 1 or self.round >= len(self.prompts):
+                return self.finish()
+            for p in self.players.values():
+                p.new_card = None
+            for p in self.alive():
+                p.new_card = self.draw(p)
+            return self.begin_round()
         if self.round >= len(self.prompts):
-            self.phase = 'end'
+            self.finish()
+        else:
+            self.begin_round()
+
+    def finish(self):
+        self.phase = 'end'
+        self.deadline = None
+        if self.survival():
+            log.info('room %s end (survival): %s', self.code, {self.players[x].name: (self.players[x].hp, self.players[x].out_round) for x in self.order})
+            self.final = self.survival_standings()
+        else:
             log.info('room %s end: %s', self.code, {self.players[x].name: self.players[x].score for x in self.order})
             # 最後の順位: 今いる人（途中から観戦で入った人は遊んでいないので入れない）と、途中で退出した人（そのときの点数）
             players = [{'pid': x, 'name': self.players[x].name, 'name_en': self.players[x].name_en, 'score': self.players[x].score,
                         'is_bot': self.players[x].is_bot} for x in self.order if not self.players[x].spectator]
             gone = [{'pid': x, **d} for x, d in self.departed.items() if x not in self.players]
             self.final = sorted(players + gone, key=lambda e: -e['score'])
-            top = self.final[0]['score'] if self.final else 0
-            nm = lambda e: e['name'] + ('（ボット）' if e['is_bot'] else '')
-            sheet_log('ゲーム終了', self, '・'.join(nm(e) for e in self.final if e['score'] == top),
-                      '、'.join(f'{nm(e)} {e["score"]}点' for e in self.final))
-        else:
-            self.begin_round()
+        top = self.final[0]['score'] if self.final else 0
+        nm = lambda e: e['name'] + ('（ボット）' if e['is_bot'] else '')
+        sheet_log('ゲーム終了', self, '・'.join(nm(e) for e in self.final if e['score'] == top),
+                  '、'.join(f'{nm(e)} {e["score"]}点' for e in self.final))
+
+    def survival_standings(self):
+        """サバイバルの最後の順位: 残った人（体力の多い順）→ 脱落した人（あとまで残った人ほど上）。同じなら同じ順位。
+        途中で退出した人は、そのラウンドで脱落したのと同じ。score は並べ替えと記録用（残った人は体力、脱落は0）"""
+        es = [{'pid': x, 'name': p.name, 'name_en': p.name_en, 'is_bot': p.is_bot, 'hp': p.hp or 0, 'out_round': p.out_round}
+              for x in self.order for p in [self.players[x]] if not p.spectator]
+        es += [{'pid': x, 'name': d['name'], 'name_en': d.get('name_en'), 'is_bot': d.get('is_bot', False),
+                'hp': d.get('hp') or 0, 'out_round': d.get('out_round') or self.round}
+               for x, d in self.departed.items() if x not in self.players]
+        key = lambda e: (1, -e['out_round']) if e['out_round'] else (0, -e['hp'])
+        es.sort(key=key)
+        place, prev = 0, None
+        for i, e in enumerate(es, 1):
+            if key(e) != prev:
+                place, prev = i, key(e)
+            e['place'], e['score'] = place, (0 if e['out_round'] else e['hp'])
+        return es
+
+    def draw(self, p):
+        """サバイバル: 山札から1枚引いて手札に入れる。山札がなくなったら、誰の手札にもない国で作り直す（前に出た国も戻る）"""
+        if not self.deck:
+            held = {c for pl in self.players.values() for c in pl.hand}
+            self.deck = [c['id'] for c in COUNTRIES if c['id'] not in held]
+            random.shuffle(self.deck)
+        if not self.deck:
+            return None
+        c = self.deck.pop()
+        p.hand.append(c)
+        return c
 
     def deal_late(self, p):
         """途中参加者に、残りラウンド数＋1枚を配る（元の「1枚余る」感覚を維持）。"""
@@ -390,12 +486,15 @@ class Room:
         self.history, self.prompts, self.final, self.departed = [], [], None, {}
         for p in self.players.values():
             p.hand, p.pick, p.selecting, p.score, p.won, p.spectator = [], None, None, 0, [], False
+            p.hp, p.out_round, p.new_card = None, None, None
         self.history = []
 
     def remove_player(self, pid):
         p = self.players.get(pid)
         if p and not p.spectator and self.phase in ('pick', 'reveal'):   # ゲームの途中で抜けた人も、最後の順位にそのときの点数で出す
             self.departed[pid] = {'name': p.name, 'name_en': p.name_en, 'score': p.score, 'is_bot': p.is_bot}
+            if self.survival():   # サバイバル: そのときの体力と、脱落したラウンド（残っていた人は抜けたラウンドで脱落したのと同じ）
+                self.departed[pid].update({'hp': p.hp or 0, 'out_round': p.out_round or self.round})
         self.players.pop(pid, None)
         if pid in self.order:
             self.order.remove(pid)
@@ -412,6 +511,7 @@ class Room:
             'pid': pid, 'name': p.name, 'name_en': p.name_en, 'score': p.score, 'is_bot': p.is_bot,
             'connected': p.connected, 'picked': p.pick is not None, 'won': p.won, 'spectator': p.spectator,
             'hand_count': len(p.hand),
+            'hp': p.hp, 'out_round': p.out_round,   # サバイバルの体力と脱落したラウンド（ほかのルールでは None）
         } for pid, p in ((pid, self.players[pid]) for pid in self.order)]
 
     def state_for(self, pid):
@@ -424,9 +524,11 @@ class Room:
             'prompt': self.current_prompt() if self.phase in ('pick', 'reveal') else None,
             'hand': me.hand if me else [],
             'hands': {x: pl.hand for x, pl in self.players.items()},   # 全員の手札（出したカードは公開まで手札に残るので選択は漏れない）
-            # 観戦者にだけ、各プレイヤーが「いま選んでいる／出した」カードをリアルタイムで見せる
-            'live': ({x: {'selecting': pl.selecting, 'pick': pl.pick} for x, pl in self.players.items() if not pl.spectator}
-                     if (me and me.spectator and self.phase == 'pick') else None),
+            # 観戦者（サバイバルで脱落した人も）にだけ、各プレイヤーが「いま選んでいる／出した」カードをリアルタイムで見せる
+            'live': ({x: {'selecting': pl.selecting, 'pick': pl.pick} for x, pl in self.players.items() if not pl.spectator and not pl.out_round}
+                     if (me and (me.spectator or me.out_round) and self.phase == 'pick') else None),
+            'new_card': me.new_card if (me and self.phase == 'pick') else None,   # サバイバル: このラウンドの前に引いた国旗
+            'surv': {'hp': SURV_HP, 'max_damage': SURV_MAX_DAMAGE} if self.survival() else None,   # 画面の体力ゲージの満タンと、ロビーのルールの説明の数字
             'history': self.history if self.phase == 'end' else None,
             'final': self.final if self.phase == 'end' else None,   # 終わった時点の順位（そのあと誰かが退出しても変わらない）
             'leftover': ({x: pl.hand for x, pl in self.players.items() if not pl.spectator and pl.hand} if self.phase == 'end' else None),   # 使わなかった手札
@@ -455,7 +557,7 @@ async def broadcast(room):
 
 async def bots_play(room):
     for p in list(room.players.values()):
-        if p.is_bot and p.pick is None and p.hand:
+        if p.is_bot and p.pick is None and p.hand and not p.spectator and not p.out_round:
             await asyncio.sleep(random.uniform(0.6, 1.8))
             if migrating or moved or getattr(room, 'dead', False):   # 引っ越し中・後、置き換えた部屋は進めない（新しいサーバー・新しい部屋が続きを出す）
                 return
@@ -508,7 +610,7 @@ async def start_timer(room):
         await asyncio.sleep(max(0, room.deadline - time.time()))
         if room.phase == 'pick' and room.round == rnd:   # 前のラウンドの時計が、次のラウンドの始まりに鳴らないように（鳴ると次の結果がすぐ出てしまう）
             for p in room.players.values():
-                if p.pick is None and p.hand:
+                if p.pick is None and p.hand and not p.spectator and not p.out_round:
                     p.pick = random.choice(p.hand)  # 時間切れはランダム
             await finish_reveal(room)
     room.timer_task = asyncio.create_task(_run())
@@ -546,6 +648,11 @@ async def after_player_gone(room, name):
     if room.phase in ('pick', 'reveal', 'end') and name:
         room.chat.append({'name': 'システム', 'text': f'{name}さんが退出しました', 'ts': time.time()})
         room.chat = room.chat[-60:]
+    if room.phase == 'pick' and room.survival() and len(room.alive()) <= 1:   # サバイバルで、ほかの人が抜けて残りが1人になった: その人の勝ちで終わる（答え合わせの途中なら、答え合わせのあとに終わる）
+        if room.timer_task:
+            room.timer_task.cancel()
+        room.finish()
+        return await broadcast(room)
     if room.phase == 'pick' and room.all_picked():
         return await finish_reveal(room)
     await broadcast(room)
@@ -575,7 +682,8 @@ LIVE_SOCKETS = set()   # つながっている全部の WebSocket（送り終え
 def player_to_dict(p):
     return {'pid': p.pid, 'name': p.name, 'name_en': p.name_en, 'is_bot': p.is_bot, 'hand': list(p.hand), 'score': p.score,
             'won': list(p.won), 'pick': p.pick, 'selecting': p.selecting, 'connected': p.connected, 'token': p.token,
-            'spectator': p.spectator, 'muted': sorted(p.muted), 'reported_by': sorted(p.reported_by), 'chat_banned': p.chat_banned}
+            'spectator': p.spectator, 'muted': sorted(p.muted), 'reported_by': sorted(p.reported_by), 'chat_banned': p.chat_banned,
+            'hp': p.hp, 'out_round': p.out_round, 'new_card': p.new_card}
 
 
 def room_to_dict(r, now):
@@ -598,16 +706,20 @@ def room_from_dict(d, now, source=None):
         raise ValueError('unknown prompt')
     r = Room(code, d['host'])
     r.migrated_from = source   # 送ってきた古いサーバー（同じサーバーが送り直してきたら置き換える）
-    r.settings = {**DEFAULT_SETTINGS, **d['settings']}
+    r.settings = {**DEFAULT_SETTINGS, 'rule': 'points', **d['settings']}   # ルールの項目がない部屋は、サバイバルを知らない前の版のサーバーの部屋（点のルール）
+    if r.settings.get('rule') not in RULES:
+        raise ValueError('unknown rule')
     r.phase, r.round, r.prompts = d['phase'], int(d['round']), prompts
     if r.phase not in ('lobby', 'pick', 'reveal', 'end'):
         raise ValueError('bad phase')
     r.reveal, r.chat, r.history = d['reveal'], list(d['chat'])[-60:], list(d['history'])
+    opt_int = lambda v: None if v is None else int(v)   # サバイバルの体力・脱落したラウンドなど（前の版のサーバーからは届かない）
+    surv_keys = lambda x: {k: opt_int(x.get(k)) for k in ('hp', 'out_round', 'place') if k in x}
     f = d.get('final')   # 前の版のサーバーからは届かない（そのときは画面が今いる人から順位を作る）
-    r.final = [{'pid': str(x['pid']), 'name': str(x['name']), 'name_en': x.get('name_en'), 'score': int(x['score']), 'is_bot': bool(x.get('is_bot'))}
+    r.final = [{'pid': str(x['pid']), 'name': str(x['name']), 'name_en': x.get('name_en'), 'score': int(x['score']), 'is_bot': bool(x.get('is_bot')), **surv_keys(x)}
                for x in f] if isinstance(f, list) else None
     dep = d.get('departed')
-    r.departed = {str(k)[:12]: {'name': str(v['name']), 'name_en': v.get('name_en'), 'score': int(v['score']), 'is_bot': bool(v.get('is_bot'))}
+    r.departed = {str(k)[:12]: {'name': str(v['name']), 'name_en': v.get('name_en'), 'score': int(v['score']), 'is_bot': bool(v.get('is_bot')), **surv_keys(v)}
                   for k, v in dep.items()} if isinstance(dep, dict) else {}
     r.deck = [c for c in d['deck'] if c in COUNTRY_BY_ID]
     old = rooms.get(code)
@@ -618,6 +730,8 @@ def room_from_dict(d, now, source=None):
         p.pick, p.selecting, p.spectator, p.chat_banned = pd['pick'], pd['selecting'], bool(pd['spectator']), bool(pd['chat_banned'])
         p.token = pd['token']
         p.muted, p.reported_by = set(pd['muted']), set(pd['reported_by'])
+        p.hp, p.out_round = opt_int(pd.get('hp')), opt_int(pd.get('out_round'))
+        p.new_card = pd.get('new_card') if pd.get('new_card') in COUNTRY_BY_ID else None
         p.connected = bool(pd['connected'])   # つながっていた人は、つなぎ直すまで（MIGRATE_GRACE 秒まで）いるものとして扱う
         if any(c not in COUNTRY_BY_ID for c in p.hand + ([p.pick] if p.pick else [])):
             raise ValueError('unknown card')
@@ -967,6 +1081,7 @@ async def ws_session(ws):
                 'timer': to_int(s.get('timer', cur['timer']), 0, 180, cur['timer']),
                 'max_star': to_int(s.get('max_star', cur['max_star']), 1, 3, cur['max_star']),
                 'public': bool(s.get('public', cur['public'])),
+                'rule': s['rule'] if s.get('rule') in RULES else cur.get('rule', 'points'),   # 画面にはまだ切り替えがない（試作用のサーバーは最初から 'survival'。テストはここで切り替える）
             })
             host = room.players.get(room.host)
             if room.settings['public'] != was_public:
@@ -1075,7 +1190,7 @@ async def ws_session(ws):
             if room.phase != 'pick':
                 return
             p = room.players[pid]
-            if p.spectator:
+            if p.spectator or p.out_round:
                 return
             card = data.get('card')
             if isinstance(card, str) and card in p.hand:
@@ -1220,6 +1335,8 @@ SITE_URL = os.environ.get('SITE_URL', 'https://geoking-vlgh.onrender.com').rstri
 SITEMAP_PAGES = ['/', '/static/zukan.html', '/static/quiz.html', '/static/privacy.html']
 
 async def robots_txt(request):   # 国データ（/api/meta）は図鑑の表示に要るので許可。利用ログ送信などは除外
+    if TEST_SERVER:   # 試作用のサーバーは検索に載せない（本番の地理王と同じページが別のアドレスで並ばないように）
+        return web.Response(text="User-agent: *\nDisallow: /\n")
     return web.Response(text=f"User-agent: *\nAllow: /api/meta\nDisallow: /api/\nDisallow: /admin/\n\nSitemap: {SITE_URL}/sitemap.xml\n")
 
 
@@ -1382,6 +1499,8 @@ async def security_headers(request, handler):
     resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
     resp.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')   # アプリ内フレーム（同じサイト）で図鑑・クイズを開けるように
     resp.headers.setdefault('Referrer-Policy', 'no-referrer')
+    if TEST_SERVER:
+        resp.headers['X-Robots-Tag'] = 'noindex, nofollow'   # 試作用のサーバーは検索結果に出さない
     return resp
 
 

@@ -136,8 +136,9 @@ function pushSettings() {
 }
 ['#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
-$('#lobbyBtn').onclick = () => { if (confirm(t('confirm_to_lobby'))) send({ type: 'to_lobby' }); };
-$('#leaveBtn').onclick = () => { if (confirm(t('confirm_leave'))) send({ type: 'leave' }); };
+// 確認はゲームの中の小窓で（ブラウザの確認ダイアログは、出さずに「キャンセル」にするアプリ内ブラウザがある。common.js の askConfirm）
+$('#lobbyBtn').onclick = async () => { if (await askConfirm(t('confirm_to_lobby'), t('ask_lobby_ok'), t('ask_cancel'))) send({ type: 'to_lobby' }); };
+$('#leaveBtn').onclick = async () => { if (await askConfirm(t('confirm_leave'), t('ask_leave_ok'), t('ask_cancel'), true)) send({ type: 'leave' }); };
 function leaveToHome(message) {
   stopTimer(); prevKey = ''; prevChatLen = 0; prevRoom = null; prevPlayers = null; seenChat.clear(); chatPrimed = false;
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
@@ -240,7 +241,7 @@ function playTransitions() {
       sfx.reveal();
       const me = state.reveal.rows.find(r => r.pid === pid);
       const isSpectator = !!state.players.find(p => p.pid === pid && p.spectator);
-      if (me && !isSpectator) setTimeout(() => (me.winner ? sfx.win() : sfx.lose()), 350);
+      if (me && !isSpectator && !SV.on()) setTimeout(() => (me.winner ? sfx.win() : sfx.lose()), 350);   // サバイバルは当たる演出に合わせて survival.js が鳴らす
     } else if (state.phase === 'end') {
       scrollTopNext = true;
       const mine = (state.final || state.players).find(p => p.pid === pid);
@@ -328,7 +329,9 @@ function renderLobby() {
   if (document.activeElement?.closest('.settings') == null) {
     $('#setPublic').checked = s.public; $('#setTitle').value = state.title_raw || ''; $('#setTitle').placeholder = roomTitle() || t('room_title_ph');
   }
-  $('#startBtn').textContent = state.players.length < 2 ? t('start_with_bot') : t('start_rounds', { n: state.settings.rounds });
+  $('#startBtn').textContent = SV.on() ? t(state.players.length < 2 ? 'sv_start_bot' : 'sv_start')
+    : (state.players.length < 2 ? t('start_with_bot') : t('start_rounds', { n: state.settings.rounds }));
+  const rl = $('#svRule'); rl.classList.toggle('hidden', !SV.on()); rl.innerHTML = SV.on() ? SV.ruleLine() : '';   // サバイバルの部屋だけ: ルールを1行
 }
 
 function renderGame() {
@@ -338,9 +341,12 @@ function renderGame() {
   const m = LANG === 'ja' ? pr.text.match(/^(.*?)(大きい|小さい|多い|少ない|高い|低い|長い|短い|北|南|東|西|近い)(国は？)$/) : null;
   $('#promptText').innerHTML = m ? `${escapeHtml(m[1])}<span class="kw">${m[2]}</span>${m[3]}` : escapeHtml(pt(pr));
 
-  // スコア
+  SV.renderStatus();   // サバイバル: 「ラウンド 3」の下に自分の体力と残りの人数（点のルールでは隠れたまま）
+  // スコア（サバイバルは体力）
   const sl = $('#scoreList'); sl.innerHTML = '';
-  for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
+  $('#scoreTitle').textContent = t(SV.on() ? 'sv_hp' : 'score');
+  if (SV.on()) SV.renderScores(sl);
+  else for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
     sl.appendChild(el('li', '', `<span>${p.pid !== pid && !p.is_bot ? `<b class="who" data-pid="${p.pid}" title="${t('report_mute')}">${escapeHtml(pname(p))}</b>` : escapeHtml(pname(p))}${playerTag(p)}</span><b>${p.spectator ? '—' : p.score + ' ' + t('pts')}${state.phase === 'pick' && !p.spectator ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
   }
   sl.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
@@ -359,18 +365,19 @@ function renderGame() {
 
 function renderHand() {
   const hand = $('#hand'); hand.innerHTML = '';
+  hand.classList.toggle('sv-hand', SV.on());   // サバイバル: 手札の外側のカードの枠をなくす（国旗の枠だけ）
   const me = state.players.find(p => p.pid === pid);
-  const spectating = !!(me && me.spectator);
+  const spectating = !!(me && (me.spectator || me.out_round));   // out_round: サバイバルで脱落した（最後まで観戦）
   $('#spectate').classList.toggle('hidden', !spectating);
   $('#pickTitle').classList.toggle('hidden', spectating);
-  if (spectating) { renderOthersHands(); return; }
+  if (spectating) { SV.spectateText(me); renderOthersHands(); return; }
   const picked = state.my_pick;
   if (selectedCard && !state.hand.includes(selectedCard)) selectedCard = null;
   $('#pickTitle').textContent = picked
     ? t('played_msg', { card: state.settings.show_names ? '「' + countryName(picked) + '」' : t('card_word') })
     : (state.hand.length ? t('pick_hint') : t('no_hand'));
   for (const id of state.hand) {
-    const cls = 'flagcard' + (id === picked ? ' picked' : '') + (id === selectedCard && id !== picked ? ' selected' : '');
+    const cls = 'flagcard' + (id === picked ? ' picked' : '') + (id === selectedCard && id !== picked ? ' selected' : '') + (id === state.new_card ? ' sv-new' : '');   // sv-new: サバイバルでこのラウンドの前に引いた国旗
     const c = el('div', cls);
     c.innerHTML = `<img src="${flagUrl(id)}" alt="${t('flag_alt')}" loading="lazy"><div class="nm">${state.settings.show_names ? countryName(id) : (id === picked ? t('played_card') : '&nbsp;')}</div>`;
     c.onclick = () => {
@@ -386,14 +393,14 @@ function renderHand() {
     hand.appendChild(c);
   }
   const w = el('div', 'waiting');
-  for (const p of state.players.filter(x => !x.spectator)) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ' + ico('check', 'sm') : ''}`));
+  for (const p of state.players.filter(x => !x.spectator && !x.out_round)) w.appendChild(el('span', p.picked ? 'done' : '', `${escapeHtml(p.name)}${p.picked ? ' ' + ico('check', 'sm') : ''}`));
   hand.appendChild(w); w.style.gridColumn = '1 / -1';
   renderOthersHands();
 }
 
 function renderOthersHands() {
   const box = $('#othersHands'); box.innerHTML = '';
-  const others = state.players.filter(p => p.pid !== pid && !p.spectator);
+  const others = state.players.filter(p => p.pid !== pid && !p.spectator && !p.out_round);   // サバイバルで脱落した人は、もう手札がない
   if (!others.length || !state.hands) return;
   const live = state.live;   // 観戦者にだけ届く
   box.appendChild(el('h4', '', live ? t('others_live') : t('others_hidden')));
@@ -405,7 +412,7 @@ function renderOthersHands() {
       const st = lv.pick ? 'go' : (lv.selecting ? 'sel' : 'think');
       bubble = `<span class="bubble ${st}">${lv.pick ? t('bubble_pick') : (lv.selecting ? t('bubble_selecting') : t('bubble_thinking'))}</span>`;
     }
-    row.appendChild(el('span', 'oname', `${escapeHtml(p.name)}${!live && p.picked ? ' ' + ico('check', 'sm') : ''}${bubble}`));
+    row.appendChild(el('span', 'oname', `${escapeHtml(p.name)}${SV.on() ? SV.bar(p.pid, SV.hpOf(p), true) : ''}${!live && p.picked ? ' ' + ico('check', 'sm') : ''}${bubble}`));
     for (const id of (state.hands[p.pid] || [])) {
       const wrap = el('span', 'oflag' + (lv && lv.pick === id ? ' go' : (lv && lv.selecting === id ? ' sel' : '')));
       const img = el('img'); img.src = flagUrl(id, 80); img.alt = ''; img.title = state.settings.show_names ? countryName(id) : '';
@@ -451,9 +458,11 @@ function spawnConfetti(target, tier, scale = 1) {
   setTimeout(() => box.remove(), 1800);
 }
 function renderReveal() {
+  if (SV.on()) return SV.renderReveal();   // サバイバル: 体力が減る演出つきの答え合わせ（survival.js）
   const r = state.reveal, F = META.fields[r.prompt.key];
   const key = revealKeyOf(state), fresh = key !== revealShown();   // 初めて見る結果だけ動かす
   const box = $('#revealRows'); box.innerHTML = '';
+  delete box.dataset.svKey; box.classList.remove('sv-reveal');   // 前にサバイバルの答え合わせを出していたときの印を消す
   box.classList.toggle('still', !fresh);
   r.rows.forEach((row, i) => {
     const c = META.countries[row.card];
@@ -490,7 +499,8 @@ function renderEnd() {
   // メダル形式: 同点は同じ順位（1,1,3…）。金・銀・銅、4位以下は白。1位はポンと出て光り、紙吹雪。
   // 1位の行の名前は champ（2026-09-27 まで top で、ヘッダーの .top の「上に貼り付く」が効き、スクロールしても1位の行だけ動かなかった）
   let rank = 0, prev = null;
-  sorted.forEach((p, i) => {
+  if (SV.on()) SV.renderFinal(ol);   // サバイバル: 最後まで残った人（体力）→ 脱落した人（何ラウンドで脱落したか）
+  else sorted.forEach((p, i) => {
     if (p.score !== prev) { rank = i + 1; prev = p.score; }
     const cls = rank === 1 ? 'g' : rank === 2 ? 's' : rank === 3 ? 'b' : 'n';
     const li = el('li', 'm' + (rank === 1 ? ' champ' : ''), `<div class="disc ${cls}">${rank}</div><div class="nm">${rank === 1 ? ico('crown') + ' ' : ''}${escapeHtml(pname(p))}</div><div class="sc">${p.score}<small>${t('pts')}</small></div>`);
@@ -500,7 +510,7 @@ function renderEnd() {
   });
   const rb = $('#rematchBtn'); rb.dataset.i18n = state.players.length < 2 ? 'start_with_bot' : 'rematch'; rb.textContent = t(rb.dataset.i18n);   // ひとりならボットを入れて始める
   const champs = sorted.filter(p => p.score === top).map(p => pname(p));
-  $('#endTitle').innerHTML = `${ico('trophy', 'big')} ${t('is_champion', { names: escapeHtml(joinNames(champs)) })}`;
+  $('#endTitle').innerHTML = SV.on() ? SV.endTitle() : `${ico('trophy', 'big')} ${t('is_champion', { names: escapeHtml(joinNames(champs)) })}`;
   renderHistory();
 }
 
@@ -527,7 +537,7 @@ function renderHistory() {
       if (!r) { table.appendChild(el('div', 'hcard empty', '—')); continue; }
       const card = el('div', 'hcard' + (r.winner ? ' win' : ''));
       const t = r.world_rank ? wrankTier(r.world_rank).cls : '';
-      card.innerHTML = cardHtml(r.card, `<div class="val">${r.winner ? ico('crown', 'sm') + ' ' : ''}${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who${t ? ' hot' + t : ''}">${window.t('world_rank_plain', { n: r.world_rank, total: r.world_total })}</div>` : ''}`);
+      card.innerHTML = cardHtml(r.card, `<div class="val">${r.winner ? ico('crown', 'sm') + ' ' : ''}${fmtValue(r.value, F.fmt)}</div>${r.world_rank ? `<div class="who${t ? ' hot' + t : ''}">${window.t('world_rank_plain', { n: r.world_rank, total: r.world_total })}</div>` : ''}${SV.historyDamage(r)}`);   // historyDamage: サバイバルだけ、そのラウンドで減った体力
       card.onclick = () => showCountry(r.card);
       table.appendChild(card);
     }

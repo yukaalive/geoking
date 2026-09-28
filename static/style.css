@@ -468,3 +468,126 @@ body.framed{overflow:hidden}
   button.pref.off .ico,button.mini:hover .ico{color:#1c2b22}   /* 効果音を切ったとき（薄い灰色）・上のボタンに指を乗せたとき（黄色）のアイコン */
   #publicRoomList .proom-st.live{color:#52b47f}   /* 公開中の部屋の「対戦中」: 小さい字なので、濃い背景の上で少し明るい緑に（いつもの緑だと見にくい） */
 }
+
+/* ---------- 確認の小窓（common.js の askConfirm。退出・ロビーへ・クイズをやめる）
+   ブラウザの確認ダイアログ（confirm）のかわり。アプリ内のブラウザには、確認ダイアログを出さずに「キャンセル」にするものがある（2026-09-28: Claude アプリのブラウザで「退出」が効かなかった） */
+.askmsg{margin:2px 36px 16px 0;font-size:16px;font-weight:800;line-height:1.6}
+.askrow{justify-content:flex-end}
+.askrow button{min-width:110px}
+button.askok.danger-fill{background:#b8391a;color:#fff}
+
+/* ---------- サバイバル（体力を減らし合う試作のルール。survival.js）
+   部屋の rule が survival のときだけ出る部品。名前はすべて sv- で始める（ほかの画面の部品には効かない） */
+:root{--sv-red:#b8391a}   /* 減った体力の赤（脱落した国旗の薄い地の上でも 4.5 以上） */
+@media (prefers-color-scheme:dark){:root{--sv-red:#ff8a6e}}
+/* 体力ゲージ（太いゲージの中に数字。どこでも同じ見た目: 上の自分の体力・答え合わせ・スコアの欄・みんなの手札・結果発表）。
+   減ると中身がすぐ縮み、今減った分（赤）があとから消える。半分で黄、4分の1で赤く点滅。
+   地は明るい色のまま（ダークモードでも）にして、中の数字は、ゲージのどこに重なっても濃い色で読めるようにする */
+.sv-hpbox{display:inline-flex;align-items:center;vertical-align:middle;white-space:nowrap}
+.sv-hp{--hp:1;position:relative;display:inline-block;flex:none;width:150px;height:22px;border:2px solid var(--ink);border-radius:999px;background:#ece6d3;overflow:hidden}
+.sv-hp i{position:absolute;left:0;top:0;bottom:0;width:calc(var(--hp) * 100%)}
+.sv-hp .sv-ghost{background:#ffab96;transition:width .7s cubic-bezier(.3,.7,.3,1) .35s}
+.sv-hp .sv-fill{background:#56bd79;transition:width .3s ease-out,background-color .3s}
+.sv-hp.mid .sv-fill{background:#f4c542}
+.sv-hp.low .sv-fill{background:#f0806a;animation:svLow 1s ease-in-out infinite}
+@keyframes svLow{50%{opacity:.55}}
+.sv-hp .sv-hpnum{position:absolute;left:8px;top:50%;z-index:1;transform:translateY(-50%);font-family:var(--font-head);font-weight:400;font-size:15px;line-height:1;color:#1c2b22;font-variant-numeric:tabular-nums}
+.sv-hpbox.small .sv-hp{width:84px;height:18px;border-width:1.5px}.sv-hpbox.small .sv-hpnum{left:6px;font-size:12px}
+.tag.sv-outtag{background:var(--ink);color:var(--card);letter-spacing:.05em}
+/* ロビー: ルールを1行 */
+.sv-rule{margin:12px 0 0;padding:8px 12px;border:2px dashed var(--line-soft);border-radius:12px;font-size:13px;font-weight:700;line-height:1.55;color:var(--ink)}
+.sv-rule b{color:var(--sv-red);font-weight:900;margin-right:2px}
+/* 「ラウンド 3」の下: 自分の体力と残りの人数 */
+.roundlabel .sv-status{display:flex;align-items:center;gap:6px;margin-top:4px;color:var(--ink)}
+.sv-status .sv-alive{font-size:12px;font-weight:900;padding:2px 9px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);margin-left:4px}
+/* スコアの欄（体力）: 脱落した人は薄く */
+.scores li.sv-row .sv-right{display:inline-flex;align-items:center;gap:2px}
+.scores li.sv-dead{opacity:.6}
+/* 手札（選ぶ画面）: 外側のカードの枠はなし（国旗の枠だけ）。1回押した国旗は黄、出した国旗は緑の線で、国旗のまわりを囲む */
+.hand.sv-hand{gap:10px}
+.hand.sv-hand .flagcard{padding:0;border:0;border-radius:9px;background:transparent;box-shadow:none}
+.hand.sv-hand .flagcard:hover{transform:translateY(-3px);box-shadow:none}
+.hand.sv-hand .flagcard img{display:block}
+.hand.sv-hand .flagcard.selected{outline:4px solid var(--accent);outline-offset:1px}
+.hand.sv-hand .flagcard.picked{outline:4px solid var(--primary);outline-offset:1px;background:transparent}
+.hand.sv-hand .flagcard .nm{display:none}
+.hand.sv-hand .flagcard.picked .nm{display:block;margin-top:5px}   /* 出した国旗の下にだけ「出したカード」 */
+@media(max-width:360px){.hand.sv-hand{grid-template-columns:repeat(2,minmax(0,1fr))}}   /* 320px でも2列（1列だと国旗1枚が画面の幅いっぱいになり、下まで長くなる）。375px 以上は今までどおり */
+/* 手札: このラウンドの前に引いた国旗 */
+.flagcard.sv-new::after{content:"NEW";position:absolute;top:-9px;right:-7px;z-index:2;padding:1px 8px;border-radius:999px;border:2px solid var(--ink);background:#c8401f;color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em;animation:svPopIn .45s cubic-bezier(.2,1.6,.4,1) both}
+/* 答え合わせ: 外側のカードの枠はなし（国旗の枠だけ）。4人ならスマホの1画面に全員入る。上の段に順位と減った体力、国旗のすぐ下に体力ゲージ。
+   演出は国旗ごとに（1位＝国旗の枠が金色に光る、ほか＝揺れて国旗が赤く光る、0＝ハンコ） */
+.reveal.sv-reveal{position:relative;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px}
+@media(max-width:560px){.reveal.sv-reveal{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}}   /* スマホはいつも2列（320px でも） */
+.sv-fx{position:absolute;inset:-12px;overflow:hidden;pointer-events:none;z-index:4}   /* 衝撃波と紙吹雪を描く層。枠の外（画面の横）にはみ出さない */
+.rev.sv-card,.rev.sv-card.win{position:relative;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow-wrap:anywhere}
+.rev.sv-card.win,.rev.sv-card.win .country,.rev.sv-card.win .val,.rev.sv-card.win .crown .ico{color:var(--ink)}   /* 金色のカードの上の濃い文字の決まり（.rev.win）を、地の上の色に戻す */
+.rev.sv-card.win .who,.rev.sv-card.win .country small{color:var(--muted)}
+.rev.sv-card .sv-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 6px;min-height:26px;margin-bottom:4px}
+.rev.sv-card .crown{position:relative;font-size:18px;line-height:1}
+.rev.sv-card .crown .ico{width:1.5em;height:1.5em}
+.sv-flag{position:relative;overflow:hidden;border-radius:8px}   /* 光の筋・赤い光・脱落のハンコは国旗の中だけ（押す瞬間に大きくても、画面の横にはみ出さない） */
+.rev.sv-card.win .sv-flag{box-shadow:0 0 0 3px var(--accent)}   /* 1位の国旗の枠は金色 */
+.rev.sv-card .sv-hprow{margin-top:6px}
+.rev.sv-card .sv-hpbox{display:flex;width:100%}
+.rev.sv-card .sv-hp{flex:1 1 auto;width:auto}
+.rev.sv-card .who{margin-top:5px}
+.rev.sv-card .country{font-size:14px;margin-top:1px}
+.rev.sv-card .val{font-size:16px;line-height:1.25}
+.sv-wr{display:inline-block;margin-top:4px;padding:0 6px;border-radius:6px;font-size:11px;font-weight:800;color:var(--muted)}
+.sv-wr.gold{color:#5a4a10;background:var(--accent)}.sv-wr.silver{color:#374151;background:#dfe3e9}.sv-wr.bronze{color:#6b3a14;background:#f0cdb0}
+.rev .sv-dmgline{font-family:var(--font-head);font-size:22px;line-height:1;color:var(--sv-red);visibility:hidden}
+.rev .sv-dmgline.show{visibility:visible;animation:svPopIn .4s cubic-bezier(.2,1.6,.4,1)}
+.sv-nodmg{display:inline-block;padding:2px 10px;border-radius:999px;border:2px solid #1c2b22;background:#fff;color:#1f6f4a;font-family:var(--font-body);font-weight:900;font-size:13px;line-height:1.4;vertical-align:middle}
+@keyframes svPopIn{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+/* 1位: 国旗の枠が金色に光り、少し大きくなって王冠が跳ね、国旗の上を光の筋が走る */
+.rev.sv-power{animation:svPower .75s cubic-bezier(.2,1.5,.4,1) both;z-index:2}
+@keyframes svPower{0%{transform:none}35%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1.02)}}
+.rev.sv-power .sv-flag{animation:svRing 1.6s ease-out both}
+@keyframes svRing{0%{box-shadow:0 0 0 3px var(--accent)}20%{box-shadow:0 0 0 5px var(--accent),0 0 28px 12px rgba(244,197,66,.9)}100%{box-shadow:0 0 0 3px var(--accent),0 0 14px 4px rgba(244,197,66,.45)}}
+.rev.sv-power .crown .ico{animation:svCrown .9s cubic-bezier(.2,1.8,.4,1)}
+@keyframes svCrown{0%{transform:none}40%{transform:translateY(-12px) scale(1.4) rotate(-10deg)}100%{transform:none}}
+.sv-flag::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.85) 48%,transparent 62%) no-repeat;background-size:250% 100%;background-position:130% 0}
+.rev.sv-power .sv-flag::before{animation:svShine 1s ease-out .15s both}
+@keyframes svShine{0%{opacity:1;background-position:130% 0}85%{opacity:1}100%{opacity:0;background-position:-130% 0}}
+.sv-wave{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:6px solid var(--accent);box-shadow:0 0 12px 2px rgba(244,197,66,.6);animation:svWave .75s ease-out forwards}
+@keyframes svWave{0%{transform:scale(.3);opacity:1}100%{transform:scale(var(--s,12));opacity:0}}
+.sv-anchor{position:absolute;width:0;height:0}
+.sv-anchor .confetti{position:absolute;inset:-40px -20px;pointer-events:none;overflow:visible}
+.sv-anchor .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;left:50%;top:50%;opacity:0;animation:conf 1.4s ease-out forwards}
+/* 1位以外: 揺れて国旗が赤く光り、ダメージの数字が飛び出す（大きいダメージほど強く） */
+.rev.sv-hit{animation:svShake .5s cubic-bezier(.36,.07,.19,.97) both}
+.rev.sv-hit.sv-big{animation:svShakeBig .6s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes svShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-6px) rotate(-1deg)}40%,60%{transform:translateX(6px) rotate(1deg)}}
+@keyframes svShakeBig{10%,90%{transform:translate(-3px,1px)}20%,80%{transform:translate(6px,-1px)}30%,50%,70%{transform:translate(-9px,2px) rotate(-2deg)}40%,60%{transform:translate(9px,-2px) rotate(2deg)}}
+.sv-flag::after{content:"";position:absolute;inset:0;z-index:2;background:var(--sv-red);opacity:0;pointer-events:none}
+.rev.sv-hit .sv-flag::after{animation:svFlash .5s ease-out}
+@keyframes svFlash{0%{opacity:.6}100%{opacity:0}}
+.sv-pop{position:absolute;left:50%;top:22%;z-index:5;pointer-events:none;font-family:var(--font-head);font-size:38px;line-height:1;color:#ff4d2e;white-space:nowrap;
+  text-shadow:3px 3px 0 #1c2b22,-1.5px -1.5px 0 #1c2b22,1.5px -1.5px 0 #1c2b22,-1.5px 1.5px 0 #1c2b22,1.5px 1.5px 0 #1c2b22;animation:svPop 1.2s cubic-bezier(.2,.9,.3,1) forwards}
+.sv-pop.big{font-size:48px}   /* 「−30」の3文字でも、いちばん大きくなった瞬間に 320px の画面の横にはみ出さない大きさ */
+@keyframes svPop{0%{opacity:0;transform:translate(-50%,12px) scale(.3)}14%{opacity:1;transform:translate(-50%,-8px) scale(1.2)}28%{transform:translate(-50%,-12px) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-52px) scale(1)}}
+/* 体力0: 「脱落」のハンコ。国旗は白黒、文字は薄く */
+.sv-stamp{position:absolute;left:50%;top:50%;z-index:3;padding:0 12px;border:4px solid #a8321a;border-radius:10px;color:#a8321a;background:rgba(255,253,246,.9);font-family:var(--font-head);font-size:26px;line-height:1.35;letter-spacing:.12em;white-space:nowrap;opacity:0;transform:translate(-50%,-50%) rotate(-14deg);pointer-events:none}
+.rev.sv-ko .sv-stamp{opacity:1;animation:svStamp .45s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes svStamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-14deg) scale(1.9)}60%{opacity:1;transform:translate(-50%,-50%) rotate(-14deg) scale(.9)}100%{opacity:1;transform:translate(-50%,-50%) rotate(-14deg) scale(1)}}
+.rev.sv-ko .sv-flag img{filter:grayscale(1) brightness(.92)}
+.rev.sv-ko .who,.rev.sv-ko .country,.rev.sv-ko .val,.rev.sv-ko .sv-wr{opacity:.55}
+#revealRows.still .rev.sv-ko .sv-stamp{animation:none}
+/* 自分が当たった（赤）・自分が1位（金）: 画面のふちが光る */
+.sv-flash{position:fixed;inset:0;z-index:45;pointer-events:none;animation:svHurt .7s ease-out forwards}
+.sv-flash.gold{animation-name:svGold}
+@keyframes svHurt{0%{box-shadow:inset 0 0 70px 28px rgba(214,55,30,.8)}100%{box-shadow:inset 0 0 70px 28px rgba(214,55,30,0)}}
+@keyframes svGold{0%{box-shadow:inset 0 0 80px 30px rgba(244,197,66,.9)}100%{box-shadow:inset 0 0 80px 30px rgba(244,197,66,0)}}
+/* 結果発表: 最後まで残った人は体力、脱落した人は何ラウンドで脱落したか。出された国の一覧には減った体力 */
+.final .sv-sc{font-family:var(--font-body)}
+.final li.sv-m .nm{min-width:0;overflow-wrap:anywhere}   /* 長い名前と「8ラウンドで脱落」が並んでも 320px に収まるよう、名前のほうを折り返す */
+.sv-outnote{font-size:13px;font-weight:800;color:var(--muted);white-space:nowrap}
+.history .sv-hdmg{font-family:var(--font-head);font-size:15px;color:var(--sv-red);margin-top:2px;display:flex;align-items:center;justify-content:center;gap:4px}
+.history .sv-hdmg.safe{color:var(--primary)}
+.history .hcard.win .sv-hdmg{color:#1c2b22}
+.history .sv-hdmg .tag{margin-left:0}
+@media (prefers-reduced-motion:reduce){
+  .rev.sv-power,.rev.sv-hit,.rev.sv-hit.sv-big,.rev.sv-power .crown .ico,.rev.sv-power .sv-flag,.rev.sv-power .sv-flag::before,.rev.sv-hit .sv-flag::after,.rev.sv-ko .sv-stamp,.sv-hp.low .sv-fill,.flagcard.sv-new::after,.rev .sv-dmgline.show{animation:none}
+  .sv-wave,.sv-pop,.sv-flash,.sv-anchor{display:none}
+}

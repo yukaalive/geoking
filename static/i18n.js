@@ -72,6 +72,15 @@ const I18N = {
     learn_first: '先に図鑑で覚える', question: '問題', quit: 'やめる', which_flag: 'この国の国旗は？', which_name: 'この国旗の国は？', which_capital: 'この国の首都は？',
     correct: '正解！', wrong_answer: 'ざんねん… 正解は {name}', res_perfect: '全問正解！地理王！', res_great: 'すごい！', res_good: 'いいね！', res_tryagain: 'もう一度チャレンジ！',
     review_wrong: 'まちがえた国', replay_same: '同じ問題でもう一度', play_again: '新しい問題に挑戦', choose_mode: 'モードを選ぶ', confirm_quit: 'クイズをやめてモード選択に戻りますか？',
+    // 確認の小窓（common.js の askConfirm）
+    ask_leave_ok: '退出する', ask_lobby_ok: 'ロビーに戻る', ask_quit_ok: 'やめる', ask_cancel: 'キャンセル', ask_continue: '続ける',
+    // サバイバル（体力を減らし合う試作のルール。survival.js）
+    sv_rule_line: '<b>サバイバル</b>　体力{hp}。1位は減らず、最下位は{max}減る。0で脱落、最後の1人が勝ち',
+    sv_start: 'サバイバル開始', sv_start_bot: 'botとサバイバル開始', sv_hp: '体力', sv_alive: 'のこり{n}人',
+    sv_no_damage: 'ノーダメージ', sv_out: '脱落', sv_out_round: '{n}ラウンドで脱落',
+    sv_next_label: '次のラウンド', sv_knocked: '{names} が脱落！', sv_decided: '決着！ {name} が最後の1人', sv_time_up: '時間切れ！ 体力の多い人の勝ち',
+    sv_champion: '最後まで残った {names} が地理王！',
+    sv_you_out_title: '脱落しました', sv_you_out_note: '最後まで観戦できます。みんなの手札で、誰がどの国旗を選んでいるかが見えます。',
   },
   en: {
     app_title: 'GeoKing | Flag card geography party game', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -136,6 +145,13 @@ const I18N = {
     learn_first: 'Study the flags first', question: 'Question', quit: 'Quit', which_flag: 'Which flag is this country?', which_name: 'Which country is this flag?', which_capital: "What is this country's capital?",
     correct: 'Correct!', wrong_answer: 'Not quite… it was {name}', res_perfect: 'Perfect! You are the GeoKing!', res_great: 'Great job!', res_good: 'Nice!', res_tryagain: 'Try again!',
     review_wrong: 'Countries you missed', replay_same: 'Same questions again', play_again: 'New questions', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
+    ask_leave_ok: 'Leave', ask_lobby_ok: 'Go to lobby', ask_quit_ok: 'Quit', ask_cancel: 'Cancel', ask_continue: 'Keep playing',
+    sv_rule_line: '<b>Survival</b>  {hp} HP. 1st place loses nothing, last place loses {max}. At 0 you are out; the last one standing wins',
+    sv_start: 'Start survival', sv_start_bot: 'Start survival with a bot', sv_hp: 'HP', sv_alive: '{n} left',
+    sv_no_damage: 'No damage', sv_out: 'OUT', sv_out_round: 'Out in round {n}',
+    sv_next_label: 'next round', sv_knocked: 'Out: {names}', sv_decided: 'Game over! {name} is the last one standing', sv_time_up: "Time's up! Most HP wins",
+    sv_champion: '{names} survived — the GeoKing!',
+    sv_you_out_title: "You're out", sv_you_out_note: 'Keep watching to the end. You can see which flag each player is choosing.',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

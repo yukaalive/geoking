@@ -29,6 +29,29 @@
         "server.py"
       ],
       "port": 8090
+    },
+    {
+      "name": "survival",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PORT=8092",
+        "GEOKING_DEV=1",
+        "GEOKING_RULE=survival",
+        "python3",
+        "server.py"
+      ],
+      "port": 8092
+    },
+    {
+      "name": "survival-normal",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PORT=8093",
+        "GEOKING_DEV=1",
+        "python3",
+        "server.py"
+      ],
+      "port": 8093
     }
   ]
 }

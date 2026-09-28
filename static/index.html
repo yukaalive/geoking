@@ -118,6 +118,7 @@
           <label><span data-i18n="room_name">部屋の名前</span> <input id="setTitle" maxlength="20" placeholder="例：ゆかの部屋" data-i18n-ph="room_title_ph" style="width:180px"></label>
           <label class="chk"><input type="checkbox" id="setPublic"> <svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="public_room_label">公開部屋にする</span></label>
         </div>
+        <p id="svRule" class="sv-rule hidden"></p>
         <button id="startBtn" class="primary big hostonly">ゲーム開始</button>
         <p class="guestonly muted" data-i18n="waiting_host_start">ホストが開始するのを待っています…</p>
       </div>
@@ -128,7 +129,7 @@
   <!-- ゲーム -->
   <section id="game" class="screen hidden">
     <div class="gamehead">
-      <div class="roundlabel"><span data-i18n="round">ラウンド</span> <b id="roundNum"></b> / <span id="roundTotal"></span></div>
+      <div class="roundlabel"><span data-i18n="round">ラウンド</span> <b id="roundNum"></b><span id="roundOf"> / <span id="roundTotal"></span></span><div id="svStatus" class="sv-status hidden"></div></div>
       <div id="promptCard" class="promptcard">
         <div class="text" id="promptText"></div>
       </div>
@@ -153,7 +154,7 @@
       </div>
       <aside class="right">
         <div class="card">
-          <h3><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> <span data-i18n="score">スコア</span></h3>
+          <h3><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> <span id="scoreTitle" data-i18n="score">スコア</span></h3>
           <ul id="scoreList" class="scores"></ul>
         </div>
         <div id="gameChatSlot"></div>
@@ -195,6 +196,7 @@
 <script src="/static/i18n.js"></script>
 <script src="/static/common.js"></script>
 <script src="/static/sfx.js"></script>
+<script src="/static/survival.js"></script>
 <script src="/static/app.js"></script>
 <script src="/static/native.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});</script>

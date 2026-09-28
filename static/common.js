@@ -36,6 +36,23 @@ const ico = (name, cls = '') => `<svg class="ico ${cls}" aria-hidden="true"><use
 function stars(n) { return `<span class="stars">${ico('star').repeat(n)}${ico('star-off').repeat(3 - n)}</span>`; }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 function toast(msg) { const t = $('#toast'); if (!t) return; t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add('hidden'), 2600); }
+// 確認の小窓（退出・ロビーへ・クイズをやめる）。はい → true、やめる・外側・× → false。
+// ブラウザの確認ダイアログ（confirm）は使わない: アプリ内のブラウザには、ダイアログを出さずにすぐ「キャンセル」にするものがある（2026-09-28: Claude アプリのブラウザで「退出」が効かなかった）
+function askConfirm(message, okLabel, cancelLabel, danger) {
+  const modal = $('#modal'), body = $('#modalBody');
+  if (!modal || !body) return Promise.resolve(window.confirm(message));
+  return new Promise((resolve) => {
+    body.classList.remove('wide');
+    body.innerHTML = `<p class="askmsg">${escapeHtml(message).replace(/\n/g, '<br>')}</p><div class="row askrow"><button class="askok ${danger ? 'danger-fill' : 'primary'}">${escapeHtml(okLabel)}</button><button class="askcancel">${escapeHtml(cancelLabel)}</button></div>`;
+    let done = false;
+    const finish = (yes) => { if (done) return; done = true; watch.disconnect(); modal.classList.add('hidden'); resolve(yes); };
+    const watch = new MutationObserver(() => { if (modal.classList.contains('hidden')) finish(false); });   // 外側や × で閉じた
+    body.querySelector('.askok').onclick = () => finish(true);
+    body.querySelector('.askcancel').onclick = () => finish(false);
+    modal.classList.remove('hidden');
+    watch.observe(modal, { attributes: true, attributeFilter: ['class'] });
+  });
+}
 function countryName(id) { const c = META.countries[id]; return c ? c.name : id; }
 
 function fmtValue(v, fmt) {

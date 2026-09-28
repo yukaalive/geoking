@@ -260,7 +260,7 @@ function spawnConfetti(target, tier) {
   trackVisit('quiz');
   META = await loadMeta();
   document.querySelectorAll('.qlevel').forEach(b => b.onclick = () => startQuiz(b.dataset.mode, false, b.dataset.level === 'hard'));
-  $('#qQuit').onclick = () => { if (confirm(t('confirm_quit'))) { sfx.leave(); renderMenu(); } };
+  $('#qQuit').onclick = async () => { if (await askConfirm(t('confirm_quit'), t('ask_quit_ok'), t('ask_continue'))) { sfx.leave(); renderMenu(); } };   // 確認はゲームの中の小窓で（common.js）
   $('#qReplay').onclick = () => startQuiz(qMode, true, qHard);
   $('#qAgain').onclick = () => startQuiz(qMode, false, qHard);
   $('#qOther').onclick = () => renderMenu();
