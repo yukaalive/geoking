@@ -4,25 +4,40 @@ const sfx = (() => {
   let ctx = null;
   const prefs = { sound: localStorage.getItem('geoking_sound') !== 'off' };   // 音オン＝振動もオン（設定は1つ）
   const ensure = () => { if (!prefs.sound) return null; try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; } catch { return null; } };
-  // 1音: type=波形, f=周波数(Hz), t=開始遅延, d=長さ, v=音量, slide=終了周波数
-  const tone = (type, f, t, d, v = .18, slide = null) => {
+  // 1音: type=波形, f=周波数(Hz), t=開始遅延, d=長さ, v=音量, slide=終了周波数, out=つなぐ先（なしはスピーカー）
+  const tone = (type, f, t, d, v = .18, slide = null, out = null) => {
     const c = ensure(); if (!c) return;
     const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, c.currentTime + t);
     if (slide) o.frequency.exponentialRampToValueAtTime(slide, c.currentTime + t + d);
     g.gain.setValueAtTime(0.0001, c.currentTime + t); g.gain.exponentialRampToValueAtTime(v, c.currentTime + t + .01); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + t + d);
-    o.connect(g).connect(c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + d + .02);
+    o.connect(g).connect(out || c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + d + .02);
   };
   // ノイズ: めくり音・ため息用。freq→slideTo でフィルタを動かせる
-  const noise = (t, d, v = .12, freq = 1800, q = .8, slideTo = null) => {
+  const noise = (t, d, v = .12, freq = 1800, q = .8, slideTo = null, out = null) => {
     const c = ensure(); if (!c) return;
     const buf = c.createBuffer(1, c.sampleRate * d, c.sampleRate); const data = buf.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
     const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = v;
     const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(freq, c.currentTime + t);
     if (slideTo) bp.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + t + d); bp.Q.value = q;
-    src.connect(bp).connect(g).connect(c.destination); src.start(c.currentTime + t);
+    src.connect(bp).connect(g).connect(out || c.destination); src.start(c.currentTime + t);
   };
   const vibrate = (pattern) => { if (prefs.sound && navigator.vibrate) { try { navigator.vibrate(pattern); } catch {} } };
+  // バトルの音は何人分も重ねて鳴らすので、割れないよう音の大きさをならす所（compressor）を通す
+  let comp = null;
+  const bus = () => {
+    const c = ensure(); if (!c) return null;
+    if (!comp) { comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 6; comp.attack.value = .002; comp.release.value = .2; comp.connect(c.destination); }
+    return comp;
+  };
+  const brass = (freqs, t, d, v, out) => {   // ラッパのような和音（のこぎり波を少しずらして重ね、こもらせる）
+    const c = ensure(); if (!c) return;
+    const t0 = c.currentTime + t, lp = c.createBiquadFilter(), g = c.createGain();
+    lp.type = 'lowpass'; lp.Q.value = 1.2; lp.frequency.setValueAtTime(500, t0); lp.frequency.exponentialRampToValueAtTime(3200, t0 + .05); lp.frequency.exponentialRampToValueAtTime(1400, t0 + d);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(v, t0 + .02); g.gain.setValueAtTime(v, t0 + d * .7); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+    lp.connect(g).connect(out || c.destination);
+    for (const f of freqs) for (const det of [-7, 7]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det; o.connect(lp); o.start(t0); o.stop(t0 + d + .02); }
+  };
   return {
     prefs,
     unlock() { ensure(); },
@@ -49,11 +64,23 @@ const sfx = (() => {
     open()    { tone('sine', 700, 0, .06, .07, 900); },                                                    // 小窓を開く
     close()   { tone('sine', 900, 0, .06, .06, 600); },                                                    // 小窓を閉じる
     switch()  { tone('square', 990, 0, .05, .07); },                                                       // 設定の切り替え
-    // ---- サバイバル（体力を減らし合うルール）の答え合わせ
-    power()   { tone('triangle', 392, 0, .14, .14, 784); [784, 988, 1319].forEach((f, i) => tone('triangle', f, .1 + i * .06, .24, .15)); noise(.05, .3, .05, 5000, .7, 9000); }, // 1位が光る（キラーン）
-    hit(n = 3){ const v = Math.min(.32, .12 + n * .035); noise(0, .18, v, 520, .8, 150); tone('square', 190 - n * 14, 0, .16, v * .45, 60); }, // ダメージ（大きいほど低く強い「ドン」）
-    hurt(n = 3){ vibrate(n >= 5 ? [70, 40, 110] : n >= 3 ? [50, 30, 50] : 35); },                       // 自分がダメージを受けた（振動だけ）
+    // ---- バトル（体力を減らし合うゲーム）の答え合わせ。k は当たる強さ 0〜1（その回でいちばん大きいダメージが 1）
+    shine()   { const o = bus(); noise(0, .32, .07, 5000, 1, 14000, o); tone('triangle', 988, 0, .1, .15, 1976, o); [1319, 1568, 1976, 2637].forEach((f, i) => tone('triangle', f, .06 + i * .055, .22, .13, null, o)); tone('sine', 3136, .3, .7, .06, null, o); tone('sine', 2637, .36, .8, .05, null, o); }, // ほかの人が1位（シャキーン）
+    fanfare() { const o = bus(); brass([523, 659, 784], 0, .12, .045, o); brass([523, 659, 784], .14, .12, .045, o); brass([659, 784, 1047], .28, .75, .05, o); [1568, 2093, 2637, 3136].forEach((f, i) => tone('triangle', f, .3 + i * .05, .3, .09, null, o)); noise(.28, .9, .05, 9000, .6, 6000, o); vibrate([40, 50, 40, 50, 120]); }, // 自分が1位（パッパッパーン）
+    charge()  { const o = bus(); tone('triangle', 220, 0, .45, .09, 880, o); tone('sine', 440, .05, .4, .05, 1760, o); noise(0, .45, .05, 900, 1, 7000, o); tone('sine', 1760, .44, .12, .07, null, o); }, // 1位の国旗に力がたまる
+    whoosh(k = 1) { const o = bus(); noise(0, .26, .16 + .08 * k, 500, 1.2, 4200, o); tone('sine', 260, 0, .24, .05 + .03 * k, 900, o); }, // 弾が飛ぶ（シュッ）
+    smash(k = 1, many = 1) {   // 当たった: 「パチッ」＋「ドン」＋「ガッ」。大きいほど低く強い。いちばん大きいダメージは砕ける音も。何人も同時に当たると少し大きく
+      const o = bus(), v = Math.min(.55, .24 + k * .2 + (many - 1) * .05);
+      noise(0, .03, v * 1.3, 5200, .7, null, o); tone('sine', 170 + 50 * k, 0, .2 + .22 * k, v * 1.25, 36, o); noise(.005, .13 + .14 * k, v, 1200 - 500 * k, .9, 170, o); tone('square', 100 - 30 * k, .012, .1 + .1 * k, v * .2, 42, o);
+      if (k > .67) { for (let i = 0; i < 7; i++) noise(.03 + i * .03 + Math.random() * .02, .05, v * .32, 3500 + Math.random() * 5000, 5, null, o); tone('sawtooth', 64, .02, .55, v * .22, 30, o); }
+    },
+    buzz(k = 1) {   // 自分が当たった（振動だけ）。アプリは振動1回が「コツン」1回なので、大きいダメージは分けて2回
+      const p = k > .67 ? [90, 50, 150] : k > .34 ? [60, 40, 60] : [40];
+      if (!document.body.classList.contains('native')) { vibrate(p); return; }
+      let at = 0; p.forEach((ms, i) => { if (i % 2 === 0) setTimeout(() => vibrate(ms), at); at += ms; });
+    },
     ko()      { noise(0, .55, .2, 900, .6, 110); tone('sawtooth', 320, 0, .55, .09, 55); tone('square', 110, .08, .4, .06, 50); }, // 脱落（ハンコ）
+    shatter() { this.ko(); const o = bus(); for (let i = 0; i < 9; i++) noise(.05 + i * .035 + Math.random() * .02, .06, .14, 4000 + Math.random() * 6000, 6, null, o); }, // 脱落（ハンコ＋国旗が砕ける）
   };
 })();
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });   // 最初のタップで音を許可

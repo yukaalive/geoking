@@ -364,6 +364,44 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 #revealRows.still .rev,#revealRows.still .rev .wrank.bronze,#revealRows.still .rev .wrank.silver{animation:none}
 #revealRows.still .rev .wrank.gold{animation:wrankGlow 1.6s ease-in-out infinite}
 @keyframes wrankPop{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
+/* 答え合わせの1位の演出（パーティー・バトル共通。app.js の cheerWinners。2026-09-28）: 国旗が大きく跳ねて金色に強く光り（そのあとも少し光ったまま）、王冠が跳ね、
+   国旗の上を光の筋が走る。後ろで後光が回り、金の星が飛び散って、キラキラが残る。自分が1位なら画面ぜんぶ（ふちだけでなく真ん中も）が金色に光る */
+#revealRows{position:relative;z-index:0}   /* 演出を描く2枚の層の基準（z-index で、後ろの層 .fx-back をカードの下に置く）。カードの並びは変わらない */
+.fx-back,.fx-front{position:absolute;inset:-12px;overflow:hidden;pointer-events:none}   /* 枠の外（画面の横）にはみ出さない */
+.fx-back{z-index:-1}.fx-front{z-index:4}
+.rev.cheer{animation:winJump .85s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes winJump{0%{transform:none}30%{transform:translateY(-8px) scale(1.07) rotate(-1deg)}62%{transform:translateY(0) scale(.99) rotate(.4deg)}100%{transform:translateY(-2px) scale(1.02)}}   /* 大きくなりすぎると、狭いスマホ（パーティーは1列）で画面の横にはみ出す */
+.rev.cheer .crown .ico{animation:winCrown .9s cubic-bezier(.2,1.8,.4,1)}
+@keyframes winCrown{0%{transform:none}40%{transform:translateY(-12px) scale(1.4) rotate(-10deg)}100%{transform:none}}
+.rev.cheer .rflag>img{animation:winRing 2.4s ease-out both}   /* パーティー: 国旗の画像の金色の枠が強く光る（バトルは国旗の枠 .sv-flag） */
+@keyframes winRing{0%{box-shadow:0 0 0 3px var(--accent)}14%{box-shadow:0 0 0 6px var(--accent),0 0 40px 18px rgba(255,204,64,.95)}100%{box-shadow:0 0 0 3px var(--accent),0 0 20px 7px rgba(244,197,66,.6)}}
+.rev.cheer .rflag{position:relative}
+.fx-shine{position:absolute;z-index:1;border-radius:8px;pointer-events:none;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.85) 48%,transparent 62%) no-repeat;background-size:250% 100%;background-position:130% 0;opacity:0;animation:winShine 1s ease-out .15s both}   /* パーティー: 国旗の画像の上を走る光の筋 */
+@keyframes winShine{0%{opacity:1;background-position:130% 0}85%{opacity:1}100%{opacity:0;background-position:-130% 0}}
+.fx-wave{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:6px solid var(--accent);box-shadow:0 0 12px 2px rgba(244,197,66,.6);animation:winWave .75s ease-out forwards}   /* 衝撃波 */
+@keyframes winWave{0%{transform:scale(.3);opacity:1}100%{transform:scale(var(--s,12));opacity:0}}
+.fx-anchor{position:absolute;width:0;height:0}
+.fx-anchor .confetti{position:absolute;inset:-40px -20px;pointer-events:none;overflow:visible}
+.fx-anchor .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;left:50%;top:50%;opacity:0;animation:conf 1.4s ease-out forwards}
+.fx-rays{position:absolute;left:0;top:0;width:var(--d);height:var(--d);margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;opacity:0;
+  background:repeating-conic-gradient(rgba(255,200,55,.85) 0deg 7deg,rgba(255,200,55,0) 7deg 20deg);
+  -webkit-mask-image:radial-gradient(closest-side,#000 28%,rgba(0,0,0,.55) 60%,transparent);mask-image:radial-gradient(closest-side,#000 28%,rgba(0,0,0,.55) 60%,transparent)}   /* 国旗の後ろで回る後光 */
+.fx-star,.fx-tw{position:absolute;left:0;top:0;width:var(--s,16px);height:var(--s,16px);margin:calc(var(--s,16px) / -2) 0 0 calc(var(--s,16px) / -2);pointer-events:none}
+.fx-star svg,.fx-tw svg{display:block;width:100%;height:100%;overflow:visible}
+.fx-star path{fill:var(--c,#ffd23f);stroke:#1c2b22;stroke-width:1.6;stroke-linejoin:round}   /* 飛び散る金の星 */
+.fx-tw path{fill:#fffbe6;stroke:#e0a800;stroke-width:1.4;stroke-linejoin:round}   /* キラッ */
+.fx-tw.fixed{position:fixed;z-index:46}
+.fx-gold{position:fixed;inset:0;z-index:45;pointer-events:none;
+  background:radial-gradient(circle at var(--x,50%) var(--y,50%),rgba(255,250,222,.9),rgba(255,214,90,.55) 22%,rgba(244,197,66,.3) 55%,rgba(244,197,66,.24));
+  box-shadow:inset 0 0 90px 34px rgba(244,197,66,.85);animation:winGold 1.2s ease-out forwards}   /* 自分が1位: 画面ぜんぶが金色に光る（前はふちだけ） */
+@keyframes winGold{0%{opacity:0}10%{opacity:1}100%{opacity:0}}
+.fx-bigrays{position:fixed;z-index:44;border-radius:50%;pointer-events:none;opacity:0;
+  background:repeating-conic-gradient(rgba(255,196,40,.42) 0deg 6deg,rgba(255,196,40,0) 6deg 18deg);
+  -webkit-mask-image:radial-gradient(closest-side,rgba(0,0,0,.4),#000 18%,#000 70%,transparent);mask-image:radial-gradient(closest-side,rgba(0,0,0,.4),#000 18%,#000 70%,transparent)}   /* 自分が1位: 自分の国旗から画面いっぱいに回る後光 */
+@media (prefers-reduced-motion:reduce){
+  .rev.cheer,.rev.cheer .crown .ico,.rev.cheer .rflag>img{animation:none}
+  .fx-wave,.fx-anchor,.fx-shine,.fx-gold,.fx-bigrays{display:none}
+}
 @keyframes wrankGlow{0%,100%{box-shadow:3px 3px 0 var(--ink),0 0 0 0 rgba(244,197,66,0)}50%{box-shadow:3px 3px 0 var(--ink),0 0 0 8px rgba(244,197,66,.45)}}
 .history .who.hot{font-weight:900;border-radius:6px;padding:0 4px;display:inline-block}
 .history .who.hot.bronze{color:#6b3a14;background:#f0cdb0}
@@ -525,10 +563,10 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
   .flagcard.sv-new .fimg::after{content:"NEW";grid-area:1/1;place-self:start end;margin:-9px -7px 0 0}
 }
 /* 答え合わせ: 外側のカードの枠はなし（国旗の枠だけ）。4人ならスマホの1画面に全員入る。上の段に順位と減った体力、国旗のすぐ下に体力ゲージ。
-   演出は国旗ごとに（1位＝国旗の枠が金色に光る、ほか＝揺れて国旗が赤く光る、0＝ハンコ） */
+   演出（2026-09-28 案B「1位の国旗が攻撃する」）: 1位＝跳ねて金色に光り、後ろで後光が回る → 1位の国旗から弾が飛ぶ → 当たった国旗は白く光って止まり、揺れて赤く光る → 0＝ハンコ */
 .reveal.sv-reveal{position:relative;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px}
 @media(max-width:560px){.reveal.sv-reveal{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}}   /* スマホはいつも2列（320px でも） */
-.sv-fx{position:absolute;inset:-12px;overflow:hidden;pointer-events:none;z-index:4}   /* 衝撃波と紙吹雪を描く層。枠の外（画面の横）にはみ出さない */
+.reveal.sv-reveal .sv-ghost{display:none}   /* 答え合わせのカードのゲージ: 減った分は割れて落ちる（.sv-chunk）ので、あとから消える赤い影は出さない */
 .rev.sv-card,.rev.sv-card.win{position:relative;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow-wrap:anywhere}
 .rev.sv-card.win,.rev.sv-card.win .country,.rev.sv-card.win .val,.rev.sv-card.win .crown .ico{color:var(--ink)}   /* 金色のカードの上の濃い文字の決まり（.rev.win）を、地の上の色に戻す */
 .rev.sv-card.win .who,.rev.sv-card.win .country small{color:var(--muted)}
@@ -548,26 +586,26 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .rev.sv-card .val{font-size:16px;line-height:1.25}
 .sv-wr{display:inline-block;margin-top:4px;padding:0 6px;border-radius:6px;font-size:11px;font-weight:800;color:var(--muted)}
 .sv-wr.gold{color:#5a4a10;background:var(--accent)}.sv-wr.silver{color:#374151;background:#dfe3e9}.sv-wr.bronze{color:#6b3a14;background:#f0cdb0}
-.rev .sv-dmgline{font-family:var(--font-head);font-size:22px;line-height:1;color:var(--sv-red);visibility:hidden}
-.rev .sv-dmgline.show{visibility:visible;animation:svPopIn .4s cubic-bezier(.2,1.6,.4,1)}
-.sv-nodmg{display:inline-block;padding:2px 10px;border-radius:999px;border:2px solid #1c2b22;background:#fff;color:#1f6f4a;font-family:var(--font-body);font-weight:900;font-size:13px;line-height:1.4;vertical-align:middle}
+.rev .sv-dmgline{font-family:var(--font-head);font-size:22px;line-height:1;color:var(--sv-red);visibility:hidden;transform-origin:100% 50%}   /* 大きく出るときは右の端から（右の列のカードでも画面の横にはみ出さない） */
+.rev .sv-dmgline.show{visibility:visible;animation:svSlam .6s cubic-bezier(.2,1.5,.35,1)}   /* 当たった瞬間に、押しつけるように出る */
+@keyframes svSlam{0%{transform:scale(2.6) rotate(-10deg);opacity:0}40%{transform:scale(.88) rotate(2deg);opacity:1}68%{transform:scale(1.08)}100%{transform:none;opacity:1}}
 @keyframes svPopIn{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
-/* 1位: 国旗の枠が金色に光り、少し大きくなって王冠が跳ね、国旗の上を光の筋が走る */
-.rev.sv-power{animation:svPower .75s cubic-bezier(.2,1.5,.4,1) both;z-index:2}
-@keyframes svPower{0%{transform:none}35%{transform:scale(1.07) rotate(-1.2deg)}100%{transform:scale(1.02)}}
-.rev.sv-power .sv-flag{animation:svRing 1.6s ease-out both}
-@keyframes svRing{0%{box-shadow:0 0 0 3px var(--accent)}20%{box-shadow:0 0 0 5px var(--accent),0 0 28px 12px rgba(244,197,66,.9)}100%{box-shadow:0 0 0 3px var(--accent),0 0 14px 4px rgba(244,197,66,.45)}}
-.rev.sv-power .crown .ico{animation:svCrown .9s cubic-bezier(.2,1.8,.4,1)}
-@keyframes svCrown{0%{transform:none}40%{transform:translateY(-12px) scale(1.4) rotate(-10deg)}100%{transform:none}}
+/* 1位: パーティーと同じ演出（決まりは上の「答え合わせの1位の演出」）。バトルは国旗の枠 .sv-flag が金色に強く光り、その上を光の筋が走る */
+.rev.sv-card.cheer{z-index:2}   /* 大きくなった1位のカードが、隣のカードの下にならないように */
+.rev.cheer .sv-flag{animation:winRing 2.4s ease-out both}
 .sv-flag::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.85) 48%,transparent 62%) no-repeat;background-size:250% 100%;background-position:130% 0}
-.rev.sv-power .sv-flag::before{animation:svShine 1s ease-out .15s both}
-@keyframes svShine{0%{opacity:1;background-position:130% 0}85%{opacity:1}100%{opacity:0;background-position:-130% 0}}
-.sv-wave{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:6px solid var(--accent);box-shadow:0 0 12px 2px rgba(244,197,66,.6);animation:svWave .75s ease-out forwards}
-@keyframes svWave{0%{transform:scale(.3);opacity:1}100%{transform:scale(var(--s,12));opacity:0}}
-.sv-anchor{position:absolute;width:0;height:0}
-.sv-anchor .confetti{position:absolute;inset:-40px -20px;pointer-events:none;overflow:visible}
-.sv-anchor .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;left:50%;top:50%;opacity:0;animation:conf 1.4s ease-out forwards}
-/* 1位以外: 揺れて国旗が赤く光り、ダメージの数字が飛び出す（大きいダメージほど強く） */
+.rev.cheer .sv-flag::before{animation:winShine 1s ease-out .15s both}
+/* 1位の国旗に光が集まって、ほかの人の国旗へ光の弾が飛ぶ（大きいダメージほど大きい弾） */
+.rev.sv-charge .sv-flag{animation:svCharge .5s ease-in both}
+@keyframes svCharge{0%{transform:none;box-shadow:0 0 0 3px var(--accent),0 0 20px 7px rgba(244,197,66,.6)}80%{transform:scale(1.06);box-shadow:0 0 0 5px #fff3b0,0 0 34px 16px rgba(255,214,80,.95)}100%{transform:scale(1.04);box-shadow:0 0 0 4px var(--accent),0 0 26px 10px rgba(255,214,80,.8)}}
+.sv-dot{position:absolute;left:0;top:0;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:radial-gradient(circle,#fff 0 30%,#ffd84d 58%,rgba(255,200,60,0) 72%)}
+.sv-shot,.sv-trail{position:absolute;left:0;top:0;width:var(--s,20px);height:var(--s,20px);margin:calc(var(--s,20px) / -2) 0 0 calc(var(--s,20px) / -2);border-radius:50%;pointer-events:none}
+.sv-shot{z-index:7;background:radial-gradient(circle,#fff 0 22%,#fff1a8 34%,#ffc53d 52%,#ff7a2e 68%,rgba(255,90,40,0) 72%);box-shadow:0 0 14px 5px rgba(255,180,60,.7)}
+.sv-trail{z-index:6;background:radial-gradient(circle,rgba(255,244,190,.95),rgba(255,176,60,.75) 45%,rgba(255,120,40,0) 70%)}
+/* 当たる: 国旗が白く光って一瞬止まる → 揺れて赤く光る。切り傷・火花・ギザギザの吹き出しの数字・体力ゲージの減った分が割れて落ちる（大きいダメージほど強く）。
+   その回でいちばん大きいダメージは、答え合わせ全体も揺れる */
+.rev.sv-white .sv-flag{transform:scale(1.05)}
+.rev.sv-white .sv-flag::before{background:#fff;opacity:.95;animation:none}
 .rev.sv-hit{animation:svShake .5s cubic-bezier(.36,.07,.19,.97) both}
 .rev.sv-hit.sv-big{animation:svShakeBig .6s cubic-bezier(.36,.07,.19,.97) both}
 @keyframes svShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-6px) rotate(-1deg)}40%,60%{transform:translateX(6px) rotate(1deg)}}
@@ -575,22 +613,45 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .sv-flag::after{content:"";position:absolute;inset:0;z-index:2;background:var(--sv-red);opacity:0;pointer-events:none}
 .rev.sv-hit .sv-flag::after{animation:svFlash .5s ease-out}
 @keyframes svFlash{0%{opacity:.6}100%{opacity:0}}
-.sv-pop{position:absolute;left:50%;top:22%;z-index:5;pointer-events:none;font-family:var(--font-head);font-size:38px;line-height:1;color:#ff4d2e;white-space:nowrap;
-  text-shadow:3px 3px 0 #1c2b22,-1.5px -1.5px 0 #1c2b22,1.5px -1.5px 0 #1c2b22,-1.5px 1.5px 0 #1c2b22,1.5px 1.5px 0 #1c2b22;animation:svPop 1.2s cubic-bezier(.2,.9,.3,1) forwards}
-.sv-pop.big{font-size:48px}   /* 「−30」の3文字でも、いちばん大きくなった瞬間に 320px の画面の横にはみ出さない大きさ */
-@keyframes svPop{0%{opacity:0;transform:translate(-50%,12px) scale(.3)}14%{opacity:1;transform:translate(-50%,-8px) scale(1.2)}28%{transform:translate(-50%,-12px) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-52px) scale(1)}}
-/* 体力0: 「脱落」のハンコ。国旗は白黒、文字は薄く */
+#revealRows.sv-quake{animation:svQuake .45s cubic-bezier(.36,.07,.19,.97)}
+@keyframes svQuake{10%{transform:translate(-5px,2px) rotate(-.5deg)}25%{transform:translate(6px,-2px) rotate(.5deg)}40%{transform:translate(-5px,1px)}55%{transform:translate(4px,-1px)}72%{transform:translate(-2px,0)}100%{transform:none}}
+.sv-slash{position:absolute;left:50%;top:50%;z-index:3;width:160%;height:6px;margin:-3px 0 0 -80%;border-radius:3px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(255,255,255,0),#fff 22%,#fff6c4 50%,#fff 78%,rgba(255,255,255,0));box-shadow:0 0 9px 3px rgba(255,105,45,.85)}   /* 切り傷（国旗の枠の中だけ） */
+.sv-spark{position:absolute;left:0;top:0;width:4px;margin-left:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(28,43,34,.55)}   /* 火花 */
+/* ギザギザの吹き出しの「−20」。「−30」がいちばん大きくなった瞬間も、はみ出す分は .fx-front の中で切れる（画面の横にはみ出さない）。320px では 45px */
+.sv-pop{position:absolute;left:0;top:0;z-index:6;display:grid;place-items:center;pointer-events:none;transform:translate(-50%,-50%)}
+.sv-pop>*{grid-area:1/1}
+.sv-pop svg{width:calc(var(--fs) * 2.9);height:calc(var(--fs) * 2.1);overflow:visible}
+.sv-pop .o{fill:var(--b1);stroke:#1c2b22;stroke-width:3;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.sv-pop .i{fill:var(--b2)}
+.sv-pop b{position:relative;font-family:var(--font-head);font-weight:400;font-size:var(--fs);line-height:1;white-space:nowrap;color:var(--nc);
+  text-shadow:3px 3px 0 #1c2b22,-2px -2px 0 #1c2b22,2px -2px 0 #1c2b22,-2px 2px 0 #1c2b22,2px 2px 0 #1c2b22}
+.sv-pop.small{--fs:30px;--b1:#ffd25e;--b2:#fff1b8;--nc:#ff6a2a}
+.sv-pop.mid{--fs:38px;--b1:#ff9a3d;--b2:#ffd25e;--nc:#ff3d1f}
+.sv-pop.big{--fs:min(50px,14vw);--b1:#ff3d1f;--b2:#ffe066;--nc:#fff}
+.sv-chunk{position:absolute;left:0;top:0;z-index:5;border:2px solid #1c2b22;border-radius:4px;pointer-events:none}   /* 体力ゲージから割れて落ちるかけら */
+.sv-hp.sv-jolt{animation:svJolt .42s cubic-bezier(.36,.07,.19,.97)}
+@keyframes svJolt{15%{transform:translate(-4px,1px)}30%{transform:translate(4px,-1px)}45%{transform:translate(-3px,0)}60%{transform:translate(2px,0)}100%{transform:none}}
+.sv-hp .sv-blink{position:absolute;inset:0;z-index:2;background:#fff;pointer-events:none;animation:svBlink .32s ease-out forwards}
+@keyframes svBlink{from{opacity:.95}to{opacity:0}}
+.sv-hp .sv-hpnum.sv-red{color:#c21807}
+/* 体力0: 「脱落」のハンコ。国旗は白黒でひびが入り、かけらが落ちる。文字は薄く */
 .sv-stamp{position:absolute;left:50%;top:50%;z-index:3;padding:0 12px;border:4px solid #a8321a;border-radius:10px;color:#a8321a;background:rgba(255,253,246,.9);font-family:var(--font-head);font-size:26px;line-height:1.35;letter-spacing:.12em;white-space:nowrap;opacity:0;transform:translate(-50%,-50%) rotate(-14deg);pointer-events:none}
 .rev.sv-ko .sv-stamp{opacity:1;animation:svStamp .45s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes svStamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-14deg) scale(1.9)}60%{opacity:1;transform:translate(-50%,-50%) rotate(-14deg) scale(.9)}100%{opacity:1;transform:translate(-50%,-50%) rotate(-14deg) scale(1)}}
 .rev.sv-ko .sv-flag img{filter:grayscale(1) brightness(.92)}
 .rev.sv-ko .who,.rev.sv-ko .country,.rev.sv-ko .val,.rev.sv-ko .sv-wr{opacity:.55}
 #revealRows.still .rev.sv-ko .sv-stamp{animation:none}
-/* 自分が当たった（赤）・自分が1位（金）: 画面のふちが光る */
+.sv-crack{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.sv-crack path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;vector-effect:non-scaling-stroke}
+.sv-crack.done path{stroke-dashoffset:0}
+.sv-crack .k1{stroke:#1c2b22;stroke-width:3.2}.sv-crack .k2{stroke:#fff;stroke-width:1.2}
+.sv-shard{position:absolute;left:0;top:0;width:var(--s,8px);height:var(--s,8px);margin:calc(var(--s,8px) / -2) 0 0 calc(var(--s,8px) / -2);background:#9aa19c;clip-path:polygon(0 0,100% 25%,65% 100%)}
+/* 自分が当たった: 画面のふちが赤く光る（その回でいちばん大きいダメージは強く） */
 .sv-flash{position:fixed;inset:0;z-index:45;pointer-events:none;animation:svHurt .7s ease-out forwards}
-.sv-flash.gold{animation-name:svGold}
+.sv-flash.big{animation-name:svHurtBig;animation-duration:.85s}
 @keyframes svHurt{0%{box-shadow:inset 0 0 70px 28px rgba(214,55,30,.8)}100%{box-shadow:inset 0 0 70px 28px rgba(214,55,30,0)}}
-@keyframes svGold{0%{box-shadow:inset 0 0 80px 30px rgba(244,197,66,.9)}100%{box-shadow:inset 0 0 80px 30px rgba(244,197,66,0)}}
+@keyframes svHurtBig{0%{box-shadow:inset 0 0 90px 42px rgba(214,40,20,.9);background:rgba(255,70,40,.16)}100%{box-shadow:inset 0 0 90px 42px rgba(214,40,20,0);background:rgba(255,70,40,0)}}
 /* 結果発表: 最後まで残った人は体力、脱落した人は何ラウンドで脱落したか。出された国の一覧には減った体力 */
 .final .sv-sc{font-family:var(--font-body)}
 .final li.sv-m .nm{min-width:0;overflow-wrap:anywhere}   /* 長い名前と「8ラウンドで脱落」が並んでも 320px に収まるよう、名前のほうを折り返す */
@@ -599,6 +660,7 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .history .sv-hdmg.safe{color:var(--primary)}
 .history .sv-hdmg .tag{margin-left:0}
 @media (prefers-reduced-motion:reduce){
-  .rev.sv-power,.rev.sv-hit,.rev.sv-hit.sv-big,.rev.sv-power .crown .ico,.rev.sv-power .sv-flag,.rev.sv-power .sv-flag::before,.rev.sv-hit .sv-flag::after,.rev.sv-ko .sv-stamp,.sv-hp.low .sv-fill,.flagcard.sv-new::after,.flagcard.sv-new .fimg::after,.rev .sv-dmgline.show{animation:none}
-  .sv-wave,.sv-pop,.sv-flash,.sv-anchor{display:none}
+  .rev.sv-hit,.rev.sv-hit.sv-big,.rev.cheer .sv-flag,.rev.cheer .sv-flag::before,.rev.sv-hit .sv-flag::after,.rev.sv-ko .sv-stamp,.sv-hp.low .sv-fill,.flagcard.sv-new::after,.flagcard.sv-new .fimg::after,.rev .sv-dmgline.show,
+  .rev.sv-charge .sv-flag,#revealRows.sv-quake,.sv-hp.sv-jolt{animation:none}
+  .sv-pop,.sv-flash{display:none}
 }

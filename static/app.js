@@ -245,7 +245,7 @@ function playTransitions() {
       sfx.reveal();
       const me = state.reveal.rows.find(r => r.pid === pid);
       const isSpectator = !!state.players.find(p => p.pid === pid && p.spectator);
-      if (me && !isSpectator && !SV.on()) setTimeout(() => (me.winner ? sfx.win() : sfx.lose()), 350);   // サバイバルは当たる演出に合わせて survival.js が鳴らす
+      if (me && !isSpectator && !SV.on() && !me.winner) setTimeout(() => sfx.lose(), 350);   // 1位のファンファーレは1位の演出（cheerWinners）が鳴らす。バトルは当たる演出に合わせて survival.js が鳴らす
     } else if (state.phase === 'end') {
       scrollTopNext = true;
       const mine = (state.final || state.players).find(p => p.pid === pid);
@@ -461,6 +461,102 @@ function spawnConfetti(target, tier, scale = 1) {
   target.appendChild(box);
   setTimeout(() => box.remove(), 1800);
 }
+
+// ---------- 答え合わせの1位の演出（パーティー・バトル共通。2026-09-28 にバトルの案B として作り、同じ日にパーティーにも入れた）
+// 国旗が跳ねて金色に光る・王冠が跳ねる・国旗の上を光の筋が走る・後ろで後光が回る・金の星が飛び散る・キラキラが残る・衝撃波・金の紙吹雪。
+// 自分が1位なら、画面ぜんぶ（ふちだけでなく真ん中も）が金色に光って後光が画面いっぱいに回り、ファンファーレ（前はふちだけ光り、真ん中に何もなかった）。
+// 部品は答え合わせの枠の中の2枚の層（.fx-back＝国旗の後ろ、.fx-front＝前）か画面に固定して出し、動き終わったら消す（画面の横にはみ出さない）
+const fxCalm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;   // 端末の「視差効果を減らす」: 動く飾りは出さない
+const fxRnd = (a, b) => a + Math.random() * (b - a);
+const fxCenter = (layer, node) => { const L = layer.getBoundingClientRect(), c = node.getBoundingClientRect(); return { x: c.left - L.left + c.width / 2, y: c.top - L.top + c.height / 2, w: c.width, h: c.height }; };
+function fxPart(layer, cls, x, y, frames, opt, html) {   // 小さい部品（星・キラキラ・火花など）を1つ出して、動き終わったら消す
+  const e = el('i', cls, html); e.style.left = x + 'px'; e.style.top = y + 'px'; layer.appendChild(e);
+  e.animate(frames, opt).onfinish = () => e.remove();
+  setTimeout(() => e.remove(), (opt.duration || 0) + (opt.delay || 0) + 600);   // 画面が裏に回って動きが止まっていても消す
+  return e;
+}
+function fxLayers(box) {   // 答え合わせの枠に、演出を描く層を2枚
+  const back = el('div', 'fx-back'), front = el('div', 'fx-front');
+  box.prepend(back); box.append(front);
+  return { back, front };
+}
+const FX_STAR = `<svg viewBox="-11 -11 22 22" aria-hidden="true"><path d="${(() => { let d = ''; for (let i = 0; i < 10; i++) { const r = i % 2 ? 4.3 : 10, a = (-90 + i * 36) * Math.PI / 180; d += (i ? 'L' : 'M') + (r * Math.cos(a)).toFixed(2) + ' ' + (r * Math.sin(a)).toFixed(2); } return d + 'Z'; })()}"/></svg>`;
+const FX_SPARK = '<svg viewBox="-11 -11 22 22" aria-hidden="true"><path d="M0 -10C1 -2 2 -1 10 0C2 1 1 2 0 10C-1 2 -2 1 -10 0C-2 -1 -1 -2 0 -10Z"/></svg>';
+// wins: 1位のカードごとに { card, flag（国旗の枠）, crown（王冠）, mine（自分か） }。shine: ほかの人が1位のときに「シャキーン」を鳴らすか（パーティーは今までの「ふぃ〜」のまま）
+function cheerWinners(box, L, wins, shine) {
+  let mine = null;
+  for (const w of wins) {
+    if (w.mine && !mine) mine = w;   // チャットなどでカードが描き直されていても、自分が1位のファンファーレは鳴らす
+    if (!w.card.isConnected) continue;
+    w.card.style.animationDelay = '0s';   // めくる動きの遅れを引き継がない
+    w.card.classList.add('cheer');
+    fxWave(box, L.front, w.card);
+    spawnConfetti(fxAnchor(L.front, w.crown), 'gold', 0.6);
+    if (!fxCalm()) {
+      fxRays(L.back, w.flag); fxStars(L.front, w.flag); fxTwinkle(L.front, w.crown, true);
+      if (w.flag.tagName === 'IMG') fxShine(w.flag);   // パーティーの国旗は枠なしの画像なので、光の筋は上に重ねて出す（バトルは .sv-flag::before）
+      const id = setInterval(() => (w.flag.isConnected && state && state.phase === 'reveal' ? fxTwinkle(L.front, w.flag) : clearInterval(id)), 420);
+      setTimeout(() => clearInterval(id), 5200);
+    }
+  }
+  if (mine) { sfx.fanfare(); fxGoldScreen(mine.flag); } else if (shine && wins.length) sfx.shine();
+}
+function fxWave(box, front, card) {   // 1位のカードから広がる衝撃波
+  const b = box.getBoundingClientRect(), p = fxCenter(front, card), w = el('i', 'fx-wave');
+  w.style.left = p.x + 'px'; w.style.top = p.y + 'px'; w.style.setProperty('--s', (Math.hypot(b.width, b.height) / 20).toFixed(1));
+  front.appendChild(w); setTimeout(() => w.remove(), 900);
+}
+function fxAnchor(front, target) {   // 紙吹雪の出どころ（王冠の位置）。紙吹雪は .fx-front の中に出すので、画面の横にはみ出さない
+  const p = fxCenter(front, target), a = el('i', 'fx-anchor');
+  a.style.left = p.x + 'px'; a.style.top = p.y + 'px';
+  front.appendChild(a); setTimeout(() => a.remove(), 1900);
+  return a;
+}
+function fxRays(back, flag) {   // 国旗の後ろで回る後光（カードの下の層なので、国旗や文字を隠さない）
+  const p = fxCenter(back, flag), e = el('i', 'fx-rays');
+  e.style.left = p.x + 'px'; e.style.top = p.y + 'px'; e.style.setProperty('--d', Math.max(p.w, p.h) * 2.5 + 'px');
+  back.appendChild(e);
+  e.animate([{ opacity: 0, transform: 'scale(.3) rotate(0deg)' }, { opacity: 1, transform: 'scale(1) rotate(25deg)', offset: .14 }, { opacity: .85, transform: 'scale(1.04) rotate(95deg)', offset: .75 }, { opacity: 0, transform: 'scale(1.08) rotate(130deg)' }], { duration: 3200, fill: 'forwards' }).onfinish = () => e.remove();
+  setTimeout(() => e.remove(), 3800);
+}
+function fxStars(front, flag) {   // 金の星が飛び散る
+  const p = fxCenter(front, flag);
+  for (let i = 0; i < 14; i++) {
+    const a = i / 14 * Math.PI * 2 + fxRnd(-.2, .2), dist = fxRnd(60, 115), dx = Math.cos(a) * dist, dy = Math.sin(a) * dist * .8;
+    const s = fxPart(front, 'fx-star', p.x, p.y, [{ transform: 'translate(0,0) scale(.2) rotate(0deg)', opacity: 1 }, { transform: `translate(${dx * .8}px,${dy * .8}px) scale(1.1) rotate(${fxRnd(90, 220)}deg)`, opacity: 1, offset: .55 }, { transform: `translate(${dx}px,${dy + 18}px) scale(.4) rotate(${fxRnd(240, 360)}deg)`, opacity: 0 }],
+      { duration: fxRnd(750, 1000), easing: 'cubic-bezier(.15,.8,.3,1)', fill: 'forwards' }, FX_STAR);
+    s.style.setProperty('--s', fxRnd(12, 22) + 'px'); s.style.setProperty('--c', i % 3 ? '#ffd23f' : '#fff4c2');
+  }
+}
+function fxTwinkle(front, node, big) {   // キラッ（big: 王冠の右上に大きく1つ。ほか: 国旗のまわりのどこか）
+  if (!node.isConnected) return;
+  const p = fxCenter(front, node), x = big ? p.x + p.w * .35 : p.x + fxRnd(-.55, .55) * p.w, y = big ? p.y - p.h * .35 : p.y + fxRnd(-.6, .6) * p.h;
+  const s = fxPart(front, 'fx-tw', x, y, [{ transform: 'scale(0) rotate(0deg)', opacity: 0 }, { transform: 'scale(1.15) rotate(45deg)', opacity: 1, offset: .45 }, { transform: 'scale(0) rotate(90deg)', opacity: 0 }], { duration: big ? 700 : 650, easing: 'ease-out', fill: 'forwards' }, FX_SPARK);
+  s.style.setProperty('--s', (big ? 30 : fxRnd(12, 22)) + 'px');
+}
+function fxShine(img) {   // 国旗の画像の上を光の筋が走る（国旗の置き場 .rflag の中に、国旗と同じ大きさで重ねる。カードと一緒に跳ねる）
+  const box = img.parentElement, R = box.getBoundingClientRect(), I = img.getBoundingClientRect(), s = el('i', 'fx-shine');
+  Object.assign(s.style, { left: I.left - R.left + 'px', top: I.top - R.top + 'px', width: I.width + 'px', height: I.height + 'px' });
+  box.appendChild(s); setTimeout(() => s.remove(), 1400);
+}
+function fxGoldScreen(flag) {   // 自分が1位: 画面ぜんぶが金色に光り、自分の国旗から後光が画面いっぱいに回って、画面のあちこちがキラッと光る
+  if (fxCalm()) return;
+  const W = innerWidth, H = innerHeight, f = flag.isConnected ? flag.getBoundingClientRect() : { left: W / 2, top: H / 2, width: 0, height: 0 };   // 描き直されていたら画面の真ん中から
+  const x = f.left + f.width / 2, y = f.top + f.height / 2;
+  const R = Math.max(Math.hypot(x, y), Math.hypot(W - x, y), Math.hypot(x, H - y), Math.hypot(W - x, H - y));   // 自分の国旗から、いちばん遠い画面の角まで
+  const glow = el('div', 'fx-gold'), big = el('i', 'fx-bigrays');
+  glow.style.setProperty('--x', x + 'px'); glow.style.setProperty('--y', y + 'px');
+  Object.assign(big.style, { left: x + 'px', top: y + 'px', width: 2 * R + 'px', height: 2 * R + 'px' });
+  document.body.append(big, glow);
+  setTimeout(() => glow.remove(), 1300);
+  big.animate([{ opacity: 0, transform: 'translate(-50%,-50%) scale(.25) rotate(0deg)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(24deg)', offset: .18 }, { opacity: .85, transform: 'translate(-50%,-50%) scale(1.02) rotate(60deg)', offset: .65 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.05) rotate(80deg)' }], { duration: 2000, fill: 'forwards' }).onfinish = () => big.remove();
+  setTimeout(() => big.remove(), 2400);
+  for (let i = 0; i < 16; i++) setTimeout(() => {
+    const s = fxPart(document.body, 'fx-tw fixed', W * fxRnd(.06, .94), H * fxRnd(.06, .94), [{ transform: 'scale(0) rotate(0deg)', opacity: 0 }, { transform: 'scale(1.2) rotate(45deg)', opacity: 1, offset: .45 }, { transform: 'scale(0) rotate(90deg)', opacity: 0 }], { duration: 700, easing: 'ease-out', fill: 'forwards' }, FX_SPARK);
+    s.style.setProperty('--s', fxRnd(16, 30) + 'px');
+  }, 60 + i * 75);
+}
+
 function renderReveal() {
   if (SV.on()) return SV.renderReveal();   // サバイバル: 体力が減る演出つきの答え合わせ（survival.js）
   const r = state.reveal, F = META.fields[r.prompt.key];
@@ -468,6 +564,7 @@ function renderReveal() {
   const box = $('#revealRows'); box.innerHTML = '';
   delete box.dataset.svKey; box.classList.remove('sv-reveal');   // 前にサバイバルの答え合わせを出していたときの印を消す
   box.classList.toggle('still', !fresh);
+  const wins = [];
   r.rows.forEach((row, i) => {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
@@ -477,7 +574,10 @@ function renderReveal() {
     box.appendChild(d);
     const tier = wrankTier(row.world_rank || 999).cls.trim();
     if (tier) { d.dataset.tier = tier; if (fresh) setTimeout(() => spawnConfetti(d.querySelector('.wrank'), tier), i * 250 + 350); }
+    if (row.winner) wins.push({ card: d, flag: d.querySelector('.rflag img'), crown: d.querySelector('.crown .ico'), mine: row.pid === pid, i });
   });
+  const L = fxLayers(box);   // 1位の演出を描く層（バトルと同じ）
+  if (fresh && wins.length) setTimeout(() => cheerWinners(box, L, wins, false), (wins[wins.length - 1].i * 0.25 + 0.6) * 1000);   // 1位のカードがめくれ終わったら（自分が1位ならファンファーレ）
   try { sessionStorage.setItem('geoking_revealed', key); } catch {}
   // 結果画面が出ている間は紙吹雪を繰り返す（最初の大きな一発のあと、少し控えめに）
   clearInterval(confettiTimer);
