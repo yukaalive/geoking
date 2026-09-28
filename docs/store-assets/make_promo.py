@@ -5,8 +5,9 @@
    ・吹き出し型の説明カード、ステップ番号の丸バッジ
    使い方: python3 make_promo.py → promo/ に Play 用 (1080x2400) と App Store 用 (1290x2796 / 1284x2778 / 1320x2868)
            python3 make_promo.py appstore → App Store 用だけ作り直す（Play 用はそのまま）
-   画面の写真: Play 用は android-*.png（Android エミュレーター）、App Store 用は ios-*.png（iPhone シミュレーター。2026-09-26 撮影）
-   依存: macOS の qlmanage（SVG→PNG）, sips
+   画面の写真: Play 用は android-*.png（360×800 の3倍）、App Store 用は ios-*.png（402×874 の3倍）。2026-09-28 に今の画面で撮り直し
+   （ヘッドレス Chrome で確認用サーバーを撮り、上の時刻などの帯の分（iPhone 150px・Android 110px）を空けてある。下の build_svg がその帯を切り落とす）
+   依存: macOS の qlmanage（SVG→PNG）, sips、xcrun swift（flatten_png.swift で最後に透明の情報を外す。App Store・Google Play の画像はアルファなし）
 """
 import base64, os, subprocess, shutil
 
@@ -22,7 +23,9 @@ FRAMES = [
     (('android-3-game.png', 'ios-2-game.png'),     ['お題に合う', '国旗を選べ'],
      [('お題は、面積・人口など約30種。', True)], ['no', 'ar', 'eg']),
     (('android-4-reveal.png', 'ios-3-reveal.png'), ['答え合わせで、', '勝負！'],
-     [('一番近い国旗を出した人が1点！', True)], ['jp', 'eg', 'br']),
+     [('お題に近い順に、点が入る！', True)], ['jp', 'eg', 'br']),   # 2026-09-28: 「一番近い国旗を出した人が1点！」から（順位で点が入るルールに）
+    (('android-6-battle.png', 'ios-7-battle.png'), ['体力を削る', 'バトルも！'],
+     [('最後まで残った人が、地理王！', True)], ['jp', 'ke', 'no']),   # 2026-09-28 追加（ゲームは パーティー と バトル の2つ）
     (('android-5-modal.png', 'ios-4-modal.png'),   ['出した国の', 'ことが分かる'],
      [('首都・気候・宗教まで丸わかり。', True)], ['ke', 'no', 'ar']),
     ((None, 'ios-5-zukan.png'),                    ['図鑑で', '世界を知る'],
@@ -149,6 +152,7 @@ def main():
     import sys
     only = sys.argv[1] if len(sys.argv) > 1 else ''   # 'appstore' なら App Store 用だけ、'play' なら Play 用だけ
     os.makedirs(OUT, exist_ok=True)
+    outs = []
     for i, (shots, head, desc, flags) in enumerate(FRAMES, 1):
         for tag, W, H in (('play', 1080, 2400), ('appstore', 1290, 2796), ('appstore65', 1284, 2778), ('appstore69', 1320, 2868)):
             if only and not tag.startswith(only):
@@ -159,7 +163,10 @@ def main():
             src = os.path.join(HERE, shot)
             out = os.path.join(OUT, f'{tag}-{i}.png')
             render(build_svg(src, head, desc, flags, i, W, H), out, W, H)
+            outs.append(out)
             print('wrote', out)
+    if outs:   # qlmanage の PNG はアルファ付きなので外す（ストアではじかれないように）
+        subprocess.run(['xcrun', 'swift', os.path.join(HERE, 'flatten_png.swift'), *outs], check=True)
 
 if __name__ == '__main__':
     main()

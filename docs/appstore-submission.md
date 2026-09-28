@@ -28,19 +28,25 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
   （以前の答え: 「いいえ、このAppからデータを収集しません」。ニックネーム・チャットは対戦中だけメモリに保持していた）
 
 ## 4. バージョン情報（1.1 から。コピペ用）
-### スクリーンショット（2026-09-26 に今の画面で撮り直し。`docs/store-assets/make_promo.py appstore` で作る。元の画面は `docs/store-assets/ios-*.png`）
-- iPhone 6.9インチの欄: `docs/store-assets/promo/appstore69-1.png` 〜 `appstore69-6.png`（1320×2868）をこの順で6枚
-- 6.5インチの欄: `appstore65-1.png` 〜 `appstore65-6.png`（1284×2778）。6.7インチ（1290×2796）は `appstore-1..6.png`
-- 1〜4: 対戦（ホーム・お題・答え合わせ・国データ）、5: 図鑑（ランキング）、6: ひとりでクイズ。5・6 は App Store だけ（Play 用は作らない）
+### スクリーンショット（2026-09-28 に今の画面で撮り直し、バトルの1枚を足した。`docs/store-assets/make_promo.py appstore` で作る。元の画面は `docs/store-assets/ios-*.png`）
+- iPhone 6.9インチの欄: `docs/store-assets/promo/appstore69-1.png` 〜 `appstore69-7.png`（1320×2868）をこの順で7枚
+- 6.5インチの欄: `appstore65-1.png` 〜 `appstore65-7.png`（1284×2778）。6.7インチ（1290×2796）は `appstore-1..7.png`
+- 1〜3: パーティー（ホーム・お題・答え合わせ）、4: バトル（体力を削り合う）、5: 国データ、6: 図鑑（ランキング）、7: ひとりでクイズ。6・7 は App Store だけ（Play 用は作らない）
+- 3 の文は「お題に近い順に、点が入る！」（前の「一番近い国旗を出した人が1点！」は今のルールと違うので直した）
+- 画像は透明の情報（アルファ）なし（make_promo.py が最後に flatten_png.swift で外す。アルファ付きだと App Store Connect にはじかれることがある）
 - iPad は対象外（iPhone のみ）
 - 画像の文には「裏」「めくる」を使わない（このゲームは裏返さない。2026-09-26 に直した）
 
 ### プロモーション用テキスト（170字まで。審査なしでいつでも変えられる）
-国旗だけを見て「面積が大きい国は？」「人口密度が高い国は？」に答える、みんなで遊べる地理カードゲーム。知識がなくても勘で勝てるかも？ ひとりでも、ボットとの対戦・国旗や首都のクイズ・図鑑で楽しめます。
+国旗だけを見て「面積が大きい国は？」「人口密度が高い国は？」に答える、みんなで遊べる地理カードゲーム。点を集める「パーティー」と、体力を削り合う「バトル」の2つのゲームで勝負！ ひとりでも、ボット・クイズ・図鑑で楽しめます。
 
 ### 概要
 国旗だけで、どんな国かを当てる地理カードゲーム。
-「GDPが高い国は？」「イスラム教徒の割合が高い国は？」…お題に一番合いそうな国旗を1枚出して、お題に近い順に点が入ります。7ラウンドの合計で一番の人が「地理王」。
+「GDPが高い国は？」「イスラム教徒の割合が高い国は？」…お題に一番合いそうな国旗を1枚出して勝負！
+
+■ ゲームは2つ（部屋ごとに選べます）
+・パーティー：お題に近い順に点が入り、7ラウンドの合計で一番の人が「地理王」
+・バトル：体力100からスタート。順位が下がるほど体力が減り、最後まで残った人が「地理王」
 
 ■ みんなで対戦
 ・友だちと最大8人
@@ -56,6 +62,8 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 ・出した国の首都・データ・世界地図上の位置がすぐ分かる
 
 ### このバージョンの最新情報（1.1）
+・新しいゲーム「バトル」を追加しました。体力を削り合い、最後まで残った人の勝ち。部屋の設定で「パーティー」（点を集めるゲーム）と選べます
+・点の入り方を、お題に近い順に点が入るようにしました（1位ほど多く）
 ・アイコンの黒い枠をなくしました
 ・「ひとりでクイズ」（国旗・国名・首都）を追加しました
 ・部屋の名前で、友だちの部屋に入れるようになりました
@@ -64,7 +72,7 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 ・画面をいくつか見やすくしました
 
 ### キーワード（100字まで、カンマ区切り）
-国旗,地理,クイズ,パーティー,カードゲーム,世界,地図,対戦,オンライン,トリビア,教育,勉強,図鑑,雑学,友達,ひとり,国名,暗記,ランキング
+国旗,地理,クイズ,パーティー,バトル,カードゲーム,世界,地図,対戦,オンライン,トリビア,教育,勉強,図鑑,雑学,友達,ひとり,国名,暗記,ランキング
 
 ### サポートURL
 https://github.com/yukaalive/geoking/issues
@@ -92,16 +100,17 @@ Language: the app follows the device language. To switch between English and Jap
 
 How to test alone (1-2 minutes):
 1. Enter any nickname in 「あなたの名前（必須）」 (Your name (required)) and tap 「部屋を作る」 (Create room).
-2. In the lobby, tap 「botとゲーム開始」 (Start with a bot). One AI player joins and the game starts. Alternatively, tap 「ボットを追加」 (Add bot) one or more times before starting; the start button then reads 「ゲーム開始（7ラウンド）」 (Start game (7 rounds)).
+2. In the lobby, under 「ゲーム」 (Game) the host picks 「パーティー」 (Party, the default) or 「バトル」 (Battle). Tap 「botとゲーム開始」 (Start with a bot), or 「botとバトル開始」 (Start battle with a bot) in Battle: one AI player joins and the game starts. To play with more bots, tap 「ボットを追加」 (Add bot) first.
 3. Each round shows a prompt such as 「面積が大きい国は？」 (Which country has the largest area?). Tap one of your flag cards (8 at the start), then tap the same card again to play it. Each round has a 30-second limit; if time runs out, a random card is played.
-4. When everyone has played, the cards are revealed with each country's value and world rank. Points go by rank: with N players, the closest card scores N points, the next N-1, and so on down to 1 point (ties share the same rank and points; a country with no data scores 1 point). The next round starts automatically after 8 seconds. After 7 rounds the final results screen shows the winner.
+4. When everyone has played, the cards are revealed with each country's value and world rank. Party: points go by rank; with N players, the closest card scores N points, the next N-1, and so on down to 1 point (ties share the same rank and points; a country with no data scores 1 point). The next round starts automatically after 8 seconds. After 7 rounds the final results screen shows the winner.
+   Battle: all start with 100 HP; the closest card loses nothing and each lower rank loses 10 more (max 30). At 0 HP a player is out and watches; the last one standing wins (or the most HP after 20 rounds).
 To stop early, tap 「退出」 (Leave) at the top left. The host can also tap 「ロビーへ」 (Lobby) to stop the game and return to the lobby (scores are reset). Both buttons ask for confirmation.
 
 Single-player features on the home screen:
 - 「図鑑で学ぶ」 (Study mode): all 197 flags with search, rankings for each prompt, and a country sheet with data, world rank and a world map. Tap 「対戦へ戻る」 (Back to game) to return.
 - 「ひとりでクイズ」 (Solo quiz): 10 questions with 4 choices each (Flag mode / Name mode / Capital mode, each Normal or Hard).
 
-Playing with others (optional): in the lobby, tap the share icon at the top right to send an invite link with the iOS share sheet. On a second device, either open the link (it opens in Safari; enter a nickname and tap 「参加する」 (Join)), or in the app enter a nickname, type the room name shown in bold in the lobby (by default the host's nickname; a number is added if that name is already taken) into 「友だちの部屋の名前」 (Friend's room name) on the home screen, and tap 「参加する」 (Join). The shared message also shows a 4-letter room code; typing that code instead of the room name also works.
+Playing with others (optional): in the lobby, tap the share icon at the top right to send an invite link with the iOS share sheet. On a second device, either open the link (it opens in Safari; enter a nickname and tap 「参加する」 (Join)), or in the app enter a nickname, type the room name shown in bold in the lobby into 「友だちの部屋の名前」 (Friend's room name) on the home screen, and tap 「参加する」 (Join). The shared message also shows a 4-letter room code; typing that code instead of the room name also works.
 
 User-generated content: chat messages, nicknames and room names are filtered on the server (profanity, URLs and contact info are blocked). Mute and Report work on other human players only (not on bots), so they need the second device described above: tap the other player's name in the chat, or in the score list during a game, then choose 「ミュートする」 (Mute), or 「通報する」 (Report) and a reason. A player reported by two different people can no longer chat in that room, and reports are logged for the developer to review. The host can also remove a player from the lobby with the 「退出」 (Remove) button next to their name.
 
@@ -124,7 +133,7 @@ Native features: haptic feedback (on/off with the sound button at the top right)
 
 ### B. App Store Connect で新しい版を作る（15分）
 1. App Store Connect →「アプリ」→ 地理王 → 左の「iOS アプリ」の横の「＋」（「バージョンまたはプラットフォームを追加」）→「iOS」→ バージョン「1.1」→「作成」
-2. 「プレビューとスクリーンショット」: 前の版の画像が入っているので、6.9インチ（または6.5インチ）の欄の4枚を消し、新しい6枚（4 の「スクリーンショット」）を 1 → 6 の順にドラッグ
+2. 「プレビューとスクリーンショット」: 前の版の画像が入っているので、6.9インチ（または6.5インチ）の欄の4枚を消し、新しい7枚（4 の「スクリーンショット」）を 1 → 7 の順にドラッグ
 3. 「プロモーション用テキスト」「概要」「キーワード」「このバージョンの最新情報」に、4 の文をそのまま貼る
 4. 「ビルド」の「＋」→ **1.1 (8)** を選ぶ → 完了（暗号化の質問は、アプリの設定で「使っていない」にしてあるので出ない）
 5. 下の「App Review に関する情報」の「メモ」を、5 の英文に貼り替える
