@@ -409,7 +409,8 @@ function renderOthersHands() {
       const wrap = el('span', 'oflag' + (lv && lv.pick === id ? ' go' : (lv && lv.selecting === id ? ' sel' : '')));
       const img = el('img'); img.src = flagUrl(id, 80); img.alt = ''; img.title = state.settings.show_names ? countryName(id) : '';
       img.onclick = () => showCountry(id);
-      wrap.appendChild(img); row.appendChild(wrap);
+      wrap.appendChild(img);
+      const slot = el('span', 'oslot'); slot.appendChild(wrap); row.appendChild(slot);   // oslot: 国旗の置き場（並びをそろえる）。国旗と選択中・勝負の枠（oflag）は国旗にぴったり
     }
     box.appendChild(row);
   }

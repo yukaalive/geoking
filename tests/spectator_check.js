@@ -41,7 +41,7 @@
       for (const row of doc.querySelectorAll(rowSel)) {
         // 位置は offsetTop/offsetLeft で測る（選択中・勝負の国旗は少し浮かせて大きくしてあるので、見た目の枠だと位置がずれて見える）
         const pos = (e) => ({ left: e.offsetLeft, top: e.offsetTop, bottom: e.offsetTop + e.offsetHeight });
-        const nm = row.querySelector('.oname'), name = pos(nm), flags = [...row.querySelectorAll('.oflag')].map(pos);
+        const nm = row.querySelector('.oname'), name = pos(nm), fl = row.querySelectorAll('.oslot'), flags = [...(fl.length ? fl : row.querySelectorAll('.oflag'))].map(pos);   // 国旗の置き場（oslot）で測る（中の国旗は形のまま真ん中にあるので、正方形の国旗は置き場の左端より右にある）
         const who = nm.textContent.trim().slice(0, 12);
         if (flags.some(f => f.top < name.bottom - 1)) ng.push(`${who}: 国旗が名前と同じ行にある`);
         if (flags.length && Math.abs(Math.min(...flags.map(f => f.left)) - pos(row).left) > 1) ng.push(`${who}: 国旗の行が左端から始まっていない`);

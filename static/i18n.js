@@ -51,7 +51,7 @@ const I18N = {
     sys_joined: '{name}さんが入室しました', sys_spectating: '{name}さんが観戦しました', sys_host_lobby: 'ホストがゲームを中断してロビーに戻りました',
     // 国データ・共通
     no_data: 'データなし', capital: '首都', landlocked: '（内陸国）', map_loading: '地図を読み込み中…', world_pos: '世界の中の位置', zoom_in: '周辺を拡大',
-    lat_n: '北緯', lat_s: '南緯', lng_e: '東経', lng_w: '西経', g_basic: '基本', g_climate: '気候・自然', g_religion: '宗教', g_society: '社会・暮らし', rank_of: '{rank}位/{total}',
+    lat_n: '北緯', lat_s: '南緯', lng_e: '東経', lng_w: '西経', g_basic: '基本', g_climate: '気候・自然', g_religion: '宗教', g_society: '社会・暮らし', rank_of: '{rank} 位 ／ {total}',
     share_title: '地理王で対戦しよう', share_text: '部屋コード {code}',
     credits_html: `<h2 style="margin-top:0">データ出典</h2><ul class="small" style="padding-left:18px;line-height:1.8">
     <li>国の基本情報・面積・位置: <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a>（ODbL）</li>
@@ -117,7 +117,7 @@ const I18N = {
     l_kicked: 'You were removed by the host', l_left: 'You left the room', t_reported: 'Reported. Thank you.',
     sys_joined: '{name} joined', sys_spectating: '{name} is watching', sys_host_lobby: 'The host paused the game and returned to the lobby',
     no_data: 'No data', capital: 'Capital', landlocked: ' (landlocked)', map_loading: 'Loading map…', world_pos: 'Location in the world', zoom_in: 'Zoomed in',
-    lat_n: 'N', lat_s: 'S', lng_e: 'E', lng_w: 'W', g_basic: 'Basics', g_climate: 'Climate & Nature', g_religion: 'Religion', g_society: 'Society & Life', rank_of: '#{rank}/{total}',
+    lat_n: 'N', lat_s: 'S', lng_e: 'E', lng_w: 'W', g_basic: 'Basics', g_climate: 'Climate & Nature', g_religion: 'Religion', g_society: 'Society & Life', rank_of: '#{rank} / {total}',
     share_title: 'Play GeoKing with me', share_text: 'Room code {code}',
     credits_html: `<h2 style="margin-top:0">Data sources</h2><ul class="small" style="padding-left:18px;line-height:1.8">
     <li>Country basics, area, location: <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL)</li>
