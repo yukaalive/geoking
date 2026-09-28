@@ -377,7 +377,7 @@ function renderHand() {
   for (const id of state.hand) {
     const cls = 'flagcard' + (id === picked ? ' picked' : '') + (id === selectedCard && id !== picked ? ' selected' : '') + (id === state.new_card ? ' sv-new' : '');   // sv-new: サバイバルでこのラウンドの前に引いた国旗
     const c = el('div', cls);
-    c.innerHTML = `<img src="${flagUrl(id)}" alt="${t('flag_alt')}" loading="lazy"><div class="nm">${state.settings.show_names ? countryName(id) : (id === picked ? t('played_card') : '&nbsp;')}</div>`;
+    c.innerHTML = `<span class="fimg"><img src="${flagUrl(id)}" alt="${t('flag_alt')}" loading="lazy"></span><div class="nm">${state.settings.show_names ? countryName(id) : (id === picked ? t('played_card') : '&nbsp;')}</div>`;
     c.onclick = () => {
       if (id === picked) return;                       // すでに出しているカード
       if (selectedCard === id) { send({ type: 'pick', card: id }); selectedCard = null; sfx.confirm(); return; }   // 2回目で決定・変更
@@ -466,7 +466,7 @@ function renderReveal() {
     const c = META.countries[row.card];
     const d = el('div', 'rev' + (row.winner ? ' win' : ''));
     d.style.animationDelay = (i * 0.25) + 's';
-    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? t('rank_n', { n: row.rank }) : '—')}</div><img src="${flagUrl(row.card)}" alt=""><div class="who">${escapeHtml(rowName(row))}</div><div class="country">${coff(c)}${r.prompt.key === 'kana_rank' ? `<small>${t('reading')}${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>${t('reading')}${c.official_kana}</small>` : (coff(c) !== cname(c) ? `<small>${cname(c)}</small>` : ''))}</div><div class="val">${row.missing ? t('no_data') : fmtValue(row.value, F.fmt)}</div>${row.points != null ? `<div class="gain">${t(row.points === 1 ? 'gain_1' : 'gain', { n: row.points })}</div>` : ''}${wrankHtml(row.world_rank, row.world_total)}`;
+    d.innerHTML = `<div class="crown">${row.winner ? ico('crown') : (row.rank ? t('rank_n', { n: row.rank }) : '—')}</div><div class="rflag"><img src="${flagUrl(row.card)}" alt=""></div><div class="who">${escapeHtml(rowName(row))}</div><div class="country">${coff(c)}${r.prompt.key === 'kana_rank' ? `<small>${t('reading')}${c.name_kana}</small>` : (r.prompt.key === 'name_len' ? `<small>${t('reading')}${c.official_kana}</small>` : (coff(c) !== cname(c) ? `<small>${cname(c)}</small>` : ''))}</div><div class="val">${row.missing ? t('no_data') : fmtValue(row.value, F.fmt)}</div>${row.points != null ? `<div class="gain">${t(row.points === 1 ? 'gain_1' : 'gain', { n: row.points })}</div>` : ''}${wrankHtml(row.world_rank, row.world_total)}`;
     d.style.cursor = 'pointer'; d.onclick = () => showCountry(row.card);
     box.appendChild(d);
     const tier = wrankTier(row.world_rank || 999).cls.trim();
