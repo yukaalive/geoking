@@ -105,7 +105,7 @@ const SV = (() => {
       const tier = row.world_rank ? wrankTier(row.world_rank).cls : '';
       d.innerHTML = `<div class="sv-head"><span class="crown">${row.winner ? ico('crown') : (row.rank ? t('rank_n', { n: row.rank }) : '—')}</span>`
         + `<span class="sv-dmgline${fresh ? '' : ' show'}${safe ? ' safe' : ''}">${safe ? `<span class="sv-nodmg">${t('sv_no_damage')}</span>` : '−' + row.damage}</span></div>`
-        + `<div class="sv-flag"><img src="${flagUrl(row.card)}" alt=""><span class="sv-stamp">${t('sv_out')}</span></div>`
+        + `<div class="rflag"><div class="sv-flag"><img src="${flagUrl(row.card)}" alt=""></div><span class="sv-stamp">${t('sv_out')}</span></div>`   // rflag: 国旗の置き場（3:2。メインと同じ）。sv-flag は国旗にぴったりの枠（金の光・赤い光）。ハンコは置き場の中央（細い国旗でも切れない）
         + `<div class="sv-hprow">${bar(row.pid, shown[row.pid])}</div>`
         + `<div class="who">${escapeHtml(rowName(row))}</div>`
         + `<div class="country">${nm}</div>`

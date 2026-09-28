@@ -498,14 +498,21 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .sv-status .sv-alive{font-size:12px;font-weight:900;padding:2px 9px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);margin-left:4px}
 /* スコアの欄（体力）: 脱落した人は薄く */
 .scores li.sv-row .sv-right{display:inline-flex;align-items:center;gap:2px}
-.scores li.sv-row .tag{white-space:nowrap}
-.others .oname .sv-hpbox{margin-left:6px}   /* みんなの手札: 名前と体力ゲージのあいだを空ける（「グレース100」とくっついて見えた） */   /* 札（ホスト・BOT など）は途中で切らない（「あな／た」のように割れていた） */
+.scores li.sv-row .tag{white-space:nowrap}   /* 札（ホスト・BOT など）は途中で切らない（「あな／た」のように割れていた） */
+.others .oname .sv-hpbox{margin-left:6px}   /* みんなの手札: 名前と体力ゲージのあいだを空ける（「グレース100」とくっついて見えた） */
 .scores li.sv-dead{opacity:.6}
 /* 手札（選ぶ画面）: 外側のカードの枠がないのはメインと同じ（.flagcard）。サバイバルは国旗の間を少し詰める */
 .hand.sv-hand{gap:10px}
 @media(max-width:360px){.hand.sv-hand{grid-template-columns:repeat(2,minmax(0,1fr))}}   /* 320px でも2列（1列だと国旗1枚が画面の幅いっぱいになり、下まで長くなる）。375px 以上は今までどおり */
-/* 手札: このラウンドの前に引いた国旗 */
-.flagcard.sv-new::after{content:"NEW";position:absolute;top:-9px;right:-7px;z-index:2;padding:1px 8px;border-radius:999px;border:2px solid var(--ink);background:#c8401f;color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em;animation:svPopIn .45s cubic-bezier(.2,1.6,.4,1) both}
+/* 手札: このラウンドの前に引いた国旗。NEW は国旗の右上の角に */
+.flagcard.sv-new::after,.flagcard.sv-new .fimg::after{z-index:2;padding:1px 8px;border-radius:999px;border:2px solid var(--ink);background:#c8401f;color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em;animation:svPopIn .45s cubic-bezier(.2,1.6,.4,1) both}
+.flagcard.sv-new::after{content:"NEW";position:absolute;top:-9px;right:-7px}   /* cqw の使えない古いブラウザ: 国旗の置き場（3:2）の角 */
+@supports (width:1cqw){   /* 置き場の中に国旗にぴったりの升を作って、その角に付ける（正方形や縦長の国旗でも国旗から離れない） */
+  .flagcard.sv-new::after{content:none}
+  .flagcard.sv-new .fimg{place-content:center}
+  .flagcard.sv-new .fimg img{grid-area:1/1}   /* 国旗と NEW を同じ升に（分けると NEW だけの段ができて、国旗が下にずれる） */
+  .flagcard.sv-new .fimg::after{content:"NEW";grid-area:1/1;place-self:start end;margin:-9px -7px 0 0}
+}
 /* 答え合わせ: 外側のカードの枠はなし（国旗の枠だけ）。4人ならスマホの1画面に全員入る。上の段に順位と減った体力、国旗のすぐ下に体力ゲージ。
    演出は国旗ごとに（1位＝国旗の枠が金色に光る、ほか＝揺れて国旗が赤く光る、0＝ハンコ） */
 .reveal.sv-reveal{position:relative;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px}
@@ -517,7 +524,10 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .rev.sv-card .sv-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 6px;min-height:26px;margin-bottom:4px}
 .rev.sv-card .crown{position:relative;font-size:18px;line-height:1}
 .rev.sv-card .crown .ico{width:1.5em;height:1.5em}
-.sv-flag{position:relative;overflow:hidden;border-radius:8px}   /* 光の筋・赤い光・脱落のハンコは国旗の中だけ（押す瞬間に大きくても、画面の横にはみ出さない） */
+.sv-flag{position:relative;overflow:hidden;border-radius:8px}   /* 光の筋・赤い光は国旗の中だけ */
+.rev .rflag .sv-flag{max-width:100%;max-height:100%}   /* 国旗の置き場（3:2。メインと同じ .rflag）の中央に、国旗にぴったりの枠で（上下・左右の白いすき間なし） */
+.rev.sv-card .rflag{position:relative}   /* 脱落のハンコは置き場の中央（細い国旗でも端が切れない） */
+.rev.sv-ko .rflag{overflow:hidden}   /* ハンコを押す瞬間の大きいハンコは置き場の中だけ（画面の横にはみ出さない） */
 .rev.sv-card.win .sv-flag{box-shadow:0 0 0 3px var(--accent)}   /* 1位の国旗の枠は金色 */
 .rev.sv-card .sv-hprow{margin-top:6px}
 .rev.sv-card .sv-hpbox{display:flex;width:100%}
@@ -578,6 +588,6 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .history .sv-hdmg.safe{color:var(--primary)}
 .history .sv-hdmg .tag{margin-left:0}
 @media (prefers-reduced-motion:reduce){
-  .rev.sv-power,.rev.sv-hit,.rev.sv-hit.sv-big,.rev.sv-power .crown .ico,.rev.sv-power .sv-flag,.rev.sv-power .sv-flag::before,.rev.sv-hit .sv-flag::after,.rev.sv-ko .sv-stamp,.sv-hp.low .sv-fill,.flagcard.sv-new::after,.rev .sv-dmgline.show{animation:none}
+  .rev.sv-power,.rev.sv-hit,.rev.sv-hit.sv-big,.rev.sv-power .crown .ico,.rev.sv-power .sv-flag,.rev.sv-power .sv-flag::before,.rev.sv-hit .sv-flag::after,.rev.sv-ko .sv-stamp,.sv-hp.low .sv-fill,.flagcard.sv-new::after,.flagcard.sv-new .fimg::after,.rev .sv-dmgline.show{animation:none}
   .sv-wave,.sv-pop,.sv-flash,.sv-anchor{display:none}
 }
