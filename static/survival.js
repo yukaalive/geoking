@@ -64,7 +64,7 @@ const SV = (() => {
       const name = p.pid !== pid && !p.is_bot ? `<b class="who" data-pid="${p.pid}" title="${t('report_mute')}">${escapeHtml(pname(p))}</b>` : escapeHtml(pname(p));
       const mark = state.phase === 'pick' && !p.spectator && !out ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : '';
       const right = p.spectator ? '—' : out ? `<span class="tag sv-outtag">${t('sv_out')}</span>` : bar(p.pid, hpOf(p), true) + mark;
-      sl.appendChild(el('li', 'sv-row' + (out ? ' sv-dead' : ''), `<span>${name}${playerTag(p, false)}</span><b class="sv-right">${right}</b>`));   // 「あなた」の札は付けない（体力ゲージと並ぶと2行になる。2026-09-28）
+      sl.appendChild(el('li', 'sv-row' + (out ? ' sv-dead' : ''), `<span>${name}${playerTag(p)}</span><b class="sv-right">${right}</b>`));
     }
     sl.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
   }
@@ -107,7 +107,7 @@ const SV = (() => {
         + `<span class="sv-dmgline${fresh ? '' : ' show'}${safe ? ' safe' : ''}">${safe ? `<span class="sv-nodmg">${t('sv_no_damage')}</span>` : '−' + row.damage}</span></div>`
         + `<div class="sv-flag"><img src="${flagUrl(row.card)}" alt=""><span class="sv-stamp">${t('sv_out')}</span></div>`
         + `<div class="sv-hprow">${bar(row.pid, shown[row.pid])}</div>`
-        + `<div class="who">${escapeHtml(rowName(row))}${row.pid === pid ? t('you_paren') : ''}</div>`
+        + `<div class="who">${escapeHtml(rowName(row))}</div>`
         + `<div class="country">${nm}</div>`
         + `<div class="val">${row.missing ? t('no_data') : fmtValue(row.value, F.fmt)}</div>`
         + (row.world_rank ? `<div class="sv-wr${tier}">${t('world_rank_plain', { n: row.world_rank, total: row.world_total })}</div>` : '');

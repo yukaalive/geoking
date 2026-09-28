@@ -137,14 +137,15 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .board{display:grid;grid-template-columns:1fr 300px;gap:18px}
 @media(max-width:900px){.board{grid-template-columns:1fr}}
 .hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-.flagcard{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:8px;cursor:pointer;text-align:center;box-shadow:var(--shadow-sm);transition:transform .1s,box-shadow .1s;position:relative}
-.flagcard:hover{transform:translate(-2px,-4px);box-shadow:5px 6px 0 var(--ink)}
-.flagcard.selected{outline:4px solid var(--accent);outline-offset:-2px}
-.flagcard.picked{outline:4px solid var(--primary);outline-offset:-2px;background:#e6f2ea}
-@media (prefers-color-scheme:dark){.flagcard.picked{background:#1e3a2c}}
+/* 手札: 外側のカードの枠（線・地の色・影）はなし。国旗の枠だけ（2026-09-28）。1回押した国旗は黄、出した国旗は緑の線で国旗のまわりを囲む */
+.flagcard{border-radius:9px;cursor:pointer;text-align:center;transition:transform .1s;position:relative}
+.flagcard:hover{transform:translateY(-3px)}
+.flagcard.selected{outline:4px solid var(--accent);outline-offset:1px}
+.flagcard.picked{outline:4px solid var(--primary);outline-offset:1px}
 .flagcard.picked .nm{color:var(--primary)}
-.flagcard img{width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:8px;background:#fff;border:1.5px solid var(--ink)}
-.flagcard .nm{font-size:12px;font-weight:800;margin-top:6px;min-height:16px}
+.flagcard img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:8px;background:#fff;border:1.5px solid var(--ink)}
+.flagcard .nm{display:none;font-size:12px;font-weight:800;margin-top:5px;min-height:16px}
+.flagcard.picked .nm{display:block}   /* 出した国旗の下にだけ「出したカード」（ほかの国旗の下の空いた行はなくす） */
 .waiting{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .waiting span{padding:3px 9px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);font-size:12px;font-weight:800}
 .waiting span.done{background:var(--primary);color:var(--primary-ink)}
@@ -156,10 +157,10 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 
 /* ---------- 公開 */
 .reveal{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
-.rev{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:10px;text-align:center;box-shadow:var(--shadow-sm);animation:flip .5s ease both;cursor:pointer}
-.rev.win{background:var(--accent);box-shadow:var(--shadow)}
+.rev{text-align:center;animation:flip .5s ease both;cursor:pointer}   /* 答え合わせ: 外側のカードの枠（線・地の色・影）はなし。国旗の枠だけ（2026-09-28） */
+.rev.win img{box-shadow:0 0 0 3px var(--accent)}   /* 1位は国旗の枠が金色（前は金色のカード） */
 .rev img{width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:8px;background:#fff;border:1.5px solid var(--ink)}
-.rev .who{font-size:12px;font-weight:700;color:var(--muted)}.rev.win .who{color:#3b3a2a}
+.rev .who{font-size:12px;font-weight:700;color:var(--muted)}
 .rev .country{font-weight:900;margin-top:4px;line-height:1.25}
 .rev .country small{display:block;font-weight:600;color:var(--muted);font-size:11px}
 .rev .val{font-size:20px;margin-top:2px}.rev .rank{font-size:12px;color:var(--muted)}
@@ -321,7 +322,6 @@ button.react:hover{background:var(--accent);transform:none;box-shadow:none}
 .rev .wrank{margin-top:6px;display:inline-block;padding:2px 10px;border-radius:999px;border:2px solid var(--ink);background:var(--card);font-size:12px;font-weight:800}
 .rev .wrank b{font-family:var(--font-head);font-size:16px}
 .rev .wrank span{color:var(--muted);font-weight:700}
-.rev.win .wrank{background:#fff}
 .rev .wrank em{display:block;font-style:normal;font-family:var(--font-head);font-size:13px;letter-spacing:.04em;margin:-2px 0 2px}
 .rev .wrank em .ico{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
 /* 金銀銅のバッジは、カードがめくれた後にポンと飛び出す（カードの表示遅延に合わせる） */
@@ -452,11 +452,7 @@ body.framed{overflow:hidden}
 @media (prefers-color-scheme:dark){
   .roomname-inline,.tag.host,.tag.host .ico,button.pref.on,button.pref.on .ico,.ztab-link,.ztab-link .ico,.bubble.sel,
   .scene .card3d.win .back,.floatmsg.me,
-  .rev.win,.rev.win .ico,.rev.win .country,.rev.win .val,
-  .rev.win .wrank:not(.bronze):not(.silver):not(.gold),.rev.win .wrank:not(.bronze):not(.silver):not(.gold) b,
   .final .disc.g,.final .disc.s,.final .disc.b{color:#1c2b22}
-  .rev.win .country small,.rev.win .rank{color:#5a4a10}
-  .rev.win .wrank:not(.bronze):not(.silver):not(.gold) span{color:#4b5563}
   .floatmsg.me b{color:#1f6f4a}
   button.primary .ico,.ztabs button.on .ico,.tag.live .ico,.bubble.go .ico,.waiting span.done .ico{color:var(--primary-ink)}   /* .waiting span.done: 対戦の「選ぶ」画面で、出した人の緑の札のチェック（明るいままだと緑の上で読めなかった） */
   .history .hth .ico{color:inherit}   /* 結果発表の表の見出しの人のアイコンは、見出しの文字と同じ色（背景と同じ色で見えなかった） */
@@ -500,17 +496,11 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .sv-status .sv-alive{font-size:12px;font-weight:900;padding:2px 9px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);margin-left:4px}
 /* スコアの欄（体力）: 脱落した人は薄く */
 .scores li.sv-row .sv-right{display:inline-flex;align-items:center;gap:2px}
-.scores li.sv-row .tag{white-space:nowrap}   /* 札（ホスト・BOT など）は途中で切らない（「あな／た」のように割れていた） */
+.scores li.sv-row .tag{white-space:nowrap}
+.others .oname .sv-hpbox{margin-left:6px}   /* みんなの手札: 名前と体力ゲージのあいだを空ける（「グレース100」とくっついて見えた） */   /* 札（ホスト・BOT など）は途中で切らない（「あな／た」のように割れていた） */
 .scores li.sv-dead{opacity:.6}
-/* 手札（選ぶ画面）: 外側のカードの枠はなし（国旗の枠だけ）。1回押した国旗は黄、出した国旗は緑の線で、国旗のまわりを囲む */
+/* 手札（選ぶ画面）: 外側のカードの枠がないのはメインと同じ（.flagcard）。サバイバルは国旗の間を少し詰める */
 .hand.sv-hand{gap:10px}
-.hand.sv-hand .flagcard{padding:0;border:0;border-radius:9px;background:transparent;box-shadow:none}
-.hand.sv-hand .flagcard:hover{transform:translateY(-3px);box-shadow:none}
-.hand.sv-hand .flagcard img{display:block}
-.hand.sv-hand .flagcard.selected{outline:4px solid var(--accent);outline-offset:1px}
-.hand.sv-hand .flagcard.picked{outline:4px solid var(--primary);outline-offset:1px;background:transparent}
-.hand.sv-hand .flagcard .nm{display:none}
-.hand.sv-hand .flagcard.picked .nm{display:block;margin-top:5px}   /* 出した国旗の下にだけ「出したカード」 */
 @media(max-width:360px){.hand.sv-hand{grid-template-columns:repeat(2,minmax(0,1fr))}}   /* 320px でも2列（1列だと国旗1枚が画面の幅いっぱいになり、下まで長くなる）。375px 以上は今までどおり */
 /* 手札: このラウンドの前に引いた国旗 */
 .flagcard.sv-new::after{content:"NEW";position:absolute;top:-9px;right:-7px;z-index:2;padding:1px 8px;border-radius:999px;border:2px solid var(--ink);background:#c8401f;color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em;animation:svPopIn .45s cubic-bezier(.2,1.6,.4,1) both}
