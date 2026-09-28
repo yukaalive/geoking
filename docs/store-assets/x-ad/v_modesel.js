@@ -5,8 +5,8 @@ SHOW(BASE({ phase: 'lobby', players: ps, chat: [], host: ME, title: 'はなこ�
 const card = document.querySelector('#lobby .settings').closest('.card');
 window.scrollTo(0, card.getBoundingClientRect().top + scrollY - AD.BAND - 76);
 let go; window.__go = () => go(); window.__ready = Promise.resolve(true); await new Promise(r => go = r);
-await sleep(700);
+await sleep(1000);
 await AD.tap('.modebtn[data-rule=survival]', 'select');
 SHOW({ ...state, settings: { ...state.settings, rule: 'survival' } });   // サーバーにはつながないので、選んだあとの状態をこちらで描く
 await sleep(450); AD.hideTap();   // 指の印を消して、選んだ「バトル」を見せる
-await sleep(1850);
+await sleep(3600);

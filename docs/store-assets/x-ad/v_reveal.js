@@ -12,8 +12,8 @@ AD.mark('reveal');
 SHOW({ ...state, phase: 'reveal', reveal: { prompt: PR('pop_max'), rows }, next_at: Date.now() / 1000 + 8 });
 await sleep(40); const ra = document.getElementById('revealArea'); window.scrollTo(0, ra.getBoundingClientRect().top + scrollY - 70);
 await sleep(300); AD.mark('lose');   // はなこは2位なので、アプリと同じ負けの音（ため息）
-await sleep(1300);
+await sleep(2600);   // メキシコと日本の2枚をしっかり見せてから下へ
 const y0 = scrollY, cards = document.querySelectorAll('#revealRows .rev'), y1 = cards[2].getBoundingClientRect().top + scrollY - innerHeight * 0.42;
-const t0 = performance.now(), D = 1700;
+const t0 = performance.now(), D = 2000;
 while (performance.now() - t0 < D) { const k = (performance.now() - t0) / D, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; window.scrollTo(0, y0 + (y1 - y0) * e); await sleep(16); }
-await sleep(900);
+await sleep(1500);

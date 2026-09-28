@@ -8,7 +8,7 @@ document.documentElement.style.zoom = 1.18;
 SHOW(BASE({ phase: 'pick', round: 2, prompt: pr[0], hand: hands[0], players, deadline: Date.now() / 1000 + 30 }));
 window.scrollTo(0, 0);
 let go; window.__go = () => go(); window.__ready = Promise.resolve(true); await new Promise(r => go = r);
-AD.mark('round'); await sleep(540);
-SHOW({ ...state, round: 3, prompt: pr[1], hand: hands[1], deadline: Date.now() / 1000 + 30 }); window.scrollTo(0, 0); AD.mark('round'); await sleep(540);
-SHOW({ ...state, round: 4, prompt: pr[2], hand: hands[2], deadline: Date.now() / 1000 + 30 }); window.scrollTo(0, 0); AD.mark('round'); await sleep(540);
-await sleep(300);   // 切り出しの余裕（最後のお題のまま）
+AD.mark('round'); await sleep(1200);
+SHOW({ ...state, round: 3, prompt: pr[1], hand: hands[1], deadline: Date.now() / 1000 + 30 }); window.scrollTo(0, 0); AD.mark('round'); await sleep(1200);
+SHOW({ ...state, round: 4, prompt: pr[2], hand: hands[2], deadline: Date.now() / 1000 + 30 }); window.scrollTo(0, 0); AD.mark('round'); await sleep(1200);
+await sleep(800);   // 切り出しの余裕（最後のお題のまま）

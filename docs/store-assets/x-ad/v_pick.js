@@ -5,10 +5,10 @@ const players = [P(ME, 'はなこ'), P('p2', 'たろう', { picked: true }), P('
 SHOW(BASE({ phase: 'pick', prompt: PR('pop_max'), hand, players, deadline: Date.now() / 1000 + 28.9, host: ME, title: 'はなこの部屋', title_raw: 'はなこ' }));
 window.scrollTo(0, 0);
 let go; window.__go = () => go(); window.__ready = Promise.resolve(true); await new Promise(r => go = r);
-await sleep(1150);
+await sleep(1400);   // お題を読む間
 const cards = () => [...document.querySelectorAll('#hand .flagcard')];
-await AD.moveTo(cards()[0], 260); await sleep(120);
-await AD.tap(cards()[1], 'select'); await sleep(330);
+await AD.moveTo(cards()[0], 380); await sleep(350);   // ちょっと迷ってから
+await AD.tap(cards()[1], 'select'); await sleep(800);
 await AD.tap(cards()[1], 'confirm');
 SHOW({ ...state, my_pick: 'jp', players: players.map(p => ({ ...p, picked: true })) });
-await sleep(330);
+await sleep(2600);

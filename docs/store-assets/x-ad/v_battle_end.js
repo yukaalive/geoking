@@ -9,4 +9,4 @@ const final = [[ME, 'はなこ', 1, 40, null], ['p2', 'たろう', 2, 0, 9], ['p
   .map(([pid, name, place, hp, out_round]) => ({ pid, name, name_en: null, is_bot: false, place, score: out_round ? 0 : hp, hp, out_round }));
 SHOW({ ...state, phase: 'end', final, history: [], leftover: {} });
 window.scrollTo(0, 0);
-await sleep(3300);
+await sleep(5200);

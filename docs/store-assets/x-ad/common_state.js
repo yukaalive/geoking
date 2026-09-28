@@ -9,3 +9,6 @@ window.BASE = (over = {}) => ({ type: 'state', room: 'AB12', title: 'ゆかの�
   settings: { categories: ['basic', 'climate', 'religion', 'society'], rounds: 7, hand_size: 8, show_names: false, timer: 30, max_star: 3, public: false },
   players: [], prompt: null, hand: [], hands: {}, live: null, history: [], final: null, leftover: null, my_pick: null, reveal: null, deadline: null, next_at: null, chat: [], muted: [], ...over });
 window.SHOW = (s) => { state = s; pid = ME; render(); };
+// バトルと1位の演出の音（sfx.js の shine・fanfare・charge・whoosh・smash・ko・shatter）は、アプリが鳴らした時刻と強さをそのまま記録する。
+// compose.py がアプリの sfx.js で同じ音を作る（演出の時間が変わっても、音がずれない）。shatter の中の ko のような、中から呼ばれた分は記録しない
+{ let depth = 0; ['shine', 'fanfare', 'charge', 'whoosh', 'smash', 'ko', 'shatter'].forEach(m => { const f = sfx[m]; sfx[m] = function (...a) { if (!depth) AD.mark('app:' + m + ':' + JSON.stringify(a)); depth++; try { return f.apply(this, a); } finally { depth--; } }; }); }
