@@ -499,6 +499,7 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .sv-status .sv-alive{font-size:12px;font-weight:900;padding:2px 9px;border-radius:999px;border:1.5px solid var(--ink);background:var(--card);margin-left:4px}
 /* スコアの欄（体力）: 脱落した人は薄く */
 .scores li.sv-row .sv-right{display:inline-flex;align-items:center;gap:2px}
+.scores li.sv-row .tag{white-space:nowrap}   /* 札（ホスト・BOT など）は途中で切らない（「あな／た」のように割れていた） */
 .scores li.sv-dead{opacity:.6}
 /* 手札（選ぶ画面）: 外側のカードの枠はなし（国旗の枠だけ）。1回押した国旗は黄、出した国旗は緑の線で、国旗のまわりを囲む */
 .hand.sv-hand{gap:10px}

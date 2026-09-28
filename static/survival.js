@@ -64,7 +64,7 @@ const SV = (() => {
       const name = p.pid !== pid && !p.is_bot ? `<b class="who" data-pid="${p.pid}" title="${t('report_mute')}">${escapeHtml(pname(p))}</b>` : escapeHtml(pname(p));
       const mark = state.phase === 'pick' && !p.spectator && !out ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : '';
       const right = p.spectator ? '—' : out ? `<span class="tag sv-outtag">${t('sv_out')}</span>` : bar(p.pid, hpOf(p), true) + mark;
-      sl.appendChild(el('li', 'sv-row' + (out ? ' sv-dead' : ''), `<span>${name}${playerTag(p)}</span><b class="sv-right">${right}</b>`));
+      sl.appendChild(el('li', 'sv-row' + (out ? ' sv-dead' : ''), `<span>${name}${playerTag(p, false)}</span><b class="sv-right">${right}</b>`));   // 「あなた」の札は付けない（体力ゲージと並ぶと2行になる。2026-09-28）
     }
     sl.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
   }

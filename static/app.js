@@ -306,13 +306,13 @@ function renderChat() {
 // 部屋名（未設定なら「〇〇の部屋」を言語に合わせて）
 function roomTitle() { if (!state) return ''; if (state.title_raw) return state.title_raw; const h = byPid(state.host); return t('room_of', { name: h ? pname(h) : '' }); }
 
-function playerTag(p) {
+function playerTag(p, withYou = true) {   // withYou: false のとき「あなた」の札を付けない（サバイバルの体力の欄。体力ゲージと並ぶと札が途中で切れて2行になる）
   let t = '';
   if (p.pid === state.host) t += `<span class="tag host">${ico('crown')}${window.t('tag_host')}</span>`;
   if (p.is_bot) t += `<span class="tag">${ico('bot')}BOT</span>`;
   if (!p.connected && !p.is_bot) t += `<span class="tag off">${window.t('tag_off')}</span>`;
   if (p.spectator) t += `<span class="tag spec">${window.t('tag_spec')}</span>`;
-  if (p.pid === state.you) t += `<span class="tag">${window.t('tag_you')}</span>`;
+  if (withYou && p.pid === state.you) t += `<span class="tag">${window.t('tag_you')}</span>`;
   return t;
 }
 
