@@ -140,10 +140,13 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 /* 手札: 外側のカードの枠（線・地の色・影）はなし。国旗の枠だけ（2026-09-28）。1回押した国旗は黄、出した国旗は緑の線で国旗のまわりを囲む */
 .flagcard{border-radius:9px;cursor:pointer;text-align:center;transition:transform .1s;position:relative}
 .flagcard:hover{transform:translateY(-3px)}
-.flagcard.selected{outline:4px solid var(--accent);outline-offset:1px}
-.flagcard.picked{outline:4px solid var(--primary);outline-offset:1px}
+.flagcard.selected img{outline:4px solid var(--accent);outline-offset:1px}
+.flagcard.picked img{outline:4px solid var(--primary);outline-offset:1px}
 .flagcard.picked .nm{color:var(--primary)}
-.flagcard img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:8px;background:#fff;border:1.5px solid var(--ink)}
+/* 国旗の置き場（3:2。並びの高さをそろえる）。国旗はこの中に形のまま入り、枠は国旗にぴったり（上下・左右の白いすき間を作らない。2026-09-28）。
+   大きさの上限は置き場の幅と高さ（cqw・cqh。使えない古いブラウザは %） */
+.flagcard .fimg,.rev .rflag{display:grid;place-items:center;aspect-ratio:3/2;container-type:size}
+.flagcard .fimg img,.rev .rflag img{display:block;width:auto;height:auto;max-width:100%;max-height:100%;max-width:100cqw;max-height:100cqh;border-radius:8px;border:1.5px solid var(--ink)}
 .flagcard .nm{display:none;font-size:12px;font-weight:800;margin-top:5px;min-height:16px}
 .flagcard.picked .nm{display:block}   /* 出した国旗の下にだけ「出したカード」（ほかの国旗の下の空いた行はなくす） */
 .waiting{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -159,7 +162,6 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .reveal{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
 .rev{text-align:center;animation:flip .5s ease both;cursor:pointer}   /* 答え合わせ: 外側のカードの枠（線・地の色・影）はなし。国旗の枠だけ（2026-09-28） */
 .rev.win img{box-shadow:0 0 0 3px var(--accent)}   /* 1位は国旗の枠が金色（前は金色のカード） */
-.rev img{width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:8px;background:#fff;border:1.5px solid var(--ink)}
 .rev .who{font-size:12px;font-weight:700;color:var(--muted)}
 .rev .country{font-weight:900;margin-top:4px;line-height:1.25}
 .rev .country small{display:block;font-weight:600;color:var(--muted);font-size:11px}
