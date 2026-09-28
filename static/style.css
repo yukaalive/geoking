@@ -504,9 +504,8 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .scores li.sv-row .tag{white-space:nowrap}   /* 札（ホスト・BOT など）は途中で切らない（「あな／た」のように割れていた） */
 .others .oname .sv-hpbox{margin-left:6px}   /* みんなの手札: 名前と体力ゲージのあいだを空ける（「グレース100」とくっついて見えた） */
 .scores li.sv-dead{opacity:.6}
-/* 手札（選ぶ画面）: 外側のカードの枠がないのはメインと同じ（.flagcard）。サバイバルは国旗の間を少し詰める */
+/* 手札（選ぶ画面）: 外側のカードの枠がないこと・狭いスマホでも2列なのはメインと同じ（.flagcard・.hand）。サバイバルは国旗の間を少し詰める */
 .hand.sv-hand{gap:10px}
-@media(max-width:360px){.hand.sv-hand{grid-template-columns:repeat(2,minmax(0,1fr))}}   /* 320px でも2列（1列だと国旗1枚が画面の幅いっぱいになり、下まで長くなる）。375px 以上は今までどおり */
 /* 手札: このラウンドの前に引いた国旗。NEW は国旗の右上の角に */
 .flagcard.sv-new::after,.flagcard.sv-new .fimg::after{z-index:2;padding:1px 8px;border-radius:999px;border:2px solid var(--ink);background:#c8401f;color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em;animation:svPopIn .45s cubic-bezier(.2,1.6,.4,1) both}
 .flagcard.sv-new::after{content:"NEW";position:absolute;top:-9px;right:-7px}   /* cqw の使えない古いブラウザ: 国旗の置き場（3:2）の角 */
