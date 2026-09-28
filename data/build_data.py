@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-"""mledoze/countries + World Bank API + 手動データ を統合して countries.json を生成する。"""
+"""mledoze/countries + World Bank API + 手動データ を統合して countries.json を生成する。
+作り直しても今の countries.json と同じになること（公用語数・年間降水量は 2026-09-24 にお題から消したので作らない。首都は manual_data.py）。
+確かめるとき: python3 tests/test_build_data.py"""
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from manual_data import TEMP, RELIGION, CLIMATE, CAPITAL_JA, CAPITAL_EN_OVERRIDES
 
 RAW = os.path.join(os.path.dirname(__file__), 'raw')
-OUT = os.path.join(os.path.dirname(__file__), 'countries.json')
+OUT = os.environ.get('GEOKING_DATA_OUT') or os.path.join(os.path.dirname(__file__), 'countries.json')   # GEOKING_DATA_OUT: 別の場所に書き出す（tests/test_build_data.py が今の countries.json と比べるとき）
 
 WB_INDICATORS = {
     'NY.GDP.MKTP.CD': 'gdp',            # GDP (USD)
     'NY.GDP.PCAP.CD': 'gdp_pc',         # 一人当たりGDP (USD)
     'SP.POP.TOTL': 'population',        # 人口
     'SP.DYN.LE00.IN': 'life_exp',       # 平均寿命
-    'AG.LND.PRCP.MM': 'precip',         # 年間降水量 (mm)
     'AG.LND.FRST.ZS': 'forest_pct',     # 森林率 (%)
     'SP.URB.TOTL.IN.ZS': 'urban_pct',   # 都市人口率 (%)
     'MS.MIL.XPND.CD': 'military',       # 軍事費 (USD)
@@ -28,9 +29,9 @@ WB_INDICATORS = {
 
 # World Bank に無い小国等の補完（概算・要検証）
 OVERRIDES = {
-    'VA': {'population': 800, 'gdp': None, 'life_exp': 82.0, 'urban_pct': 100, 'forest_pct': 0, 'precip': 800, 'internet_pct': 90, 'elec_pct': 100},
-    'CK': {'population': 15000, 'gdp': 300_000_000, 'gdp_pc': 20000, 'life_exp': 76.0, 'urban_pct': 76, 'forest_pct': 65, 'precip': 2000, 'internet_pct': 60, 'elec_pct': 100, 'age65_pct': 12, 'fertility': 2.2},
-    'NU': {'population': 1700, 'gdp': 25_000_000, 'gdp_pc': 15000, 'life_exp': 74.0, 'urban_pct': 46, 'forest_pct': 70, 'precip': 2100, 'internet_pct': 80, 'elec_pct': 100, 'age65_pct': 13, 'fertility': 2.5},
+    'VA': {'population': 800, 'gdp': None, 'life_exp': 82.0, 'urban_pct': 100, 'forest_pct': 0, 'internet_pct': 90, 'elec_pct': 100},
+    'CK': {'population': 15000, 'gdp': 300_000_000, 'gdp_pc': 20000, 'life_exp': 76.0, 'urban_pct': 76, 'forest_pct': 65, 'internet_pct': 60, 'elec_pct': 100, 'age65_pct': 12, 'fertility': 2.2},
+    'NU': {'population': 1700, 'gdp': 25_000_000, 'gdp_pc': 15000, 'life_exp': 74.0, 'urban_pct': 46, 'forest_pct': 70, 'internet_pct': 80, 'elec_pct': 100, 'age65_pct': 13, 'fertility': 2.5},
     'KP': {'gdp': 16_000_000_000, 'gdp_pc': 620},
 }
 
@@ -130,7 +131,6 @@ def main():
             'area': c['area'],
             'landlocked': c['landlocked'],
             'borders': len(c.get('borders') or []),
-            'languages': len(c.get('languages') or {}),
             'name_len': len(jp.get('official') or ''),
             'name_en_len': len(c['name']['official']),
             'income': wb_meta.get(wbkey, {}).get('incomeLevel', {}).get('value', ''),
@@ -167,8 +167,10 @@ def main():
     for rank, r in enumerate(sorted(out, key=lambda x: x['name_kana']), 1):
         r['kana_rank'] = rank
     out.sort(key=lambda r: r['id'])
-    with open(OUT, 'w', encoding='utf-8') as f:
-        json.dump(out, f, ensure_ascii=False, indent=0)
+    for r in out:   # 今の countries.json と同じ並び（climate と name_official_en はあとから足したので最後）
+        r['climate'] = r.pop('climate'); r['name_official_en'] = r.pop('name_official_en')
+    with open(OUT, 'w', encoding='utf-8') as f:   # 1行で書き出す（今の countries.json と同じ形。改行を入れると差分が全行になる）
+        json.dump(out, f, ensure_ascii=False)
     print('countries:', len(out))
     missing = {k: [r['id'] for r in out if r.get(k) is None] for k in list(WB_INDICATORS.values()) + ['temp', 'eez', 'density']}
     for k, v in missing.items():

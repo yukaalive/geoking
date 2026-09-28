@@ -33,7 +33,7 @@ GEOKING_WS=wss://geoking-vlgh.onrender.com/ws python3 tests/e2e_two_players.py  
 ## セットアップ
 ```bash
 pip install aiohttp
-python3 data/build_data.py   # データ更新時のみ（World Bank APIから再取得したraw JSONが必要）
+python3 data/build_data.py   # データ更新時のみ（data/raw の保存済みデータから作る。作り直したら python3 tests/test_build_data.py で今のデータと同じか確かめる）
 python3 server.py            # PORT環境変数で変更可
 ```
 
