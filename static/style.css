@@ -457,7 +457,7 @@ body.framed{overflow:hidden}
   .rev.win .country small,.rev.win .rank{color:#5a4a10}
   .rev.win .wrank:not(.bronze):not(.silver):not(.gold) span{color:#4b5563}
   .floatmsg.me b{color:#1f6f4a}
-  button.primary .ico,.ztabs button.on .ico,.tag.live .ico,.bubble.go .ico{color:var(--primary-ink)}
+  button.primary .ico,.ztabs button.on .ico,.tag.live .ico,.bubble.go .ico,.waiting span.done .ico{color:var(--primary-ink)}   /* .waiting span.done: 対戦の「選ぶ」画面で、出した人の緑の札のチェック（明るいままだと緑の上で読めなかった） */
   .history .hth .ico{color:inherit}   /* 結果発表の表の見出しの人のアイコンは、見出しの文字と同じ色（背景と同じ色で見えなかった） */
   .qopt.correct,.qopt.wrong,.qopt.correct .ico,.qopt.wrong .ico{color:#1c2b22}   /* クイズで答えた直後の正解（薄い緑）・不正解（薄い赤）の選択肢 */
   .qopt.correct .qopt-nm{color:#1f6f4a}.qopt.wrong .qopt-nm{color:#5f6f64}
