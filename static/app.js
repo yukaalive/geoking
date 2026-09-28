@@ -306,7 +306,7 @@ function renderChat() {
 // 部屋名（未設定なら「〇〇の部屋」を言語に合わせて）
 function roomTitle() { if (!state) return ''; if (state.title_raw) return state.title_raw; const h = byPid(state.host); return t('room_of', { name: h ? pname(h) : '' }); }
 
-function playerTag(p, withYou = true) {   // withYou: false のとき「あなた」の札を付けない（サバイバルの体力の欄。体力ゲージと並ぶと札が途中で切れて2行になる）
+function playerTag(p, withYou = true) {   // withYou: false のとき「あなた」の札を付けない（対戦中のスコアの欄・サバイバルの体力の欄。2026-09-28 に不要と言われた。ロビーの一覧には付ける）
   let t = '';
   if (p.pid === state.host) t += `<span class="tag host">${ico('crown')}${window.t('tag_host')}</span>`;
   if (p.is_bot) t += `<span class="tag">${ico('bot')}BOT</span>`;
@@ -346,7 +346,7 @@ function renderGame() {
   $('#scoreTitle').textContent = t(SV.on() ? 'sv_hp' : 'score');
   if (SV.on()) SV.renderScores(sl);
   else for (const p of [...state.players].sort((a, b) => b.score - a.score)) {
-    sl.appendChild(el('li', '', `<span>${p.pid !== pid && !p.is_bot ? `<b class="who" data-pid="${p.pid}" title="${t('report_mute')}">${escapeHtml(pname(p))}</b>` : escapeHtml(pname(p))}${playerTag(p)}</span><b>${p.spectator ? '—' : p.score + ' ' + t('pts')}${state.phase === 'pick' && !p.spectator ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
+    sl.appendChild(el('li', '', `<span>${p.pid !== pid && !p.is_bot ? `<b class="who" data-pid="${p.pid}" title="${t('report_mute')}">${escapeHtml(pname(p))}</b>` : escapeHtml(pname(p))}${playerTag(p, false)}</span><b>${p.spectator ? '—' : p.score + ' ' + t('pts')}${state.phase === 'pick' && !p.spectator ? (p.picked ? ico('check', 'sm status-ico') : ico('clock', 'sm status-ico')) : ''}</b>`));
   }
   sl.querySelectorAll('.who').forEach(b => b.onclick = () => showPlayerMenu(b.dataset.pid));
 
@@ -527,7 +527,7 @@ function renderHistory() {
   // 見出し行
   table.appendChild(el('div', 'hth corner', t('prompt_col')));
   for (const c of cols) table.appendChild(el('div', 'hth' + (c.pid === pid ? ' me' : ''), `${ico('person', 'sm')} ${escapeHtml(c.name)}${c.pid === pid ? `<small>${t('you_paren')}</small>` : ''}`));
-  const cardHtml = (id, extra = '') => `<img src="${flagUrl(id, 160)}" alt=""><div class="cn">${coff(META.countries[id])}</div>${extra}`;
+  const cardHtml = (id, extra = '') => `<div class="hflag"><img src="${flagUrl(id, 160)}" alt=""></div><div class="cn">${coff(META.countries[id])}</div>${extra}`;   // hflag: 国旗の置き場（国旗の枠は国旗にぴったり）
   for (const h of history) {
     const F = META.fields[h.prompt.key];
     table.appendChild(el('div', 'hth row', `<b>${t('round_short', { n: h.round })}</b>${escapeHtml(pt(h.prompt))}`));
