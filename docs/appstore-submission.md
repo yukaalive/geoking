@@ -31,6 +31,7 @@ App Store Connect → マイApp → 地理王 で、以下を順に入力する�
 ### スクリーンショット（2026-09-28 に今の画面で撮り直し、バトルの1枚を足した。`docs/store-assets/make_promo.py appstore` で作る。元の画面は `docs/store-assets/ios-*.png`）
 - iPhone 6.9インチの欄: `docs/store-assets/promo/appstore69-1.png` 〜 `appstore69-7.png`（1320×2868）をこの順で7枚
 - 6.5インチの欄: `appstore65-1.png` 〜 `appstore65-7.png`（1284×2778）。6.7インチ（1290×2796）は `appstore-1..7.png`
+- **地理王の App Store Connect の欄は 6.5インチ**（1242×2688 か 1284×2778 だけ受け付ける）。ここに 6.9インチの `appstore69-*`（1320×2868）を入れると「寸法が正しくありません」になる（2026-09-28）。入れるのは `appstore65-1〜7.png`
 - 1〜3: パーティー（ホーム・お題・答え合わせ）、4: バトル（体力を削り合う）、5: 国データ、6: 図鑑（ランキング）、7: ひとりでクイズ。6・7 は App Store だけ（Play 用は作らない）
 - 3 の文は「お題に近い順に、点が入る！」（前の「一番近い国旗を出した人が1点！」は今のルールと違うので直した）
 - 画像は透明の情報（アルファ）なし（make_promo.py が最後に flatten_png.swift で外す。アルファ付きだと App Store Connect にはじかれることがある）
