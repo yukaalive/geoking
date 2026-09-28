@@ -70,6 +70,15 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .settings label.chk{justify-content:flex-start}
 .settings label:not(.chk)>span{white-space:nowrap;flex:none}.settings #setTitle{flex:0 1 180px;min-width:0}   /* 狭い画面では入力欄のほうを縮め、「部屋の名前」を途中で折り返さない（チェックボックスの長い説明は折り返してよい） */
 .tag{font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:var(--bg);border:1.5px solid var(--ink);color:var(--ink);margin-left:6px}
+/* 部屋の設定の「ゲーム」: パーティー（点を集める）とバトル（体力を減らし合う）の2つから選ぶ。選んでいるほうが金色。ホスト以外は見るだけ（.guest .hostonly-disable） */
+.moderow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;font-size:13px;font-weight:700}
+.moderow>span:first-child{white-space:nowrap}
+.modesel{display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--card)}
+.modesel .modebtn,.modesel .modebtn:hover,.modesel .modebtn:active{margin:0;border:0;border-radius:0;box-shadow:none;transform:none;background:transparent;color:var(--ink);padding:5px 14px;font-size:14px;font-weight:900;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.modesel .modebtn+.modebtn{border-left:2px solid var(--ink)}
+.modesel .modebtn.on{background:var(--accent);color:#1c2b22}.modesel .modebtn.on .ico{color:#1c2b22}   /* 金色の上の文字とアイコンの線は、ダークモードでも濃い色（明るい色だと読めない） */
+.modesel .modebtn:focus-visible{outline:3px solid var(--primary);outline-offset:-3px}
+#publicRoomList .proom-mode{margin:0 0 0 8px;display:inline-flex;align-items:center;gap:2px;vertical-align:middle}   /* 公開中の部屋の一覧: その部屋のゲーム（パーティー・バトル） */
 .tag.host{background:var(--accent)}.tag.off{background:var(--accent-2);color:#fff}.tag.live{background:var(--primary);color:var(--primary-ink)}
 .players,.scores{padding:0;margin:0}
 .players li,.scores li{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:2px dashed var(--line-soft)}

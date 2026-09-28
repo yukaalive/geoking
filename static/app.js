@@ -135,6 +135,10 @@ function pushSettings() {
   send({ type: 'settings', settings: { public: $('#setPublic').checked, title: $('#setTitle').value.trim() } });
 }
 ['#setPublic', '#setTitle'].forEach(s => $(s).addEventListener('change', pushSettings));
+document.querySelectorAll('.modebtn').forEach(b => b.onclick = () => {   // 部屋の設定の「ゲーム」（パーティー＝points・バトル＝survival）。変えられるのはホストだけ
+  if (!state || state.host !== pid || state.settings.rule === b.dataset.rule) return;
+  send({ type: 'settings', settings: { rule: b.dataset.rule } });
+});
 $('#addBotBtn').onclick = () => send({ type: 'add_bot' });
 // 確認はゲームの中の小窓で（ブラウザの確認ダイアログは、出さずに「キャンセル」にするアプリ内ブラウザがある。common.js の askConfirm）
 $('#lobbyBtn').onclick = async () => { if (await askConfirm(t('confirm_to_lobby'), t('ask_lobby_ok'), t('ask_cancel'))) send({ type: 'to_lobby' }); };
@@ -328,6 +332,7 @@ function renderLobby() {
   if (document.activeElement?.closest('.settings') == null) {
     $('#setPublic').checked = s.public; $('#setTitle').value = state.title_raw || ''; $('#setTitle').placeholder = roomTitle() || t('room_title_ph');
   }
+  document.querySelectorAll('.modebtn').forEach(b => { const on = b.dataset.rule === (s.rule || 'points'); b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
   $('#startBtn').textContent = SV.on() ? t(state.players.length < 2 ? 'sv_start_bot' : 'sv_start')
     : (state.players.length < 2 ? t('start_with_bot') : t('start_rounds', { n: state.settings.rounds }));
 }
@@ -578,9 +583,10 @@ async function loadRooms() {
     const { rooms } = await (await fetch(API + '/api/rooms')).json();
     ul.innerHTML = '';
     if (!rooms.length) { ul.innerHTML = `<li class="muted">${t('no_public_rooms')}</li>`; return; }
-    for (const r of rooms) {   // 1行目に部屋名、2行目に人数と「募集中／対戦中」だけ（ホスト名・ラウンド数・お題の種類は出さない）
+    for (const r of rooms) {   // 1行目に部屋名、2行目に人数・ゲーム（パーティー／バトル）・「募集中／対戦中」だけ（ホスト名・ラウンド数・お題の種類は出さない）
       const status = r.phase === 'lobby' ? `<span class="proom-st">${t('recruiting')}</span>` : `<b class="proom-st live">${t('playing')}</b>`;
-      const li = el('li', '', `<span class="proom"><b class="proom-name">${escapeHtml(r.title_raw || t('room_of', { name: r.host }))}</b><span class="proom-sub muted small">${ico('person', 'sm')} ${t('players_n', { n: r.players })}${status}</span></span>`);
+      const mode = r.rule === 'survival' ? `<span class="tag proom-mode">${ico('heart', 'sm')}${t('mode_survival')}</span>` : `<span class="tag proom-mode">${ico('trophy', 'sm')}${t('mode_points')}</span>`;   // その部屋のゲーム
+      const li = el('li', '', `<span class="proom"><b class="proom-name">${escapeHtml(r.title_raw || t('room_of', { name: r.host }))}</b><span class="proom-sub muted small">${ico('person', 'sm')} ${t('players_n', { n: r.players })}${mode}${status}</span></span>`);
       const b = el('button', 'mini primary', t('join_short')); b.onclick = () => { $('#codeInput').value = r.room; $('#joinBtn').click(); };
       li.appendChild(b); ul.appendChild(li);
     }

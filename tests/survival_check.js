@@ -1,5 +1,5 @@
-/* サバイバル（体力を減らし合う試作のルール）の画面の確認: 試作用のサーバー（GEOKING_RULE=survival。手元は launch.json の survival、8092 番）の
-   ホーム画面を開いたブラウザのコンソールで実行する。1分半〜2分ほどかかる（javascript_tool は45秒で切れるので、下のように裏で走らせて window.__r を待つ）。
+/* バトル（体力を減らし合うゲーム。中の名前は survival）の画面の確認: 開発サーバー（GEOKING_DEV=1。launch.json の geoking-check、8090 番など）の
+   ホーム画面を開いたブラウザのコンソールで実行する。部屋を作ったら、部屋の設定の「ゲーム」をバトルにしてから遊ぶ。1分半〜2分ほどかかる（javascript_tool は45秒で切れるので、下のように裏で走らせて window.__r を待つ）。
      window.__r = null; eval(await (await fetch('/dev/tests/survival_check.js', { cache: 'no-store' })).text()).then(r => window.__r = r);
    幅 320/375/414px の枠の中でそれぞれ部屋を作り、ボット3体と最後まで遊ぶ（3つの枠は同時に進む）。ラウンドごとに日本語と英語を入れ替える。
    - 選ぶ画面・答え合わせ（演出の途中も 0.25 秒ごと）・結果発表で、ページが枠の幅より広くならないか（衝撃波・ダメージの数字・揺れ・紙吹雪ではみ出さないか）
@@ -31,7 +31,9 @@
     d.getElementById('nameInput').value = 'check' + W;
     d.getElementById('createBtn').click();
     for (let i = 0; i < 60 && !(st() && st().phase === 'lobby'); i++) await sleep(100);
-    if (!st() || st().settings.rule !== 'survival') { fr.remove(); return { W, ng: ['この部屋はサバイバルではありません（試作用のサーバーで流してください）'] }; }
+    w.send({ type: 'settings', settings: { rule: 'survival' } });   // 部屋の設定の「ゲーム」をバトルに
+    for (let i = 0; i < 40 && !(st() && st().settings.rule === 'survival'); i++) await sleep(100);
+    if (!st() || st().settings.rule !== 'survival') { fr.remove(); return { W, ng: ['部屋のゲームをバトルにできなかった'] }; }
     for (let i = 0; i < 3; i++) { w.send({ type: 'add_bot' }); await sleep(250); }
     await sleep(400); over('ロビー');
     w.send({ type: 'start' });

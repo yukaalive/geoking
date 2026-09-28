@@ -1,15 +1,16 @@
-"""サバイバル（体力を減らし合う試作のルール）の確認。実行: GEOKING_WS=ws://localhost:8092/ws python3 tests/test_survival.py
+"""バトル（体力を減らし合うゲーム。中の名前は survival）の確認。実行: GEOKING_WS=ws://localhost:8090/ws python3 tests/test_survival.py
 1. 減り方の計算（サーバーの Room を直接動かす）: 1位は0・順位が1つ下がるごとに10多く（いちばん大きくて30）、同じ値は同じだけ、データのない国は最下位と同じ、
    全員データなしなら誰も減らない、体力0で脱落して手札を捨てる、残りが1人で決着、最後の順位（残った人 → あとまで残った人）
-2. 部屋で遊ぶ（WebSocket）: ロビーでルールをサバイバルにして（試作用のサーバーは最初から）、ボット3体と最後まで。毎ラウンドの減り方・手札が8枚のまま（1枚引く）・
+2. 部屋で遊ぶ（WebSocket）: ロビーで部屋の設定の「ゲーム」をバトルにして（試作用のサーバーは最初から）、ボット3体と最後まで。毎ラウンドの減り方・手札が8枚のまま（1枚引く）・
    脱落した人は出さない・最後の1人で終わる・もう一戦で体力が戻る。2人なら負けた方が10減る。ほかの人が抜けて1人になったら、その場で終わる。
-   ひとりで「botとサバイバル開始」を押すとボットが1体入って2人で始まる（点のルールと同じ）"""
+   ひとりで「botとバトル開始」を押すとボットが1体入って2人で始まる（パーティーと同じ）。
+   部屋の設定の「ゲーム」はホストだけが変えられ、公開中の部屋の一覧（/api/rooms）にその部屋のゲームが出る"""
 import asyncio, json, os, sys
 import aiohttp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-URL = os.environ.get('GEOKING_WS', 'ws://localhost:8092/ws')
+URL = os.environ.get('GEOKING_WS', 'ws://localhost:8090/ws')
 
 
 # ---------- 1. 減り方の計算
@@ -251,6 +252,34 @@ async def solo_start_adds_one_bot(s):
     print('OK solo start: one bot (2 players) for survival and points')
 
 
+async def lobby_game_setting(s):
+    a = await s.ws_connect(URL)
+    await a.send_json({'type': 'create', 'name': 'Hana'})
+    st = await recv_state(a)
+    room = st['room']
+    await a.send_json({'type': 'settings', 'settings': {'rule': 'survival', 'public': True}})   # ホストがバトルにして公開
+    await recv_state(a, lambda d: d['settings']['rule'] == 'survival' and d['settings']['public'])
+    b = await s.ws_connect(URL)
+    await b.send_json({'type': 'join', 'room': room, 'name': 'Ken'})
+    await recv_state(b, lambda d: len(d['players']) == 2)
+    await b.send_json({'type': 'settings', 'settings': {'rule': 'points'}})   # ホスト以外は変えられない
+    await a.send_json({'type': 'chat', 'text': 'hi'})   # 何か届くまで待つための合図
+    st = await recv_state(b, lambda d: any(m.get('text') == 'hi' for m in d.get('chat', [])))
+    assert st['settings']['rule'] == 'survival', st['settings']
+    http = URL.replace('ws://', 'http://').replace('wss://', 'https://').rsplit('/ws', 1)[0]
+    async with s.get(http + '/api/rooms') as r:
+        rooms = (await r.json())['rooms']
+    mine = [x for x in rooms if x['room'] == room]
+    assert mine and mine[0]['rule'] == 'survival', mine   # 公開中の部屋の一覧にゲームが出る
+    await a.send_json({'type': 'settings', 'settings': {'rule': 'points'}})   # ホストはパーティーに戻せる
+    await recv_state(a, lambda d: d['settings']['rule'] == 'points')
+    async with s.get(http + '/api/rooms') as r:
+        rooms = (await r.json())['rooms']
+    assert [x['rule'] for x in rooms if x['room'] == room] == ['points'], rooms
+    await a.close(); await b.close()
+    print('OK lobby: only the host changes the game; the public room list shows it')
+
+
 async def points_unchanged(s):
     a, room, me = await make_room(s, 'Eve', 1, survival=False)
     await a.send_json({'type': 'start'})
@@ -270,6 +299,7 @@ async def main():
         await two_players(s)
         await last_one_by_leaving(s)
         await solo_start_adds_one_bot(s)
+        await lobby_game_setting(s)
         await points_unchanged(s)
 
 

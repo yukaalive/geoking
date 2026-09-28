@@ -27,14 +27,14 @@ BOT_NAMES_EN = ['Emily', 'Michael', 'Olivia', 'James', 'Sophia', 'Noah', 'Emma',
                 'Mia', 'Jacob', 'Isabella', 'Mason', 'Charlotte', 'Lucas', 'Amelia', 'Benjamin', 'Harper', 'Logan',
                 'Evelyn', 'Alexander', 'Abigail', 'Daniel', 'Emilia', 'Henry', 'Ella', 'Jackson', 'Grace', 'Samuel']
 
-# ---------- サバイバル（体力を減らし合う試作のルール）
+# ---------- バトル（画面の名前。中の名前は survival。体力を減らし合う）。ロビーの「部屋の設定」の「ゲーム」でホストが選ぶ（パーティー＝'points' が最初）
 # 部屋の settings['rule'] が 'survival' のとき、点のかわりに体力（SURV_HP）を減らし合う。お題に合う国旗を全員が同時に1枚出すのは同じ。
 # めくったあと、1位は減らず、順位が1つ下がるごとに SURV_STEP ずつ多く減る（いちばん大きくて SURV_MAX_DAMAGE。4人なら 0・10・20・30、2人なら 0・10、6人なら 0・10・20・30・30・30）。
 # データのない国は最下位と同じ。体力0で脱落（そのゲームは観戦）。最後の1人が勝ち。毎ラウンド1枚引くので手札は減らない。
 # 長引いたときは SURV_MAX_ROUNDS で打ち切り、体力の多い人が勝ち（ふつう 2人で17・3人で12・4人で10・8人で7ラウンドほど。2人でも19ラウンドまでに終わる）。
 # 2026-09-28: 体力 20・最下位 6 から、体力 100・最下位 30 に（ゲームの長さは同じ。数字が大きいほうが「ダメージ」らしい）
 # 2026-09-28: 最下位はいつも30（あいだは順位に合わせて）から、順位1つごとに10（案A）に。脱落して2人になると負けた方が毎回30減り、すぐ終わっていた
-# 試作用のサーバー（環境変数 GEOKING_RULE=survival）では、どの部屋もこのルールで始まる。本番（未設定）はこれまでどおり 'points'
+# 試作用のサーバー（環境変数 GEOKING_RULE=survival）では、新しい部屋がこのルールから始まる（ロビーで変えられる）。本番（未設定）はパーティー（'points'）から
 RULES = ('points', 'survival')
 SURV_HP = 100
 SURV_STEP = 10         # 順位が1つ下がるごとに多く減る体力
@@ -316,7 +316,7 @@ class Room:
                  [self.players[x].name + ('(bot)' if self.players[x].is_bot else '') for x in self.order], len(self.prompts), ','.join(s['categories']), s.get('rule'))
         host = self.players.get(self.host)
         sheet_log('ゲーム開始', self, host.name if host else '',
-                  '、'.join(self.players[x].name + ('（ボット）' if self.players[x].is_bot else '') for x in self.order) + ('／サバイバル' if self.survival() else f'／{s["rounds"]}ラウンド'))
+                  '、'.join(self.players[x].name + ('（ボット）' if self.players[x].is_bot else '') for x in self.order) + ('／バトル' if self.survival() else f'／{s["rounds"]}ラウンド'))
         self.begin_round()
 
     def begin_round(self):
@@ -1081,7 +1081,7 @@ async def ws_session(ws):
                 'timer': to_int(s.get('timer', cur['timer']), 0, 180, cur['timer']),
                 'max_star': to_int(s.get('max_star', cur['max_star']), 1, 3, cur['max_star']),
                 'public': bool(s.get('public', cur['public'])),
-                'rule': s['rule'] if s.get('rule') in RULES else cur.get('rule', 'points'),   # 画面にはまだ切り替えがない（試作用のサーバーは最初から 'survival'。テストはここで切り替える）
+                'rule': s['rule'] if s.get('rule') in RULES else cur.get('rule', 'points'),   # 部屋の設定の「ゲーム」: 'points'＝パーティー、'survival'＝バトル
             })
             host = room.players.get(room.host)
             if room.settings['public'] != was_public:
@@ -1297,7 +1297,7 @@ async def api_rooms(request):
             host = r.players.get(r.host)
             out.append({'room': r.code, 'title': r.display_title(), 'title_raw': r.title, 'phase': r.phase, 'round': r.round,
                         'host': host.name if host else '', 'players': len(r.players),
-                        'categories': r.settings['categories'], 'rounds': r.settings['rounds'], 'age': int(now - r.created)})
+                        'categories': r.settings['categories'], 'rounds': r.settings['rounds'], 'rule': r.settings.get('rule', 'points'), 'age': int(now - r.created)})   # rule: 一覧に出すゲーム（パーティー／バトル）
     out.sort(key=lambda x: x['age'])
     return web.json_response({'rooms': out[:20]})
 
