@@ -29,14 +29,16 @@ BOT_NAMES_EN = ['Emily', 'Michael', 'Olivia', 'James', 'Sophia', 'Noah', 'Emma',
 
 # ---------- サバイバル（体力を減らし合う試作のルール）
 # 部屋の settings['rule'] が 'survival' のとき、点のかわりに体力（SURV_HP）を減らし合う。お題に合う国旗を全員が同時に1枚出すのは同じ。
-# めくったあと、1位は減らず、最下位は SURV_MAX_DAMAGE 減る（あいだは順位に合わせて。人数が減っても最下位はいつも同じだけ減る。4人なら 0・10・20・30）。
+# めくったあと、1位は減らず、順位が1つ下がるごとに SURV_STEP ずつ多く減る（いちばん大きくて SURV_MAX_DAMAGE。4人なら 0・10・20・30、2人なら 0・10、6人なら 0・10・20・30・30・30）。
 # データのない国は最下位と同じ。体力0で脱落（そのゲームは観戦）。最後の1人が勝ち。毎ラウンド1枚引くので手札は減らない。
-# 長引いたときは SURV_MAX_ROUNDS で打ち切り、体力の多い人が勝ち（4人でふつう7〜8ラウンド、長くても10ラウンドほどで終わる）。
+# 長引いたときは SURV_MAX_ROUNDS で打ち切り、体力の多い人が勝ち（ふつう 2人で17・3人で12・4人で10・8人で7ラウンドほど。2人でも19ラウンドまでに終わる）。
 # 2026-09-28: 体力 20・最下位 6 から、体力 100・最下位 30 に（ゲームの長さは同じ。数字が大きいほうが「ダメージ」らしい）
+# 2026-09-28: 最下位はいつも30（あいだは順位に合わせて）から、順位1つごとに10（案A）に。脱落して2人になると負けた方が毎回30減り、すぐ終わっていた
 # 試作用のサーバー（環境変数 GEOKING_RULE=survival）では、どの部屋もこのルールで始まる。本番（未設定）はこれまでどおり 'points'
 RULES = ('points', 'survival')
 SURV_HP = 100
-SURV_MAX_DAMAGE = 30
+SURV_STEP = 10         # 順位が1つ下がるごとに多く減る体力
+SURV_MAX_DAMAGE = 30   # いちばん大きく減る体力
 SURV_MAX_ROUNDS = 20
 TEST_SERVER = os.environ.get('GEOKING_RULE') == 'survival'   # 試作用のサーバー。検索エンジンには載せない（security_headers・robots.txt）
 
@@ -367,13 +369,11 @@ class Room:
             r.setdefault('rank', None)
             r['winner'] = r['rank'] == 1
             p = self.players[r['pid']]
-            if surv:   # サバイバル: 1位は減らず、最下位は SURV_MAX_DAMAGE（あいだは順位に合わせて四捨五入）。データのない国は最下位と同じ。全員データなしなら誰も減らない
+            if surv:   # サバイバル: 1位は減らず、順位が1つ下がるごとに SURV_STEP ずつ多く（いちばん大きくて SURV_MAX_DAMAGE）。データのない国は最下位（n位）と同じ。全員データなしなら誰も減らない
                 if not anyone or n < 2:
                     dmg = 0
-                elif r['rank'] is None:
-                    dmg = SURV_MAX_DAMAGE
                 else:
-                    dmg = int(SURV_MAX_DAMAGE * (r['rank'] - 1) / (n - 1) + 0.5)
+                    dmg = min(SURV_MAX_DAMAGE, SURV_STEP * ((n if r['rank'] is None else r['rank']) - 1))
                 r['points'], r['damage'], r['hp_before'] = None, dmg, p.hp or 0
                 p.hp = max(0, (p.hp or 0) - dmg)
                 r['hp'], r['out'] = p.hp, p.hp == 0

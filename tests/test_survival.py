@@ -1,8 +1,8 @@
 """サバイバル（体力を減らし合う試作のルール）の確認。実行: GEOKING_WS=ws://localhost:8092/ws python3 tests/test_survival.py
-1. 減り方の計算（サーバーの Room を直接動かす）: 1位は0・最下位は30・あいだは順位に合わせて四捨五入、同じ値は同じだけ、データのない国は最下位と同じ、
+1. 減り方の計算（サーバーの Room を直接動かす）: 1位は0・順位が1つ下がるごとに10多く（いちばん大きくて30）、同じ値は同じだけ、データのない国は最下位と同じ、
    全員データなしなら誰も減らない、体力0で脱落して手札を捨てる、残りが1人で決着、最後の順位（残った人 → あとまで残った人）
 2. 部屋で遊ぶ（WebSocket）: ロビーでルールをサバイバルにして（試作用のサーバーは最初から）、ボット3体と最後まで。毎ラウンドの減り方・手札が8枚のまま（1枚引く）・
-   脱落した人は出さない・最後の1人で終わる・もう一戦で体力が戻る。2人なら負けた方が30減る。ほかの人が抜けて1人になったら、その場で終わる。
+   脱落した人は出さない・最後の1人で終わる・もう一戦で体力が戻る。2人なら負けた方が10減る。ほかの人が抜けて1人になったら、その場で終わる。
    ひとりで「botとサバイバル開始」を押すとボットが1体入って2人で始まる（点のルールと同じ）"""
 import asyncio, json, os, sys
 import aiohttp
@@ -20,10 +20,8 @@ def expected_damage(rows):
     for r in rows:
         if not anyone or n < 2:
             out[r['pid']] = 0
-        elif r['rank'] is None:
-            out[r['pid']] = 30
         else:
-            out[r['pid']] = int(30 * (r['rank'] - 1) / (n - 1) + 0.5)
+            out[r['pid']] = min(30, 10 * ((n if r['rank'] is None else r['rank']) - 1))   # データのない国は最下位（n位）と同じ
     return out
 
 
@@ -66,18 +64,18 @@ def unit_tests():
     rows = play(r, {'p0': 'ru', 'p1': 'ru', 'p2': 'jp', 'p3': 'mt'})
     assert [rows[f'p{i}']['damage'] for i in range(4)] == [0, 0, 20, 30], rows
 
-    # 8人: 最下位は30、あいだは 30×(順位-1)/7 を四捨五入 → 0,4,9,13,17,21,26,30
+    # 8人: 順位1つごとに10、いちばん大きくて30 → 0,10,20,30,30,30,30,30
     r = room_with(8, 'area_max')
     rows = play(r, {'p0': 'ru', 'p1': 'ca', 'p2': 'cn', 'p3': 'br', 'p4': 'au', 'p5': 'in', 'p6': 'ar', 'p7': 'kz'})
-    assert [rows[f'p{i}']['damage'] for i in range(8)] == [0, 4, 9, 13, 17, 21, 26, 30], [rows[f'p{i}']['damage'] for i in range(8)]
+    assert [rows[f'p{i}']['damage'] for i in range(8)] == [0, 10, 20, 30, 30, 30, 30, 30], [rows[f'p{i}']['damage'] for i in range(8)]
     for row in rows.values():
         assert row['damage'] == expected_damage(r.reveal['rows'])[row['pid']]
 
     # データのない国（バチカンの GDP）は最下位と同じだけ減る。ほかは順位のとおり
     r = room_with(3, 'gdp_max')
     rows = play(r, {'p0': 'us', 'p1': 'jp', 'p2': 'va'})
-    assert rows['p2']['missing'] and rows['p2']['damage'] == 30 and rows['p0']['damage'] == 0, rows
-    assert rows['p1']['damage'] == 15, rows   # データのある2人のうち2位 → 30×1/2
+    assert rows['p2']['missing'] and rows['p2']['damage'] == 20 and rows['p0']['damage'] == 0, rows   # 3人の最下位（3位）と同じ20
+    assert rows['p1']['damage'] == 10, rows   # 2位 → 10
     # 全員データなし → 誰も減らない
     r = room_with(2, 'gdp_max')
     rows = play(r, {'p0': 'va', 'p1': 'va'})
@@ -87,7 +85,7 @@ def unit_tests():
     r = room_with(3, 'area_max')
     r.players['p2'].hp = 5
     rows = play(r, {'p0': 'ru', 'p1': 'jp', 'p2': 'mt'})
-    assert rows['p2']['out'] and r.players['p2'].hp == 0 and r.players['p2'].out_round == 1 and r.players['p2'].hand == []
+    assert rows['p2']['out'] and rows['p2']['damage'] == 20 and r.players['p2'].hp == 0 and r.players['p2'].out_round == 1 and r.players['p2'].hand == []
     assert r.reveal['alive'] == 2 and not r.reveal['last']
     r.next_round()
     assert r.phase == 'pick' and r.players['p2'].new_card is None and len(r.players['p2'].hand) == 0
@@ -95,10 +93,10 @@ def unit_tests():
     r.players['p0'].pick = r.players['p0'].hand[0]
     r.players['p1'].pick = r.players['p1'].hand[0]
     assert r.all_picked()   # 脱落した人は待たない
-    # 2人: 負けた方が30
-    r.players['p1'].hp = 30
+    # 2人: 負けた方が10
+    r.players['p1'].hp = 10
     rows = play(r, {'p0': 'ru', 'p1': 'mt'})
-    assert set(rows) == {'p0', 'p1'} and rows['p1']['damage'] == 30 and rows['p1']['out'] and r.reveal['last'] is True
+    assert set(rows) == {'p0', 'p1'} and rows['p1']['damage'] == 10 and rows['p1']['out'] and r.reveal['last'] is True
     r.next_round()
     assert r.phase == 'end'
     assert [(e['pid'], e['place']) for e in r.final] == [('p0', 1), ('p1', 2), ('p2', 3)], r.final   # 残った人 → R2で脱落 → R1で脱落
@@ -117,7 +115,7 @@ def unit_tests():
     play(r, {'p0': 'ru', 'p1': 'jp', 'p2': 'mt'})
     r.next_round()
     r.remove_player('p1')
-    assert r.departed['p1']['out_round'] == 2 and r.departed['p1']['hp'] == 85
+    assert r.departed['p1']['out_round'] == 2 and r.departed['p1']['hp'] == 90
     r.players['p2'].hp = 1
     play(r, {'p0': 'ru', 'p2': 'mt'})
     r.next_round()
@@ -132,11 +130,11 @@ def unit_tests():
     d = json.loads(json.dumps(server.room_to_dict(r, time.time())))
     server.rooms.pop('TEST', None)
     r2 = server.room_from_dict(d, time.time(), source='x')
-    assert r2.settings['rule'] == 'survival' and r2.players['p1'].hp == 85 and r2.players['p2'].out_round == 1
+    assert r2.settings['rule'] == 'survival' and r2.players['p1'].hp == 90 and r2.players['p2'].out_round == 1
     assert r2.players['p0'].new_card == r.players['p0'].new_card and r2.players['p0'].new_card in r2.players['p0'].hand
     d['settings'].pop('rule')   # 前の版のサーバー（ルールの項目がない）からの部屋は、点のルール
     assert server.room_from_dict(d, time.time(), source='y').settings['rule'] == 'points'
-    print('OK unit: damage 0/10/20/30, ties, 8 players, missing data, all missing, knockout, 2 players, standings, round cap, leaver, migration')
+    print('OK unit: damage 0/10/20/30 (+10 per rank, max 30), ties, 8 players, missing data, all missing, knockout, 2 players, standings, round cap, leaver, migration')
 
 
 # ---------- 2. 部屋で遊ぶ
@@ -223,9 +221,9 @@ async def two_players(s):
     rv = await recv_state(a, lambda d: d['phase'] == 'reveal')
     rows = rv['reveal']['rows']
     dmg = sorted(x['damage'] for x in rows)
-    assert dmg in ([0, 30], [0, 0]), rows   # 負けた方が30（同じ値なら0と0）
+    assert dmg in ([0, 10], [0, 0]), rows   # 負けた方が10（同じ値なら0と0）
     await a.close()
-    print('OK two players: loser -30')
+    print('OK two players: loser -10')
 
 
 async def last_one_by_leaving(s):
