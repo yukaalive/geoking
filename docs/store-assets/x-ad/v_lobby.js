@@ -8,4 +8,4 @@ await sleep(650);
 ps.splice(1, 0, P('p2', 'たろう'));
 AD.mark('joined');
 SHOW({ ...state, players: [...ps], chat: [{ name: 'システム', key: 'joined', params: { name: 'たろう' }, text: 'たろうさんが入室しました', ts: Date.now() / 1000 }] });
-await sleep(1750);
+await sleep(2200);
