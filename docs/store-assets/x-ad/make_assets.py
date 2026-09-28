@@ -2,6 +2,7 @@
 import asyncio, base64, json, os, subprocess, tempfile, sys
 import aiohttp
 H = os.path.dirname(os.path.abspath(__file__)); A = os.path.join(H, 'assets'); PORT = 9499
+os.makedirs(A, exist_ok=True)   # assets/ は git に入れていない（作り直すたびに描く）
 LAYOUTS = {   # 名前: 画面の大きさ、帯の位置と高さ、スマホの枠の位置と大きさ
   '45':  {'W': 1080, 'H': 1350, 'band_y': 0,   'band_h': 250, 'ph_x': 200, 'ph_y': 272, 'ph_w': 680, 'ph_h': 1100},
   '916': {'W': 1080, 'H': 1920, 'band_y': 165, 'band_h': 265, 'ph_x': 130, 'ph_y': 452, 'ph_w': 820, 'ph_h': 1470},

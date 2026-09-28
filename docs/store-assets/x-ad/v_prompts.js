@@ -11,3 +11,4 @@ let go; window.__go = () => go(); window.__ready = Promise.resolve(true); await 
 AD.mark('round'); await sleep(540);
 SHOW({ ...state, round: 3, prompt: pr[1], hand: hands[1], deadline: Date.now() / 1000 + 30 }); window.scrollTo(0, 0); AD.mark('round'); await sleep(540);
 SHOW({ ...state, round: 4, prompt: pr[2], hand: hands[2], deadline: Date.now() / 1000 + 30 }); window.scrollTo(0, 0); AD.mark('round'); await sleep(540);
+await sleep(300);   // 切り出しの余裕（最後のお題のまま）

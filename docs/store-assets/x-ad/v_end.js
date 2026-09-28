@@ -6,4 +6,4 @@ let go; window.__go = () => go(); window.__ready = Promise.resolve(true); await 
 AD.mark('champion');
 SHOW({ ...state, phase: 'end', final: players.map(p => ({ pid: p.pid, name: p.name, name_en: null, score: p.score, is_bot: false })), history: [], leftover: {} });
 window.scrollTo(0, 0);
-await sleep(2400);
+await sleep(3000);

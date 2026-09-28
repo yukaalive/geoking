@@ -7,4 +7,4 @@ hero().forEach(a => { a.currentTime = 2600; a.pause(); });
 let go; window.__go = () => go(); window.__ready = Promise.resolve(true); await new Promise(r => go = r);
 hero().forEach(a => { a.currentTime = 2750; a.play(); });   // 6秒の動きの 2.75秒目から（0.55秒後にめくれ、1.6秒ごろ王冠）
 await sleep(1950); hero().forEach(a => a.pause());
-await sleep(450);
+await sleep(1900);
