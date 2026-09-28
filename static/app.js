@@ -2,7 +2,9 @@
 // サーバーの基点。ブラウザ版は同じサーバー（空文字）。アプリ版は index.html で window.GEOKING_SERVER に本番URLを入れる
 
 // 効果音・振動は sfx.js（図鑑と共用）
-trackVisit('game');   // 利用ログ（開始・5分ごと・離脱）
+const visitGame = trackVisit('game');   // 利用ログ（開始・5分ごと・離脱）。visitGame(rule): この訪問で遊んでいるゲーム（パーティー／バトル）を知らせる
+const playingNow = () => { const me = state && state.players.find(p => p.pid === pid); return !!(me && !me.spectator && state.phase !== 'lobby'); };   // ゲームに出ている（途中から観戦の人は入れない）
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && playingNow()) visitGame(state.settings.rule); });   // ゲーム中にほかのアプリから戻った: 新しい訪問になる（trackVisit の見張りのあとに動く）ので、ゲームも知らせ直す
 
 
 let ws = null, state = null, pendingAction = null;
@@ -238,7 +240,9 @@ function playTransitions() {
   if (state.room !== prevRoom) { sfx.enter(); prevRoom = state.room; prevPlayers = state.players.length; }
   else if (prevPlayers != null && state.players.length !== prevPlayers) { (state.players.length > prevPlayers ? sfx.joined : sfx.left)(); prevPlayers = state.players.length; }
   if (key !== prevKey) {
-    if (state.phase === 'pick' && state.round === 1 && !prevKey.endsWith(':pick:1')) { sfx.start(); lastTickSec = null; scrollTopNext = true; }
+    const started = state.phase === 'pick' && state.round === 1 && !prevKey.endsWith(':pick:1');
+    if (playingNow() && (started || !prevKey)) visitGame(state.settings.rule);   // 利用ログ: ゲームが始まったとき・ゲーム中に開き直して部屋に戻ったとき
+    if (started) { sfx.start(); lastTickSec = null; scrollTopNext = true; }
     else if (state.phase === 'pick') { sfx.round(); lastTickSec = null; scrollTopNext = true; }
     else if (state.phase === 'reveal' && state.reveal && revealKeyOf(state) !== revealShown()) {
       scrollTopNext = true;

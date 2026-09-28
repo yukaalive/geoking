@@ -179,11 +179,12 @@ function showCountry(id) {
 }
 if ($('#modalClose')) $('#modalClose').onclick = () => { $('#modal').classList.add('hidden'); if (typeof sfx !== 'undefined') sfx.close(); };
 
-// ---------- 利用ログ（ざっくり）: 開いた時・5分ごと・離れた時に、画面の種類とニックネーム・滞在秒数をサーバーへ送る
+// ---------- 利用ログ（ざっくり）: 開いた時・5分ごと・離れた時に、画面の種類とニックネーム・滞在秒数をサーバーへ送る。
+// 返す関数（対戦画面で使う）: この訪問で遊んでいるゲーム（rule: 'points'＝パーティー／'survival'＝バトル）を送る。管理者の利用ログの「画面」に「対戦（バトル）」のように出る
 function trackVisit(mode) {
   let id, t0;
-  const post = (event) => {
-    const body = JSON.stringify({ id, mode, event, name: localStorage.getItem('geoking_name') || '', sec: Math.round((Date.now() - t0) / 1000) });
+  const post = (event, extra) => {
+    const body = JSON.stringify({ id, mode, event, name: localStorage.getItem('geoking_name') || '', sec: Math.round((Date.now() - t0) / 1000), ...extra });
     try {
       if (event === 'leave' && navigator.sendBeacon) navigator.sendBeacon(API + '/api/visit', new Blob([body], { type: 'application/json' }));
       else fetch(API + '/api/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
@@ -199,4 +200,5 @@ function trackVisit(mode) {
   });
   window.addEventListener('pagehide', () => { if (!hidden) { hidden = true; post('leave'); } });
   window.addEventListener('beforeunload', () => { if (!hidden) { hidden = true; post('leave'); } });
+  return (rule) => post('game', { rule });
 }

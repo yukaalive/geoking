@@ -1388,7 +1388,9 @@ async def healthz(request):
 
 # 利用ログ（ざっくり）: 対戦画面・図鑑を「誰が」「何分」見たかを運用ログに残す。
 # クライアントが開いた時・5分ごと・離れた時に POST してくる。保存はせずログ出力のみ
+# 対戦画面は、ゲームが始まったとき（とゲーム中にほかのアプリから戻ったとき）にもそのゲームを送ってくる（event=game。管理者の利用ログの「画面」に「対戦（バトル）」のように出す。2026-09-29）
 VISIT_MODES = {'game': '対戦', 'zukan': '図鑑', 'quiz': 'クイズ'}
+VISIT_GAMES = {'points': 'パーティー', 'survival': 'バトル'}   # 部屋の settings.rule → ロビーの「ゲーム」の名前
 async def api_visit(request):
     try:
         data = await request.json()
@@ -1398,14 +1400,17 @@ async def api_visit(request):
         return web.json_response({'ok': False}, status=400)
     mode = VISIT_MODES.get(str(data.get('mode') or ''), None)
     event = str(data.get('event') or '')
-    if not mode or event not in ('start', 'ping', 'leave'):
+    if not mode or event not in ('start', 'ping', 'leave', 'game'):
+        return web.json_response({'ok': False}, status=400)
+    game = VISIT_GAMES.get(str(data.get('rule') or '')) if event == 'game' else None
+    if event == 'game' and (mode != '対戦' or not game):
         return web.json_response({'ok': False}, status=400)
     name = ''.join(ch for ch in str(data.get('name') or '') if ch.isprintable()).strip()[:20] or '(名前なし)'
     if name != '(名前なし)' and not check_name(name)[0]:   # 部屋に入るときに断られる名前（電話番号・SNS の ID・不適切な言葉など）は残さない
         name = '(名前なし)'
     vid = ''.join(ch for ch in str(data.get('id') or '') if ch.isalnum())[:12]
     sec = to_int(data.get('sec'), 0, 24 * 3600, 0)
-    label = {'start': '開始', 'ping': '滞在中', 'leave': '離脱'}[event]
+    label = {'start': '開始', 'ping': '滞在中', 'leave': '離脱', 'game': f'ゲーム={game}'}[event]
     log.info('visit %s %s name=%s 滞在=%d分%02d秒 id=%s', mode, label, name, sec // 60, sec % 60, vid)
     v = VISITS.get(vid)
     # スプレッドシートには、1回の訪問（id）につき「開いた」「離れた」を1行ずつだけ（5分ごとの「滞在中」や、同じ訪問の送り直しは残さない）
@@ -1416,15 +1421,17 @@ async def api_visit(request):
     if v is None:
         if len(VISITS) >= 3000:
             del VISITS[next(iter(VISITS))]
-        v = VISITS[vid] = {'mode': mode, 'name': name, 'start': time.time(), 'sec': 0, 'state': '開始'}
+        v = VISITS[vid] = {'mode': mode, 'name': name, 'start': time.time(), 'sec': 0, 'state': '開始', 'games': []}
     if name != '(名前なし)':
         v['name'] = name
+    if game and game not in v['games']:   # この訪問で遊んだゲーム（遊んだ順。スプレッドシートには書かない。ゲーム開始の行がすでにある）
+        v['games'].append(game)
     v['sec'] = max(v['sec'], sec)
     v['state'] = '離脱' if event == 'leave' else '滞在中'
     return web.json_response({'ok': True})
 
 
-VISITS = {}   # 訪問id -> {mode, name, start, sec, state}
+VISITS = {}   # 訪問id -> {mode, name, start, sec, state, games}
 ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 
 
@@ -1469,16 +1476,14 @@ async def admin_visits(request):
         return denied
     rows = sorted(VISITS.values(), key=lambda v: v['start'], reverse=True)
     jst = timezone(timedelta(hours=9))
-    total_game = sum(v['sec'] for v in rows if v['mode'] == '対戦'); total_zukan = sum(v['sec'] for v in rows if v['mode'] == '図鑑')
-    names = len({v['name'] for v in rows})
     def fmt(sec): return f"{sec // 60}分{sec % 60:02d}秒"
+    def screen(v): return v['mode'] + (f"（{'・'.join(v['games'])}）" if v.get('games') else '')   # 対戦画面で遊んだゲーム: 「対戦（バトル）」「対戦（パーティー・バトル）」。始めていなければ「対戦」
     body = ''.join(
-        f"<tr><td>{datetime.fromtimestamp(v['start'], jst).strftime('%m/%d %H:%M')}</td><td>{v['mode']}</td><td>{html.escape(v['name'])}</td><td>{fmt(v['sec'])}</td><td>{v['state']}</td></tr>"
+        f"<tr><td>{datetime.fromtimestamp(v['start'], jst).strftime('%m/%d %H:%M')}</td><td>{screen(v)}</td><td>{html.escape(v['name'])}</td><td>{fmt(v['sec'])}</td><td>{v['state']}</td></tr>"
         for v in rows)
     page = f"""<!DOCTYPE html><html lang=ja><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content=noindex><title>利用ログ - 地理王</title>
-<style>body{{font-family:system-ui,sans-serif;margin:16px;background:#f7f1df;color:#1c2b22}}table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{border-bottom:1px solid #ccc;padding:6px 8px;text-align:left;white-space:nowrap}}th{{background:#1f6f4a;color:#fff}}p{{font-size:14px}}</style></head>
+<style>body{{font-family:system-ui,sans-serif;margin:16px;background:#f7f1df;color:#1c2b22}}table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{border-bottom:1px solid #ccc;padding:6px 8px;text-align:left;white-space:nowrap}}th{{background:#1f6f4a;color:#fff}}</style></head>
 <body><h1>利用ログ（直近・サーバー起動後）</h1>
-<p>訪問 {len(rows)} 件／名前 {names} 種類／対戦 合計 {fmt(total_game)}／図鑑 合計 {fmt(total_zukan)}。サーバーが再起動（無料プランのスリープ）すると消えます。長期の記録は Render のログ（visit で検索）を参照。</p>
 <table><tr><th>開始（日本時間）</th><th>画面</th><th>名前</th><th>滞在</th><th>状態</th></tr>{body}</table></body></html>"""
     return web.Response(text=page, content_type='text/html', headers={'Cache-Control': 'no-store'})
 

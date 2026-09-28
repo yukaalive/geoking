@@ -4,14 +4,16 @@
 - 1回目の送信はわざと失敗させ、次の回に送り直されること（なくならない・二重にならない）
 - 2回目は「書き込めたのに返事だけ失敗」させ、同じ id で送り直されて、作り物（本物と同じく同じ id は2回書かない）で二重にならないこと
 - 止める合図（SIGTERM）のとき、間隔を待たずに残りを送ること
+- 対戦画面が送る「遊んでいるゲーム」（event=game）はスプレッドシートには書かず、管理者の利用ログ（/admin/visits）の「画面」に「対戦（バトル）」のように出ること
 実行: python3 tests/test_sheet_log.py"""
-import asyncio, json, os, signal, subprocess, sys, time
+import asyncio, base64, json, os, signal, subprocess, sys, time
 import aiohttp
 from aiohttp import web
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 FAKE, SERVER, SERVER2 = 18841, 18842, 18843
 KEY = 'test-sheet-key'
+ADMIN = 'test-admin-key'
 got = []            # 届いた行
 posts = {'n': 0, 'fail_first': True, 'bad_key': 0, 'ids': [], 'lose_reply_once': True}
 seen = set()        # 書き込んだまとまりの id（本物の Apps Script と同じく、同じ id は2回書かない）
@@ -44,7 +46,7 @@ async def fake_echo(request):
 
 
 def start_server(port, every):
-    env = {**os.environ, 'PORT': str(port), 'SHEET_LOG_URL': f'http://127.0.0.1:{FAKE}/exec', 'SHEET_LOG_KEY': KEY, 'SHEET_LOG_EVERY': str(every)}
+    env = {**os.environ, 'PORT': str(port), 'SHEET_LOG_URL': f'http://127.0.0.1:{FAKE}/exec', 'SHEET_LOG_KEY': KEY, 'SHEET_LOG_EVERY': str(every), 'ADMIN_KEY': ADMIN}
     env.pop('MIGRATE_KEY', None)
     return subprocess.Popen([sys.executable, 'server.py'], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -132,6 +134,23 @@ async def main():
                 assert r.status == 200
             async with s.post(f'http://127.0.0.1:{SERVER}/api/visit', json={'id': 'v2', 'mode': 'quiz', 'event': 'start', 'name': '09012345678', 'sec': 0}) as r:   # 部屋では断られる名前
                 assert r.status == 200
+            # 対戦画面: 開いて、バトル → パーティーの順に遊んだ人（g1）、バトルだけの人（g2）、ゲームを始めなかった人（g3）
+            for vid, name, evs in [('g1', 'じろう', [('game', 'survival'), ('game', 'survival'), ('game', 'points')]), ('g2', 'ごろう', [('game', 'survival')]), ('g3', 'はなこ', [])]:
+                async with s.post(f'http://127.0.0.1:{SERVER}/api/visit', json={'id': vid, 'mode': 'game', 'event': 'start', 'name': name, 'sec': 0}) as r:
+                    assert r.status == 200
+                for ev, rule in evs:
+                    async with s.post(f'http://127.0.0.1:{SERVER}/api/visit', json={'id': vid, 'mode': 'game', 'event': ev, 'rule': rule, 'name': name, 'sec': 30}) as r:
+                        assert r.status == 200
+            for bad in [{'id': 'g1', 'mode': 'game', 'event': 'game', 'rule': 'bogus'}, {'id': 'v1', 'mode': 'zukan', 'event': 'game', 'rule': 'survival'}]:   # 知らないゲーム・対戦画面ではない
+                async with s.post(f'http://127.0.0.1:{SERVER}/api/visit', json={**bad, 'name': 'x', 'sec': 0}) as r:
+                    assert r.status == 400, bad
+            async with s.get(f'http://127.0.0.1:{SERVER}/admin/visits', headers={'Authorization': 'Basic ' + base64.b64encode(f'admin:{ADMIN}'.encode()).decode()}) as r:
+                assert r.status == 200
+                page = await r.text()
+            cells = {n: page.split(f'<td>{n}</td>')[0].rsplit('<td>', 1)[1].split('</td>')[0] for n in ['じろう', 'ごろう', 'はなこ', 'たろう']}   # 名前の左の「画面」の欄
+            assert cells == {'じろう': '対戦（バトル・パーティー）', 'ごろう': '対戦（バトル）', 'はなこ': '対戦', 'たろう': '図鑑'}, cells
+            assert '訪問 ' not in page and '種類' not in page and 'Render のログ' not in page, '利用ログの上の合計の行が残っている'
+            print('OK: 管理者の利用ログの「画面」に、その訪問で遊んだゲーム（対戦（バトル・パーティー）・対戦（バトル）・対戦）。上の合計の行はなし')
             for i in range(300):   # 誰かが大量に送ってきた
                 async with s.post(f'http://127.0.0.1:{SERVER}/api/visit', json={'id': f'f{i}', 'mode': 'game', 'event': 'start', 'name': 'flood', 'sec': 0}) as r:
                     assert r.status == 200
@@ -155,6 +174,9 @@ async def main():
         print('OK: 使われている部屋名で断られても、公開部屋にしたことは残す')
         qv = rows('クイズを開いた'); assert len(qv) == 1 and qv[0]['name'] == '(名前なし)', qv
         print('OK: 部屋で断られる名前（電話番号など）は、画面を開いた記録にも残さない')
+        gv = [r for r in rows('対戦を開いた') if r['name'] in ('じろう', 'ごろう', 'はなこ')]
+        assert len(gv) == 3 and not [r for r in got if r['name'] in ('じろう', 'ごろう') and r['event'] != '対戦を開いた'], gv
+        print('OK: 遊んでいるゲーム（event=game）はスプレッドシートには書かない（対戦を開いた行だけ）')
         await until(lambda: len(rows('対戦を開いた')) >= 100, 10, '大量に送られた分')
         await asyncio.sleep(2)
         fl = [r for r in rows('対戦を開いた') if r['name'] == 'flood']
