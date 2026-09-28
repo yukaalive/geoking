@@ -1,8 +1,8 @@
 #!/bin/bash
-# X 広告用の動画（BGM つき・声なし。6・10・15・30秒 × 4:5 と 9:16 の8本）を作り直す。先に確認用サーバー（geoking-check, 8090番）を立てておく。
+# X 広告用の動画（BGM・効果音つき、声なし。6・10・15・30秒 × 4:5 と 9:16 の8本）を作り直す。先に確認用サーバー（geoking-check, 8090番）を立てておく。
 # 本物の画面（http://localhost:8090）を、ヘッドレス Chrome でスマホの大きさにして、場面の台本（v_*.js）どおりに動かして撮る。
 # 字幕は captions.json、長さごとの場面の並びと長さは compose.py の VARIANTS。できた動画は ../promo/geoking_x_ad_{6,10,15,30}s_{4x5,9x16}.mp4（と _thumb.png）
-# 2026-09-28 から音は BGM だけ（前と同じ曲。compose.py が付ける）。ナレーションと効果音はなし。前の声つき15秒の作り方は git の履歴にある（make_voice.py は今は使わない）
+# 2026-09-28 から音は BGM と効果音（前と同じ曲・同じ混ぜ方。compose.py が付ける）。ナレーションはなし。前の声つき15秒の作り方は git の履歴にある（make_voice.py は今は使わない）
 set -e
 cd "$(dirname "$0")"
 python3 make_assets.py   # 字幕の帯とスマホの枠の絵

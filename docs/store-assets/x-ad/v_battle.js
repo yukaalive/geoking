@@ -15,5 +15,8 @@ try { sessionStorage.removeItem('geoking_revealed'); } catch {}
 AD.mark('reveal');
 const after = players.map(p => { const r = rows.find(x => x.pid === p.pid); return { ...p, hp: r.hp, out_round: r.out ? 4 : null }; });   // サーバーと同じく、答え合わせのときは減ったあとの体力
 SHOW({ ...state, phase: 'reveal', players: after, reveal: { prompt: PR('pop_max'), rows, alive: 3, last: false }, next_at: Date.now() / 1000 + 8 });
+// 効果音の時刻（survival.js の演出と同じ: めくり終わり 1.04 秒 → 1位が光る +0.15 → 当たる +0.65 から 0.3 秒おき → 脱落はその 0.45 秒後）。
+// 音の名前は compose.py の SFX（hit2・hit4・hit6 は sfx.hit(n) の強さ。−10・−20・−30 が 2・4・6）
+[[1190, 'power'], [1690, 'hit2'], [1990, 'hit4'], [2290, 'hit6'], [2740, 'ko']].forEach(([ms, n]) => setTimeout(() => AD.mark(n), ms));
 await sleep(40); const ra = document.getElementById('revealArea'); window.scrollTo(0, ra.getBoundingClientRect().top + scrollY - 64);
 await sleep(4300);
