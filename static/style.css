@@ -137,6 +137,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .board{display:grid;grid-template-columns:1fr 300px;gap:18px}
 @media(max-width:900px){.board{grid-template-columns:1fr}}
 .hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+@media(max-width:345px){.hand{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}   /* 狭いスマホ（346px 未満）でも手札は2列（1列だと国旗1枚が画面の幅いっぱいになり、1画面に2枚半しか見えなかった。2026-09-28） */
 /* 手札: 外側のカードの枠（線・地の色・影）はなし。国旗の枠だけ（2026-09-28）。1回押した国旗は黄、出した国旗は緑の線で国旗のまわりを囲む */
 .flagcard{border-radius:9px;cursor:pointer;text-align:center;transition:transform .1s;position:relative}
 .flagcard:hover{transform:translateY(-3px)}
@@ -156,7 +157,9 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .others h4{margin:0 0 6px;font-size:12px;font-weight:800;color:var(--muted)}
 .others .orow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:5px 0}
 .others .oname{font-size:13px;font-weight:800;flex-basis:100%}   /* 名前（と観戦中の状態の札）で1行、国旗はその下の行から左端そろえで（プレイヤー側も観戦中も同じ） */
-.others img{width:44px;height:30px;object-fit:contain;border:1.5px solid var(--ink);border-radius:4px;background:#fff;cursor:pointer}
+/* みんなの手札の国旗: 置き場（.oslot）の大きさはそろえたまま、国旗は形のまま入り、枠（と選択中・勝負の枠）は国旗にぴったり（白いすき間なし。2026-09-28） */
+.others .oslot{display:inline-grid;place-items:center;width:54px;height:40px}
+.others .oflag img{width:auto;height:auto;max-width:44px;max-height:30px;border:1.5px solid var(--ink);border-radius:4px;cursor:pointer}
 
 /* ---------- 公開 */
 .reveal{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
