@@ -42,7 +42,7 @@ main{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .brand{font-size:22px;white-space:nowrap;flex:none}.brand span{font-family:var(--font-body);font-weight:700;color:var(--muted);font-size:12px;margin-left:8px;letter-spacing:.1em}
 .roominfo{font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .roomtitle{font-weight:800;font-size:15px}
-.roomname-inline{font-size:15px;background:var(--accent);padding:0 8px;border-radius:6px;border:1.5px solid var(--ink)}
+.roomname-inline{font-size:15px;background:var(--accent);padding:0 8px;border-radius:6px;border:1.5px solid var(--ink);display:inline-block;max-width:100%;overflow-wrap:anywhere;line-height:1.4}   /* ロビーの説明の文の中の部屋の名前の札: 行の終わりで「はな／こ」と2つに割れないよう、入らなければ札ごと次の行へ。1行より長い名前（20文字まで）だけ札の中で折り返す。line-height は札の高さを前（23px）のままにするため */
 .join input{width:170px;text-transform:none;font-family:var(--font-body);letter-spacing:0}
 
 /* ---------- 共通部品 */

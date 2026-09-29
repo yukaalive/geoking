@@ -2,7 +2,7 @@
    ① 答え合わせ（パーティー）で世界順位の札の紙吹雪が飛んでいる間に国の小窓を開いても、ページの幅が画面より広がらず、小窓が画面の真ん中に収まるか
       （2026-09-29: スマホでは粒が画面の外まで飛ぶとページの幅が広がり、小窓が右へずれて切れていた）
    ② 小窓の項目名の列: 気候の文が長いメキシコでも「一人当たりGDP」などが1行（幅 360px 未満は2行まで）で、右の数字と「〇位 ／ 197」が1行か
-   ③ ?step=lobby: ロビーの「プレイヤー」「部屋の設定」「チャット」の枠の右の端がそろうか（2026-09-29: 320px で2つの枠だけ右にはみ出していた）
+   ③ ?step=lobby: ロビーの説明の文の中の部屋の名前の札が2つに割れないか、「プレイヤー」「部屋の設定」「チャット」の枠の右の端がそろうか（2026-09-29: 320px で2つの枠だけ右にはみ出していた）
    ?fix=off で①の直し（#app の overflow-x: clip）を外して、直す前と比べる。?lang=en で英語。結果は画面の下に出す（小窓は開いたまま残す） */
 (async () => {
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -31,12 +31,20 @@
     say(`幅 ${W}px（${who}・${LANG === 'en' ? '英語' : '日本語'}）${fixOff ? '・紙吹雪の直しを外した（直す前と同じ）' : ''}`);
 
     if (step === 'lobby') {
-      SHOW(BASE({ phase: 'lobby', players: [P(ME, 'はなこ'), P('p2', 'たろう'), P('p3', 'ゆうと'), P('p4', 'さくら')].map(p => ({ ...p, picked: false })) }));
-      window.scrollTo(0, 0); await sleep(600);
+      const lobby = (name) => SHOW(BASE({ phase: 'lobby', title: name, title_raw: name, players: [P(ME, 'はなこ'), P('p2', 'たろう'), P('p3', 'ゆうと'), P('p4', 'さくら')].map(p => ({ ...p, picked: false })) }));
+      // 説明の文の中の部屋の名前の札が2つに割れないか（2026-09-30: 行の終わりで「はな／こ」と割れていた）。20文字の名前は札の中で折り返し、文からはみ出さない
+      const tags = [];
+      for (const name of ['ゆかと友だちのたのしい地理王の部屋です', 'たろう', 'はなこ']) {
+        lobby(name); window.scrollTo(0, 0); await sleep(400);
+        const b = document.getElementById('lobbyCode'), pr = b.closest('p').getBoundingClientRect(), rs = [...b.getClientRects()];
+        tags.push({ name, n: rs.length, over: Math.max(...rs.map(x => x.right)) > pr.right + 0.5 });
+      }
+      say(`③ 部屋の名前の札: ${tags.map(t => `「${t.name.length > 6 ? t.name.slice(0, 6) + '…' : t.name}」${t.n}つ${t.over ? '・はみ出し' : ''}`).join('・')} → ${tags.every(t => t.n === 1 && !t.over) ? 'OK（割れない）' : 'NG'}`);
+      await sleep(200);
       const cards = [...document.querySelectorAll('#lobby .card')].filter(e => e.offsetParent);
       const rights = cards.map(c => Math.round(c.getBoundingClientRect().right));
       const ok = new Set(rights).size === 1 && rights[0] <= W - 8 && document.documentElement.scrollWidth <= W;
-      say(`③ ロビーの枠の右の端: ${rights.join('・')}px → ${ok ? 'OK（そろっている）' : 'NG'}`);
+      say(`   ロビーの枠の右の端: ${rights.join('・')}px → ${ok ? 'OK（そろっている）' : 'NG'}`);
       say('終わり');
       return;
     }
