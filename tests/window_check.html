@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>小窓とロビーの確認</title></head>
+<body><p id="msg">読み込んでいます…</p>
+<!-- iOS シミュレーターの Safari など、コンソールが使えないブラウザで window_check.js を流して、結果を画面の下に出す。
+     紙吹雪で画面の幅が広がるのはページそのもので起きる（枠 iframe の中では起きない）ので、このページを対戦画面（/static/index.html）に
+     入れ替えてから、最後に window_check.js を入れる。?fix=off で紙吹雪の直し（#app の overflow-x: clip）を外して、直す前と比べる。?step=lobby でロビー -->
+<script>
+(async () => {
+  try {
+    const html = await (await fetch('/static/index.html', { cache: 'no-store' })).text();
+    document.open(); document.write(html.replace('</body>', '<script src="/dev/tests/window_check.js"><\/script></body>')); document.close();
+  } catch (e) { document.getElementById('msg').textContent = 'エラー: ' + e; }
+})();
+</script></body></html>

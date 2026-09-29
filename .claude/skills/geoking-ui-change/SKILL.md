@@ -58,6 +58,7 @@ window.__r = null; layoutSnapshot('before').then(r => window.__r = r);
 | クイズ（ふつう・激ムズ、似ている国旗のグループ SIMILAR_FLAGS） | `tests/quiz_hard_check.js`（激ムズの4択がどれも同じグループか・10問で答えが重ならないか・同じ問題でもう一度） |
 | 観戦中の画面（みんなの手札・考え中/選択中/勝負の札） | `tests/spectator_check.js`（部屋を作って途中から観戦に入り、幅ごとに国旗の並びとはみ出しを見る）。iPhone は `/dev/tests/spectator.html` |
 | クイズ（モード・問題・選択肢・激ムズのグループ・首都） | `tests/quiz_hard_check.js`（国旗・国名モードの激ムズ）と `tests/quiz_capital_check.js`（首都モード。全部の首都が 320px のボタンに収まるか・出さない国・似ている首都のグループ）。国データの首都を直したときも `quiz_capital_check.js` |
+| 国の小窓（showCountry・`.dl`）、紙吹雪や演出の粒、ロビーの枠 | `/dev/tests/window_check.html`（ページごと対戦画面に入れ替えて測る。紙吹雪の最中に小窓を開いてもページの幅が広がらず真ん中か・項目名と値の行の数・`?step=lobby` でロビーの枠の右の端）。スマホの画面で起きることなので、iPhone はシミュレーターの Safari、Android の代わりはスマホの大きさの Chrome（CDP の mobile: true）で開く。`?fix=off` で紙吹雪の直しを外して直す前と比べる。2026-09-29、紙吹雪の粒で Android だけページの幅が広がり、小窓が右へずれて切れていた（iPhone はページが広がるだけで小窓はずれなかった） |
 
 読み込み方（ほかのスクリプトも同じ）:
 
