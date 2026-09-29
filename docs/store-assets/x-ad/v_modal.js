@@ -8,8 +8,6 @@ const rows = [['mx', 'たろう', 'p2'], ['jp', 'はなこ', ME], ['fr', 'ゆう
 const st = BASE({ phase: 'reveal', prompt: PR('pop_max'), hand: ['fr', 'it', 'kr', 'ca', 'au', 'nl', 'se'], my_pick: 'jp', players, reveal: { prompt: PR('pop_max'), rows }, next_at: Date.now() / 1000 + 30 });
 try { sessionStorage.setItem('geoking_revealed', revealKeyOf(st)); } catch {}   // 見せ済みにして、めくる動きなしで出す
 SHOW(st);
-// 世界順位の札の紙吹雪は出さない（答え合わせの間 1.3 秒ごとに出る。粒が画面の外まで飛ぶと、スマホでは画面の幅が広がって小窓が右へずれる）
-clearInterval(confettiTimer); document.head.appendChild(Object.assign(document.createElement('style'), { textContent: '.confetti{display:none!important}' }));
 await Promise.all([...document.images].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
 const ra = document.getElementById('revealArea'); window.scrollTo(0, ra.getBoundingClientRect().top + scrollY - 70);
 let go; window.__go = () => go(); window.__ready = Promise.resolve(true); await new Promise(r => go = r);
