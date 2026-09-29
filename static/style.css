@@ -69,6 +69,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:var(--s
 .join{display:flex;gap:6px}.join input{width:118px;text-transform:uppercase;font-family:ui-monospace,monospace;letter-spacing:2px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:800px){.grid2{grid-template-columns:1fr}}
+#lobby .grid2>*{min-width:0}   /* ロビーの「プレイヤー」「部屋の設定」の枠: 中身の縮む前の幅（部屋の名前の入力欄 180px）で広がらないように。前は 320px の画面でこの2つだけ右にはみ出していた */
 .settings label{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .settings label.chk{justify-content:flex-start}
 .settings label:not(.chk)>span{white-space:nowrap;flex:none}.settings #setTitle{flex:0 1 180px;min-width:0}   /* 狭い画面では入力欄のほうを縮め、「部屋の名前」を途中で折り返さない（チェックボックスの長い説明は折り返してよい） */
