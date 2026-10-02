@@ -17,7 +17,7 @@ async def main():
         a = await s.ws_connect(URL)
         await a.send_json({'type': 'create', 'name': 'Alice'})
         st = await recv_state(a); room, pidA = st['room'], st['you']
-        await a.send_json({'type': 'settings', 'settings': {'rounds': 3, 'hand_size': 4, 'timer': 0}})
+        await a.send_json({'type': 'settings', 'settings': {'rounds': 3, 'hand_size': 4, 'timer': 0, 'rule': 'points'}})   # パーティー（点）の流れを確かめる（2026-10-03 から新しい部屋はバトルから始まるので、パーティーを選ぶ）
         await recv_state(a, lambda d: d['settings']['rounds'] == 3)
         # 以前の開始（with_bot なし）はひとりだと断られる
         await a.send_json({'type': 'start'})

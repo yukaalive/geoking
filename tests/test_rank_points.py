@@ -12,7 +12,7 @@ def play(prompt_id, cards):
     for i, (name, _) in enumerate(cards):
         pid = f'p{i}'
         r.players[pid] = server.Player(pid, name); r.order.append(pid)
-    r.settings.update({'rounds': 3, 'hand_size': 4})
+    r.settings.update({'rounds': 3, 'hand_size': 4, 'rule': 'points'})   # パーティーの点（新しい部屋はバトルから始まるので選ぶ）
     r.start()
     r.prompts[r.round - 1] = server.PROMPT_BY_ID[prompt_id]
     for i, (_, card) in enumerate(cards):

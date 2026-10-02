@@ -25,7 +25,7 @@ async def play_to_end(s, names):
     ws = [await s.ws_connect(URL) for _ in names]
     await ws[0].send_json({'type': 'create', 'name': names[0]})
     st = await recv(ws[0]); code = st['room']
-    await ws[0].send_json({'type': 'settings', 'settings': {'rounds': 3, 'hand_size': 4, 'timer': 0}})
+    await ws[0].send_json({'type': 'settings', 'settings': {'rounds': 3, 'hand_size': 4, 'timer': 0, 'rule': 'points'}})
     await recv(ws[0], lambda d: d['settings']['rounds'] == 3)
     for w, n in zip(ws[1:], names[1:]):
         await w.send_json({'type': 'join', 'room': code, 'name': n}); await recv(w)
@@ -80,7 +80,7 @@ async def main():
         ws = [await s.ws_connect(URL) for _ in names]
         await ws[0].send_json({'type': 'create', 'name': names[0]})
         st = await recv(ws[0]); code = st['room']
-        await ws[0].send_json({'type': 'settings', 'settings': {'rounds': 3, 'hand_size': 4, 'timer': 0}})
+        await ws[0].send_json({'type': 'settings', 'settings': {'rounds': 3, 'hand_size': 4, 'timer': 0, 'rule': 'points'}})
         await recv(ws[0], lambda d: d['settings']['rounds'] == 3)
         for w, n in zip(ws[1:], names[1:]):
             await w.send_json({'type': 'join', 'room': code, 'name': n}); await recv(w)
@@ -116,7 +116,7 @@ async def main():
     r = server.Room('ZZZZ', 'h')
     r.players['h'] = server.Player('h', 'Alice'); r.order.append('h')
     server.add_bot(r)
-    r.settings.update({'rounds': 3, 'hand_size': 4, 'timer': 30})
+    r.settings.update({'rounds': 3, 'hand_size': 4, 'timer': 30, 'rule': 'points'})   # 点の順位（パーティー）
     r.start()
     while r.phase != 'end':
         for p in r.players.values():
@@ -140,7 +140,7 @@ async def main():
         r.players[pid] = server.Player(pid, n); r.order.append(pid)
     r.remove_player('c')   # ロビーで抜けた人は順位に入らない
     r.players['c'] = server.Player('c', 'C'); r.order.append('c')
-    r.settings.update({'rounds': 3, 'hand_size': 4, 'timer': 30})
+    r.settings.update({'rounds': 3, 'hand_size': 4, 'timer': 30, 'rule': 'points'})   # 点の順位（パーティー）
     r.start()
     r.players['b'].score = 50; r.players['a'].score = 1   # 残った人は順位で点が入るので、抜ける人は大きめの点数にしておく
     r.players['s'] = server.Player('s', 'S'); r.order.append('s'); r.players['s'].spectator = True

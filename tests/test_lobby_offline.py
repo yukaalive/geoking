@@ -24,7 +24,7 @@ async def room_of(s, host_name, others, rounds=3):
     ws = [await s.ws_connect(URL) for _ in range(1 + len(others))]
     await ws[0].send_json({'type': 'create', 'name': host_name})
     st = await recv(ws[0]); code = st['room']
-    await ws[0].send_json({'type': 'settings', 'settings': {'rounds': rounds, 'hand_size': 4, 'timer': 0}})
+    await ws[0].send_json({'type': 'settings', 'settings': {'rounds': rounds, 'hand_size': 4, 'timer': 0, 'rule': 'points'}})   # パーティー（点）の流れを確かめる（2026-10-03 から新しい部屋はバトルから始まるので、パーティーを選ぶ）
     await recv(ws[0], lambda d: d['settings']['rounds'] == rounds)
     sts = [st]
     for w, n in zip(ws[1:], others):

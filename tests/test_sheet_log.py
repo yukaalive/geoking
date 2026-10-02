@@ -96,7 +96,7 @@ async def main():
             a = await s.ws_connect(ws_url)
             await a.send_json({'type': 'create', 'name': 'たろう'})
             st = await recv_state(a); code = st['room']
-            await a.send_json({'type': 'settings', 'settings': {'title': '国旗の部屋', 'public': True, 'rounds': 3, 'hand_size': 4, 'timer': 0}})
+            await a.send_json({'type': 'settings', 'settings': {'title': '国旗の部屋', 'public': True, 'rounds': 3, 'hand_size': 4, 'timer': 0, 'rule': 'points'}})   # 3ラウンドで終わるパーティー（2026-10-03 から新しい部屋はバトルから）
             await recv_state(a, lambda d: d['title'] == '国旗の部屋')
             b = await s.ws_connect(ws_url)
             await b.send_json({'type': 'join', 'room': code, 'name': 'はなこ'})

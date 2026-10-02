@@ -257,6 +257,7 @@ async def lobby_game_setting(s):
     await a.send_json({'type': 'create', 'name': 'Hana'})
     st = await recv_state(a)
     room = st['room']
+    assert st['settings']['rule'] == 'survival', st['settings']   # 新しい部屋はバトルから（2026-10-03 から）
     await a.send_json({'type': 'settings', 'settings': {'rule': 'survival', 'public': True}})   # ホストがバトルにして公開
     await recv_state(a, lambda d: d['settings']['rule'] == 'survival' and d['settings']['public'])
     b = await s.ws_connect(URL)
@@ -277,7 +278,7 @@ async def lobby_game_setting(s):
         rooms = (await r.json())['rooms']
     assert [x['rule'] for x in rooms if x['room'] == room] == ['points'], rooms
     await a.close(); await b.close()
-    print('OK lobby: only the host changes the game; the public room list shows it')
+    print('OK lobby: new rooms start as battle; only the host changes the game; the public room list shows it')
 
 
 async def points_unchanged(s):

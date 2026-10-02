@@ -37,7 +37,7 @@ async def main():
         # 参加者は設定変更できない（無視される）
         await b.send_json({'type': 'settings', 'settings': {'rounds': 3}})
         await a.send_json({'type': 'settings', 'settings': {'rounds': 'abc', 'timer': None}})  # 不正値は無視され接続は維持される
-        await a.send_json({'type': 'settings', 'settings': {'rounds': 4, 'hand_size': 5, 'categories': ['religion', 'climate'], 'timer': 0, 'title': 'テスト部屋<b>'}})
+        await a.send_json({'type': 'settings', 'settings': {'rounds': 4, 'hand_size': 5, 'categories': ['religion', 'climate'], 'timer': 0, 'title': 'テスト部屋<b>', 'rule': 'points'}})   # パーティー（点）の流れを確かめる（2026-10-03 から新しい部屋はバトルから始まるので、パーティーを選ぶ）
         st = await recv_state(a, lambda d: d['settings']['rounds'] == 4)
         assert st['title'] == 'テスト部屋<b>', st['title']
         assert st['settings']['hand_size'] == 5 and st['settings']['categories'] == ['religion', 'climate'], st['settings']
