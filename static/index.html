@@ -84,6 +84,7 @@
             <button id="joinBtn" class="ghost-cta" data-i18n="join">参加する</button>
           </div>
         </div>
+        <button id="rateCard" class="ratecard hidden" type="button"></button>
       </div>
       <div class="sololinks"><a class="zukanlink" href="/static/zukan.html"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#cards"/></svg> <span data-i18n="learn_zukan">図鑑で学ぶ</span></a> <a class="zukanlink quizlink" href="/static/quiz.html"><svg class="ico" aria-hidden="true"><use href="/static/icons.svg?v=2#flag"/></svg> <span data-i18n="solo_quiz">ひとりでクイズ</span></a></div>
       <div class="scene" aria-hidden="true">
@@ -166,6 +167,7 @@
   <section id="end" class="screen hidden">
     <div class="card">
       <h1 id="endTitle"><svg class="ico big" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> 結果発表</h1>
+      <div id="ratePanel" class="ratepanel hidden" aria-live="polite"></div>
       <ol id="finalList" class="final"></ol>
       <h2 style="margin-top:18px"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#cards"/></svg> <span data-i18n="played_list">出された国の一覧</span></h2>
       <div id="historyList" class="history"></div>
@@ -197,6 +199,7 @@
 <script src="/static/common.js"></script>
 <script src="/static/sfx.js"></script>
 <script src="/static/survival.js"></script>
+<script src="/static/rating.js"></script>
 <script src="/static/app.js"></script>
 <script src="/static/native.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});</script>

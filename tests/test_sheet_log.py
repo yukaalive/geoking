@@ -6,12 +6,16 @@
 - 止める合図（SIGTERM）のとき、間隔を待たずに残りを送ること
 - 対戦画面が送る「遊んでいるゲーム」（event=game）はスプレッドシートには書かず、管理者の利用ログ（/admin/visits）の「画面」に「対戦（バトル）」のように出ること
 実行: python3 tests/test_sheet_log.py"""
-import asyncio, base64, json, os, signal, subprocess, sys, time
+import asyncio, base64, json, os, secrets, signal, subprocess, sys, time
 import aiohttp
 from aiohttp import web
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-FAKE, SERVER, SERVER2 = 18841, 18842, 18843
+FAKE, SERVER, SERVER2, SERVER3 = 18841, 18842, 18843, 18844
+sys.path.insert(0, ROOT)
+import rating   # レートの番号（合言葉 → 番号）を同じ計算で作る
+rates = {}          # 作り物の「レート」のシート: 番号 -> 行
+rate_posts = {'get': 0, 'put': 0}
 KEY = 'test-sheet-key'
 ADMIN = 'test-admin-key'
 got = []            # 届いた行
@@ -20,8 +24,19 @@ seen = set()        # 書き込んだまとまりの id（本物の Apps Script 
 
 
 async def fake_exec(request):   # 本物の Apps Script（…/exec）と同じ形: 受け取って書き込み、転送先で返事
-    posts['n'] += 1
     body = await request.json()
+    if body.get('action') in ('ratings_get', 'ratings_put'):   # バトルのレート（ログとは別に数える）。本物と同じく、試合数が減る書き込みは受けない
+        if body.get('key') != KEY:
+            return web.json_response({'ok': False, 'error': 'bad key'})
+        if body['action'] == 'ratings_get':
+            rate_posts['get'] += 1
+            return web.json_response({'ok': True, 'rows': list(rates.values())})
+        rate_posts['put'] += 1
+        for row in body.get('rows') or []:
+            if row['rid'] not in rates or row['n'] >= rates[row['rid']]['n']:
+                rates[row['rid']] = row
+        return web.json_response({'ok': True})
+    posts['n'] += 1
     if body.get('key') != KEY:
         posts['bad_key'] += 1
         raise web.HTTPFound('/echo?ok=0')
@@ -209,6 +224,45 @@ async def main():
             p2.send_signal(signal.SIGTERM)
             await until(lambda: any(r['event'] == '部屋作成' and r['name'] == 'じろう' for r in got[before:]), 12, '止める前の残り')
         print(f'OK: 止める合図のとき、間隔を待たずに残りを送る（{time.time() - t0:.1f}秒で届いた）')
+
+        # バトルのレート: 起動したときにスプレッドシートから読み、バトルで変わった人の行を送る
+        old_rk = secrets.token_hex(16)
+        rates[rating.rid_of(old_rk)] = {'rid': rating.rid_of(old_rk), 'r': 1234.0, 'n': 30, 'h': 12, 'best': 1250.0, 'name': 'よしお', 'hide': False, 't': time.time() - 3600}
+        p3 = start_server(SERVER3, 1); procs.append(p3); await wait_up(SERVER3)
+        http3 = f'http://127.0.0.1:{SERVER3}'
+        async with aiohttp.ClientSession() as s:
+            me = None
+            for _ in range(50):
+                async with s.post(http3 + '/api/rating', json={'rk': old_rk}) as r:
+                    me = (await r.json())['me']
+                if me and me['rate'] == 1234:
+                    break
+                await asyncio.sleep(0.1)
+            assert me and me['rate'] == 1234 and me['n'] == 30 and me['rank'] == 1 and rate_posts['get'] >= 1, (me, rate_posts)   # どのサーバーも起動したときに1回読む
+            async with s.post(http3 + '/api/ranking', json={}) as r:
+                top = (await r.json())['top']
+            assert top and top[0]['name'] == 'よしお' and top[0]['rate'] == 1234, top
+            print('OK: レート: 起動したときにスプレッドシートの「レート」を読む（遊びに来る前から、ランキングに出る）')
+            ka, kb = secrets.token_hex(16), secrets.token_hex(16)
+            a = await s.ws_connect(f'ws://127.0.0.1:{SERVER3}/ws')
+            await a.send_json({'type': 'hello', 'rk': ka})
+            await a.send_json({'type': 'create', 'name': 'あきこ'})
+            room = (await recv_state(a))['room']
+            b = await s.ws_connect(f'ws://127.0.0.1:{SERVER3}/ws')
+            await b.send_json({'type': 'hello', 'rk': kb})
+            await b.send_json({'type': 'join', 'room': room, 'name': 'ふゆこ'})
+            await recv_state(b, lambda d: len(d['players']) == 2)
+            await a.send_json({'type': 'start'})
+            await recv_state(a, lambda d: d['phase'] == 'pick')
+            await b.send_json({'type': 'leave'})
+            st = await recv_state(a, lambda d: d['phase'] == 'end')
+            assert st['rate_me']['after'] == 1024, st['rate_me']
+            ra, rb = rating.rid_of(ka), rating.rid_of(kb)
+            await until(lambda: ra in rates and rb in rates, 8, 'バトルのあとのレートの行')
+            assert round(rates[ra]['r']) == 1024 and rates[ra]['n'] == 1 and rates[ra]['name'] == 'あきこ' and round(rates[rb]['r']) == 976, (rates[ra], rates[rb])
+            assert len(rates[ra]['rid']) == 20 and ka not in json.dumps(rates), '合言葉そのものを送っている'
+            await a.close(); await b.close()
+        print('OK: レート: バトルのあと、変わった人の行（番号・名前・レート・試合数）を送る。合言葉そのものは送らない')
     finally:
         for pr in procs:
             if pr.poll() is None:

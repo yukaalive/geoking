@@ -80,6 +80,14 @@ const I18N = {
     sv_next_label: '次のラウンド', sv_knocked: '{names} が脱落！', sv_decided: '決着！ {name} が最後の1人', sv_time_up: '時間切れ！ 体力の多い人の勝ち',
     sv_champion: '最後まで残った {names} が地理王！',
     sv_you_out_title: '脱落しました', sv_you_out_note: '最後まで観戦できます。みんなの手札で、誰がどの国旗を選んでいるかが見えます。',
+    // バトルのレートと全国ランキング（rating.js）。称号は rating.py の title_index と同じ区切り（1000・1100・1200・1350・1500）
+    r_t0: '見習い', r_t1: '旅人', r_t2: '探検家', r_t3: '地理博士', r_t4: '地理名人', r_t5: '地理王',
+    r_my: 'あなたのバトルのレート', r_rank: '全国 {rank} 位 ／ {total} 人', r_need: 'あと {n} 回、人とバトルするとランキングに載ります',
+    r_next: '{title}まで あと {n}', r_top: 'いちばん上の称号です', r_see: 'ランキングを見る', r_title: '全国ランキング（バトル）',
+    r_anon: '名前を出さない人', r_hide: 'ランキングに名前を出さない', r_you: 'あなた', r_empty: 'まだ誰も載っていません',
+    r_rule: '人と{n}回バトルすると載ります。ボット戦で上がるのは 1,200 まで', r_fail: 'ランキングを読めませんでした', r_rate: 'レート',
+    r_my_short: 'あなたのレート', r_rank_move: '全国 {from} 位 → {to} 位', r_rank_new: '全国 {to} 位に登場', r_promo: '{title}に昇格！', r_first: 'はじめてのレート',
+    r_capped: 'ボット戦で上がるのは 1,200 まで',
   },
   en: {
     app_title: 'GeoKing | Flag card geography party game', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -150,6 +158,13 @@ const I18N = {
     sv_next_label: 'next round', sv_knocked: 'Out: {names}', sv_decided: 'Game over! {name} is the last one standing', sv_time_up: "Time's up! Most HP wins",
     sv_champion: '{names} survived — the GeoKing!',
     sv_you_out_title: "You're out", sv_you_out_note: 'Keep watching to the end. You can see which flag each player is choosing.',
+    r_t0: 'Apprentice', r_t1: 'Traveler', r_t2: 'Explorer', r_t3: 'Geographer', r_t4: 'Geo Master', r_t5: 'GeoKing',
+    r_my: 'Your battle rating', r_rank: 'No. {rank} of {total}', r_need: 'Battle people {n} more times to join the ranking',
+    r_next: '{n} to {title}', r_top: 'You hold the top title', r_see: 'See the ranking', r_title: 'Battle ranking',
+    r_anon: 'Anonymous', r_hide: 'Hide my name in the ranking', r_you: 'You', r_empty: 'No one is ranked yet',
+    r_rule: 'Ranked after {n} battles with people. Bot games raise you up to 1,200', r_fail: "Couldn't load the ranking", r_rate: 'Rating',
+    r_my_short: 'Your rating', r_rank_move: 'No. {from} → No. {to}', r_rank_new: 'New in the ranking: No. {to}', r_promo: 'Promoted to {title}!', r_first: 'Your first rating',
+    r_capped: 'Bot games raise you up to 1,200',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

@@ -308,7 +308,7 @@ const SV = (() => {
       const place = e.place || i + 1;
       const cls = place === 1 ? 'g' : place === 2 ? 's' : place === 3 ? 'b' : 'n';
       const right = e.out_round ? `<span class="sv-outnote">${t('sv_out_round', { n: e.out_round })}</span>` : bar(e.pid, e.hp || 0, true);
-      const li = el('li', 'm sv-m' + (place === 1 ? ' champ' : ''), `<div class="disc ${cls}">${place}</div><div class="nm">${place === 1 ? ico('crown') + ' ' : ''}${escapeHtml(pname(e))}</div><div class="sc sv-sc">${right}</div>`);
+      const li = el('li', 'm sv-m' + (place === 1 ? ' champ' : ''), `<div class="disc ${cls}">${place}</div><div class="nm">${place === 1 ? ico('crown') + ' ' : ''}${escapeHtml(pname(e))}${RATE.finalLine(e)}</div><div class="sc sv-sc">${right}</div>`);   // 名前の下にレートの前と後（rating.js）
       li.style.animationDelay = (0.15 * i) + 's';
       ol.appendChild(li);
       if (place === 1) setTimeout(() => spawnConfetti(li.querySelector('.disc'), 'gold'), 400 + 150 * i);

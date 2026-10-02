@@ -7,12 +7,19 @@
  *   （プライバシーポリシーと Google Play の申告の「90日以内」）。並べ替えてあっても、日付を見て消す
  * - 同じまとまり（id）が2回届いたら2回目は書かない（書けたあとに返事だけ届かず、サーバーが送り直したとき）
  * - 行が MAX_KEEP_ROWS を超えそうなら、いちばん古い行から消して場所を空ける（シートがいっぱいで書けなくなるのを防ぐ）
+ * - バトルのレート（2026-10-03〜）: シート「レート」に、端末ごとの番号（合言葉そのものではない）・名前・レート・試合数などを1人1行で残す。
+ *   サーバーが起動したときに全部読み（action: ratings_get）、変わった人の行を送ってくる（action: ratings_put。同じ番号は上書き、
+ *   試合数が減る古い書き込みは受けない）。最後に遊んでから RATE_KEEP_DAYS 日たった行は、毎日の deleteOldRows で一緒に消す（プライバシーポリシー）
  */
 const SHEET_NAME = 'ログ';
 const KEEP_DAYS = 85;           // 1日1回消す。失敗した日があっても90日以内に消えるよう余裕をもたせる
 const MAX_KEEP_ROWS = 200000;   // 7列×20万行 = 140万セル（スプレッドシートの上限は1000万セル）
 const HEADER = ['日時', '出来事', '部屋コード', '部屋名', 'ニックネーム', '人数', 'くわしく'];
 const MAX_ROWS_PER_POST = 1000;
+const RATE_SHEET = 'レート';
+const RATE_HEADER = ['番号', '名前', 'レート', '試合', '人との試合', '最高', '名前を出さない', '更新日時'];
+const RATE_KEEP_DAYS = 365;     // 最後に遊んでから1年たったレートは消す
+const MAX_RATES_PER_POST = 1000;
 
 /** サーバーからの書き込み。{ key, id, rows: [{ ts, event, room, title, name, count, detail }] } */
 function doPost(e) {
@@ -24,6 +31,8 @@ function doPost(e) {
   }
   const key = PropertiesService.getScriptProperties().getProperty('LOG_KEY');
   if (!key || !data || data.key !== key) return reply({ ok: false, error: 'bad key' });
+  if (data.action === 'ratings_get') return reply({ ok: true, rows: getRatings() });
+  if (data.action === 'ratings_put') return reply(putRatings(data.rows));
   const rows = (Array.isArray(data.rows) ? data.rows : []).slice(0, MAX_ROWS_PER_POST).map(toRow);
   const batchId = data.id ? 'batch_' + String(data.id).slice(0, 64) : '';
   const lock = LockService.getScriptLock();   // 同時に届いても、毎日の削除と重なっても、行がずれないように
@@ -77,6 +86,101 @@ function getSheet() {
   return sh;
 }
 
+/** シート「レート」（なければ作る） */
+function rateSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(RATE_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(RATE_SHEET);
+    if (sh.getMaxColumns() > RATE_HEADER.length) sh.deleteColumns(RATE_HEADER.length + 1, sh.getMaxColumns() - RATE_HEADER.length);
+    sh.getRange(1, 1, 1, RATE_HEADER.length).setValues([RATE_HEADER]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+    sh.setColumnWidth(1, 190); sh.setColumnWidth(2, 130); sh.setColumnWidth(8, 150);
+  }
+  return sh;
+}
+
+/** 先頭の ' を外す（本物のシートは ' を値に入れないが、念のため） */
+function plain(v) {
+  return String(v == null ? '' : v).replace(/^'/, '');
+}
+
+/** レートの1行。番号と名前は ' を付けてただの文字に（= で始まる名前が数式にならない） */
+function toRateRow(r) {
+  const num = (v) => Math.round(Number(v) * 100) / 100;
+  const t = Number(r.t);
+  return ["'" + r.rid, "'" + String(r.name == null ? '' : r.name).slice(0, 16), num(r.r), Math.floor(Number(r.n)), Math.floor(Number(r.h) || 0),
+    num(isFinite(Number(r.best)) ? r.best : r.r), !!r.hide, isFinite(t) && t > 0 ? new Date(t * 1000) : new Date()];
+}
+
+function okRate(r) {
+  return r && /^[0-9a-f]{20}$/.test(String(r.rid)) && isFinite(Number(r.r)) && Number(r.r) > 0 && Number(r.r) < 10000 && isFinite(Number(r.n)) && Number(r.n) >= 0;
+}
+
+/** サーバーが起動したとき: 全部の人のレート */
+function getRatings() {
+  const sh = rateSheet();
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, RATE_HEADER.length).getValues()
+    .map((v) => ({ rid: plain(v[0]), name: plain(v[1]), r: Number(v[2]), n: Number(v[3]), h: Number(v[4]), best: Number(v[5]),
+      hide: v[6] === true || String(v[6]).toUpperCase() === 'TRUE', t: v[7] instanceof Date ? Math.round(v[7].getTime() / 1000) : Number(v[7]) || 0 }))
+    .filter(okRate);
+}
+
+/** 変わった人の行を書く。同じ番号の行は上書き（試合数が減る古い書き込みは受けない）、新しい人は下に足す */
+function putRatings(rows) {
+  const byId = new Map();
+  (Array.isArray(rows) ? rows : []).slice(0, MAX_RATES_PER_POST).filter(okRate).forEach((r) => byId.set(String(r.rid), r));   // 同じ番号が2回あれば後の方
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = rateSheet();
+    const last = sh.getLastRow();
+    const have = last >= 2 ? sh.getRange(2, 1, last - 1, 4).getValues() : [];
+    const at = new Map(have.map((v, i) => [plain(v[0]), i]));
+    let updated = 0, stale = 0;
+    const add = [];
+    byId.forEach((r, rid) => {
+      const i = at.get(rid);
+      if (i === undefined) { add.push(toRateRow(r)); return; }
+      if (Number(r.n) < Number(have[i][3])) { stale++; return; }
+      sh.getRange(2 + i, 1, 1, RATE_HEADER.length).setValues([toRateRow(r)]);
+      updated++;
+    });
+    if (add.length) {
+      const start = sh.getLastRow() + 1;
+      const need = start + add.length - 1 - sh.getMaxRows();
+      if (need > 0) sh.insertRowsAfter(sh.getMaxRows(), need);
+      sh.getRange(start, 1, add.length, RATE_HEADER.length).setValues(add);
+      sh.getRange(start, 8, add.length, 1).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+    }
+    SpreadsheetApp.flush();
+    return { ok: true, updated, added: add.length, stale };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 最後に遊んでから RATE_KEEP_DAYS 日たったレートの行を消す（鍵は呼ぶ側でかける）。消した数を返す */
+function deleteOldRatingsLocked() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(RATE_SHEET);
+  if (!sh) return 0;
+  const last = sh.getLastRow();
+  if (last < 2) return 0;
+  const cutoff = Date.now() - RATE_KEEP_DAYS * 24 * 60 * 60 * 1000;
+  const dates = sh.getRange(2, 8, last - 1, 1).getValues();
+  const old = [];
+  dates.forEach((d, i) => { if (d[0] instanceof Date && d[0].getTime() < cutoff) old.push(i); });
+  for (let j = old.length - 1; j >= 0;) {
+    let k = j;
+    while (k > 0 && old[k - 1] === old[k] - 1) k--;
+    deleteDataRows(sh, old[k], j - k + 1);
+    j = k - 1;
+  }
+  return old.length;
+}
+
 /** 見出しより下の行を消す（from は見出しの下を0とした番号）。見出しの下を全部は消せないので、そのときは先に空の行を1つ足す */
 function deleteDataRows(sh, from, n) {
   if (n <= 0) return;
@@ -91,7 +195,7 @@ function deleteOldRows() {
   try {
     const sh = getSheet();
     const last = sh.getLastRow();
-    if (last < 2) return 0;
+    if (last < 2) { deleteOldRatingsLocked(); return 0; }
     const cutoff = Date.now() - KEEP_DAYS * 24 * 60 * 60 * 1000;
     const dates = sh.getRange(2, 1, last - 1, 1).getValues();
     const old = [];
@@ -104,6 +208,7 @@ function deleteOldRows() {
       deleted += j - k + 1;
       j = k - 1;
     }
+    deleteOldRatingsLocked();   // レートは最後に遊んでから1年で消す（同じ毎日の予約で）
     SpreadsheetApp.flush();
     return deleted;
   } finally {
@@ -116,6 +221,7 @@ function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   ss.setSpreadsheetTimeZone('Asia/Tokyo');
   getSheet();
+  rateSheet();
   const props = PropertiesService.getScriptProperties();
   let key = props.getProperty('LOG_KEY');
   if (!key) {

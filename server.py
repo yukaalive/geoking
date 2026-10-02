@@ -9,6 +9,7 @@ from datetime import datetime, timezone, timedelta
 from aiohttp import web, WSMsgType
 from prompts import PROMPTS, PROMPT_BY_ID, CATEGORIES, FIELDS, round_value
 from moderation import check_name, check_chat
+import rating as RT   # バトルのレートと全国ランキング（rating.py）
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 log = logging.getLogger('geoking')   # Render の Logs タブ / ローカルの標準出力に出る
@@ -27,7 +28,7 @@ BOT_NAMES_EN = ['Emily', 'Michael', 'Olivia', 'James', 'Sophia', 'Noah', 'Emma',
                 'Mia', 'Jacob', 'Isabella', 'Mason', 'Charlotte', 'Lucas', 'Amelia', 'Benjamin', 'Harper', 'Logan',
                 'Evelyn', 'Alexander', 'Abigail', 'Daniel', 'Emilia', 'Henry', 'Ella', 'Jackson', 'Grace', 'Samuel']
 
-# ---------- バトル（画面の名前。中の名前は survival。体力を減らし合う）。ロビーの「部屋の設定」の「ゲーム」でホストが選ぶ（パーティー＝'points' が最初）
+# ---------- バトル（画面の名前。中の名前は survival。体力を減らし合う）。ロビーの「部屋の設定」の「ゲーム」でホストが選ぶ（2026-10-03 からバトルが最初）
 # 部屋の settings['rule'] が 'survival' のとき、点のかわりに体力（SURV_HP）を減らし合う。お題に合う国旗を全員が同時に1枚出すのは同じ。
 # めくったあと、1位は減らず、順位が1つ下がるごとに SURV_STEP ずつ多く減る（いちばん大きくて SURV_MAX_DAMAGE。4人なら 0・10・20・30、2人なら 0・10、6人なら 0・10・20・30・30・30）。
 # データのない国は最下位と同じ。体力0で脱落（そのゲームは観戦）。最後の1人が勝ち。毎ラウンド1枚引くので手札は減らない。
@@ -171,6 +172,47 @@ async def sheet_flush(session, timeout=15):
     return True
 
 
+RATING_SYNC_BATCH = 500   # 1回に送るレートの行の上限
+
+
+async def rating_load(session, timeout=15):
+    """起動したとき: スプレッドシートの「レート」のシートを読む（試合数の多い方を残す。端末の控えから先に戻った人はそのまま）"""
+    from aiohttp import ClientTimeout
+    try:
+        async with session.post(SHEET_LOG_URL, json={'key': SHEET_LOG_KEY, 'action': 'ratings_get'}, timeout=ClientTimeout(total=timeout)) as r:
+            body = await r.text()
+        d = json.loads(body) if r.status == 200 else {}
+    except Exception as e:
+        d = {'error': repr(e)}
+    if isinstance(d, dict) and d.get('ok') is True:
+        log.info('ratings: loaded %d from the sheet', RT.merge(d.get('rows')))
+        return True
+    log.warning('ratings: could not load from the sheet (%s)', str(d)[:160])
+    return False
+
+
+async def rating_flush(session, timeout=15):
+    """変わったレートをスプレッドシートへ送る（同じ番号の行は上書き。スプレッドシート側は試合数が減る書き込みは受けない）。
+    送れなかった分は次の回に。送っている間にまた変わった番号は、次の回にもう一度送る"""
+    from aiohttp import ClientTimeout
+    while RT.DIRTY:
+        rows = RT.export_rows(list(RT.DIRTY)[:RATING_SYNC_BATCH])
+        try:
+            async with session.post(SHEET_LOG_URL, json={'key': SHEET_LOG_KEY, 'action': 'ratings_put', 'rows': rows}, timeout=ClientTimeout(total=timeout)) as r:
+                body = await r.text()
+            ok = r.status == 200 and json.loads(body).get('ok') is True
+        except Exception:
+            ok = False
+        if not ok:
+            log.warning('ratings: could not send %d row(s) to the sheet (retry later)', len(rows))
+            return False
+        for row in rows:
+            rec = RT.RATINGS.get(row['rid'])
+            if rec and (rec['n'], round(rec['r'], 2), rec['hide']) == (row['n'], row['r'], row['hide']):
+                RT.DIRTY.discard(row['rid'])
+    return True
+
+
 async def sheet_log_ctx(app):
     if not (SHEET_LOG_URL and SHEET_LOG_KEY):
         log.info('sheet log: off (SHEET_LOG_URL / SHEET_LOG_KEY is not set)')
@@ -179,12 +221,15 @@ async def sheet_log_ctx(app):
     from aiohttp import ClientSession
     session = app['sheet_session'] = ClientSession()
     log.info('sheet log: on (every %.0fs)', SHEET_LOG_EVERY)
+    load = asyncio.create_task(rating_load(session))   # 起動を待たせない（読み終わる前につないだ人は、端末の控えから戻る）
 
     async def _run():
         while True:
             await asyncio.sleep(SHEET_LOG_EVERY)
             try:
                 await sheet_flush(session)
+                if load.done():   # 読み終わってから送る（スプレッドシートのレートを読む前に、起動直後の空の記録を送らない）
+                    await rating_flush(session)
             except Exception:   # 見張りが止まらないように
                 log.exception('sheet log: flush error')
     task = asyncio.create_task(_run())
@@ -192,6 +237,8 @@ async def sheet_log_ctx(app):
     task.cancel()
     try:
         await sheet_flush(session, timeout=5)   # 止める前に残りを送る
+        if load.done():
+            await rating_flush(session, timeout=5)
     except Exception:
         pass
     await session.close()
@@ -203,6 +250,7 @@ async def sheet_log_on_shutdown(app):
     if session is not None:
         try:
             await asyncio.wait_for(sheet_flush(session, timeout=5), 8)
+            await asyncio.wait_for(rating_flush(session, timeout=5), 8)
         except Exception:
             pass
 
@@ -247,6 +295,7 @@ class Player:
         self.hp = None           # サバイバルの体力（ほかのルールでは None）
         self.out_round = None    # サバイバルで脱落したラウンド（残っている間は None）。脱落した人はそのゲームは観戦
         self.new_card = None     # サバイバルで、このラウンドの前に引いた国旗（手札の「NEW」）
+        self.rid = None          # バトルのレートの番号（画面がつないだときに送る端末の合言葉から。ボット・合言葉のない古い画面は None）
 
 
 class Room:
@@ -265,6 +314,8 @@ class Room:
         self.history = []   # 各ラウンドの公開結果（最終結果の一覧用）
         self.final = None   # ゲームが終わった時点の順位 [{pid, name, name_en, score, is_bot}]。結果画面で誰かが退出しても、この順位のまま見せる
         self.departed = {}  # ゲームの途中で退出した（退出させられた）人の、そのときの点数 pid -> {name, name_en, score, is_bot}。最後の順位に入れる
+        self.rate_info = {} # バトルが終わったときの、各人のレートの動き pid -> {before, after, cap, rank_before, rank_after, total, h, need, first}（結果発表の演出用）
+        self.rated = False  # このゲームのレートを動かした（1ゲームに1回だけ）
         self.timer_task = None
         self.reveal_task = None
         self.deadline = None
@@ -311,6 +362,7 @@ class Room:
         self.deck = deck   # 途中参加者に配る残り山札（サバイバルは毎ラウンドここから引く）
         self.history = []
         self.final, self.departed = None, {}
+        self.rate_info, self.rated = {}, False
         self.round = 0
         log.info('room %s start: players=%s rounds=%d cats=%s rule=%s', self.code,
                  [self.players[x].name + ('(bot)' if self.players[x].is_bot else '') for x in self.order], len(self.prompts), ','.join(s['categories']), s.get('rule'))
@@ -420,6 +472,7 @@ class Room:
         if self.survival():
             log.info('room %s end (survival): %s', self.code, {self.players[x].name: (self.players[x].hp, self.players[x].out_round) for x in self.order})
             self.final = self.survival_standings()
+            self.apply_ratings()
         else:
             log.info('room %s end: %s', self.code, {self.players[x].name: self.players[x].score for x in self.order})
             # 最後の順位: 今いる人（途中から観戦で入った人は遊んでいないので入れない）と、途中で退出した人（そのときの点数）
@@ -448,6 +501,33 @@ class Room:
                 place, prev = i, key(e)
             e['place'], e['score'] = place, (0 if e['out_round'] else e['hp'])
         return es
+
+    def apply_ratings(self):
+        """バトルが終わったとき: 最後の順位でレートを動かし（rating.py）、結果発表で見せる動き（前・後・全国の順位の前後）を残す。1ゲームに1回だけ。
+        途中で退出した人も、そのときの順位で動く（退出すれば負けを消せる、にならないように）"""
+        if self.rated or not self.final:
+            return
+        self.rated = True
+        rid_of = lambda x: self.players[x].rid if x in self.players else (self.departed.get(x) or {}).get('rid')
+        entries = [{'rid': None if e['is_bot'] else rid_of(e['pid']), 'is_bot': e['is_bot'], 'place': e['place'], 'name': e['name']} for e in self.final]
+        before = {x['rid']: RT.summary(x['rid']) for x in entries if x['rid']}   # 試合の前の記録（全国の順位・はじめての試合か）
+        res = RT.apply_game(entries)
+        if not res:
+            return
+        for e, x in zip(self.final, entries):
+            got = res.get(x['rid']) if x['rid'] else None
+            if got:
+                e['rate_before'], e['rate_after'] = round(got['before']), round(got['after'])
+                if got['cap']:
+                    e['rate_cap'] = True
+        for x, p in self.players.items():
+            got = res.get(p.rid) if p.rid else None
+            if not got:
+                continue
+            b, a = before.get(p.rid) or {}, RT.summary(p.rid)
+            self.rate_info[x] = {'before': round(got['before']), 'after': round(got['after']), 'cap': got['cap'], 'rank_before': b.get('rank'),
+                                 'rank_after': a['rank'], 'total': a['total'], 'h': a['h'], 'need': a['need'], 'first': not b.get('n')}
+        log.info('room %s ratings: %s', self.code, ', '.join(f"{e['name']} {e['rate_before']}->{e['rate_after']}" for e in self.final if 'rate_before' in e))
 
     def draw(self, p):
         """サバイバル: 山札から1枚引いて手札に入れる。山札がなくなったら、誰の手札にもない国で作り直す（前に出た国も戻る）"""
@@ -484,6 +564,7 @@ class Room:
                 task.cancel()
         self.phase, self.round, self.reveal, self.next_at, self.deadline = 'lobby', 0, None, None, None
         self.history, self.prompts, self.final, self.departed = [], [], None, {}
+        self.rate_info, self.rated = {}, False
         for p in self.players.values():
             p.hand, p.pick, p.selecting, p.score, p.won, p.spectator = [], None, None, 0, [], False
             p.hp, p.out_round, p.new_card = None, None, None
@@ -492,7 +573,7 @@ class Room:
     def remove_player(self, pid):
         p = self.players.get(pid)
         if p and not p.spectator and self.phase in ('pick', 'reveal'):   # ゲームの途中で抜けた人も、最後の順位にそのときの点数で出す
-            self.departed[pid] = {'name': p.name, 'name_en': p.name_en, 'score': p.score, 'is_bot': p.is_bot}
+            self.departed[pid] = {'name': p.name, 'name_en': p.name_en, 'score': p.score, 'is_bot': p.is_bot, 'rid': p.rid}
             if self.survival():   # サバイバル: そのときの体力と、脱落したラウンド（残っていた人は抜けたラウンドで脱落したのと同じ）
                 self.departed[pid].update({'hp': p.hp or 0, 'out_round': p.out_round or self.round})
         self.players.pop(pid, None)
@@ -512,6 +593,7 @@ class Room:
             'connected': p.connected, 'picked': p.pick is not None, 'won': p.won, 'spectator': p.spectator,
             'hand_count': len(p.hand),
             'hp': p.hp, 'out_round': p.out_round,   # サバイバルの体力と脱落したラウンド（ほかのルールでは None）
+            'rate': RT.rate_of(p.rid),   # バトルのレート（試合をしたことがない人・ボットは None）。画面はバトルの部屋だけで見せる
         } for pid, p in ((pid, self.players[pid]) for pid in self.order)]
 
     def state_for(self, pid):
@@ -531,6 +613,8 @@ class Room:
             'surv': {'hp': SURV_HP, 'max_damage': SURV_MAX_DAMAGE} if self.survival() else None,   # 画面の体力ゲージの満タンと、ロビーのルールの説明の数字
             'history': self.history if self.phase == 'end' else None,
             'final': self.final if self.phase == 'end' else None,   # 終わった時点の順位（そのあと誰かが退出しても変わらない）
+            'rate_me': self.rate_info.get(pid) if self.phase == 'end' else None,   # 自分のレートの動き（結果発表の演出）
+            'rate_copy': RT.copy_of(me.rid) if (me and me.rid and self.phase in ('lobby', 'end')) else None,   # 端末に持たせるレートの控え（本人にだけ）
             'leftover': ({x: pl.hand for x, pl in self.players.items() if not pl.spectator and pl.hand} if self.phase == 'end' else None),   # 使わなかった手札
             'my_pick': me.pick if me else None,
             'reveal': self.reveal,
@@ -683,13 +767,14 @@ def player_to_dict(p):
     return {'pid': p.pid, 'name': p.name, 'name_en': p.name_en, 'is_bot': p.is_bot, 'hand': list(p.hand), 'score': p.score,
             'won': list(p.won), 'pick': p.pick, 'selecting': p.selecting, 'connected': p.connected, 'token': p.token,
             'spectator': p.spectator, 'muted': sorted(p.muted), 'reported_by': sorted(p.reported_by), 'chat_banned': p.chat_banned,
-            'hp': p.hp, 'out_round': p.out_round, 'new_card': p.new_card}
+            'hp': p.hp, 'out_round': p.out_round, 'new_card': p.new_card, 'rid': p.rid}
 
 
 def room_to_dict(r, now):
     """部屋の中身を送れる形に。時刻は「あと何秒」で送る（サーバーどうしの時計のずれに左右されない）。"""
     return {'code': r.code, 'host': r.host, 'order': list(r.order), 'settings': r.settings, 'phase': r.phase, 'round': r.round,
             'prompts': r.prompts, 'reveal': r.reveal, 'chat': r.chat, 'title': r.title, 'deck': list(r.deck), 'history': r.history, 'final': r.final, 'departed': r.departed,
+            'rate_info': r.rate_info, 'rated': r.rated,
             'deadline_in': (r.deadline - now) if (r.phase == 'pick' and r.deadline) else None,
             'next_in': (r.next_at - now) if (r.phase == 'reveal' and r.next_at) else None,
             'age': now - r.created, 'empty_for': (now - r.empty_since) if r.empty_since else None,
@@ -714,13 +799,19 @@ def room_from_dict(d, now, source=None):
         raise ValueError('bad phase')
     r.reveal, r.chat, r.history = d['reveal'], list(d['chat'])[-60:], list(d['history'])
     opt_int = lambda v: None if v is None else int(v)   # サバイバルの体力・脱落したラウンドなど（前の版のサーバーからは届かない）
-    surv_keys = lambda x: {k: opt_int(x.get(k)) for k in ('hp', 'out_round', 'place') if k in x}
+    surv_keys = lambda x: {k: opt_int(x.get(k)) for k in ('hp', 'out_round', 'place', 'rate_before', 'rate_after') if k in x} | ({'rate_cap': True} if x.get('rate_cap') else {})
+    rid_ok = lambda v: v if RT.valid_rid(v) else None   # レートの番号（前の版のサーバーからは届かない）
     f = d.get('final')   # 前の版のサーバーからは届かない（そのときは画面が今いる人から順位を作る）
     r.final = [{'pid': str(x['pid']), 'name': str(x['name']), 'name_en': x.get('name_en'), 'score': int(x['score']), 'is_bot': bool(x.get('is_bot')), **surv_keys(x)}
                for x in f] if isinstance(f, list) else None
     dep = d.get('departed')
-    r.departed = {str(k)[:12]: {'name': str(v['name']), 'name_en': v.get('name_en'), 'score': int(v['score']), 'is_bot': bool(v.get('is_bot')), **surv_keys(v)}
+    r.departed = {str(k)[:12]: {'name': str(v['name']), 'name_en': v.get('name_en'), 'score': int(v['score']), 'is_bot': bool(v.get('is_bot')), **surv_keys(v),
+                                **({'rid': v['rid']} if rid_ok(v.get('rid')) else {})}   # レートの番号があるときだけ（前の版と同じ形のまま）
                   for k, v in dep.items()} if isinstance(dep, dict) else {}
+    ri = d.get('rate_info')
+    r.rate_info = {str(k)[:12]: {kk: v.get(kk) for kk in ('before', 'after', 'cap', 'rank_before', 'rank_after', 'total', 'h', 'need', 'first')}
+                   for k, v in ri.items() if isinstance(v, dict)} if isinstance(ri, dict) else {}
+    r.rated = bool(d.get('rated'))
     r.deck = [c for c in d['deck'] if c in COUNTRY_BY_ID]
     old = rooms.get(code)
     r.title = d['title'] if not find_room_by_title(d['title'], exclude=old) else unique_title(d['title'], exclude=old)   # 同じ名前の部屋が新しいサーバーで先にできていたら番号を付ける
@@ -732,6 +823,7 @@ def room_from_dict(d, now, source=None):
         p.muted, p.reported_by = set(pd['muted']), set(pd['reported_by'])
         p.hp, p.out_round = opt_int(pd.get('hp')), opt_int(pd.get('out_round'))
         p.new_card = pd.get('new_card') if pd.get('new_card') in COUNTRY_BY_ID else None
+        p.rid = rid_ok(pd.get('rid'))
         p.connected = bool(pd['connected'])   # つながっていた人は、つなぎ直すまで（MIGRATE_GRACE 秒まで）いるものとして扱う
         if any(c not in COUNTRY_BY_ID for c in p.hand + ([p.pick] if p.pick else [])):
             raise ValueError('unknown card')
@@ -829,6 +921,8 @@ async def internal_migrate(request):
     except Exception:
         return web.json_response({'ok': False, 'error': 'bad'}, status=400)
     now, got, skipped = time.time(), [], []
+    if isinstance(data.get('ratings'), list):   # レート（試合数の多い方を残す。スプレッドシートへ送るのは古いサーバーの役目なので、ここでは送り直さない）
+        RT.merge(data['ratings'])
     for d in data.get('rooms') or []:
         try:
             if len(rooms) >= MAX_ROOMS and not (isinstance(d, dict) and str(d.get('code'))[:4] in rooms):
@@ -867,7 +961,8 @@ async def migrate_out(session, timeout=6):
     try:
         items = [room_to_dict(r, now) for r in rooms.values()]
         for i in range(0, len(items), MIGRATE_BATCH):   # 部屋が多くても受け取りの上限を超えないよう、何部屋かずつ送る（送り直しは受け取る側で置き換わる）
-            body = json.dumps({'v': 1, 'from': BOOT_ID, 'rooms': items[i:i + MIGRATE_BATCH]}, ensure_ascii=False).encode('utf-8')
+            body = json.dumps({'v': 1, 'from': BOOT_ID, 'rooms': items[i:i + MIGRATE_BATCH], 'ratings': RT.export_rows() if i == 0 else []},   # レートも一緒に（1回目だけ）
+                              ensure_ascii=False).encode('utf-8')
             async with session.post(PUBLIC_URL + '/internal/migrate', data=body, timeout=ClientTimeout(total=timeout),
                                     headers={'X-Migrate-Key': MIGRATE_KEY, 'Content-Type': 'application/json'}) as resp:
                 part = await resp.json(content_type=None) if resp.status == 200 else {'ok': False, 'status': resp.status}
@@ -972,7 +1067,7 @@ async def ws_handler(request):
 
 
 async def ws_session(ws):
-    ctx = {'room': None, 'pid': None}
+    ctx = {'room': None, 'pid': None, 'rid': None}
 
     async def error(msg, code=None):
         await send(ws, {'type': 'error', 'message': msg, 'code': code})   # code: クライアントが言語に合わせて表示
@@ -982,6 +1077,15 @@ async def ws_session(ws):
         room, pid = ctx['room'], ctx['pid']
         if room is not None and rooms.get(room.code) not in (None, room):   # 引っ越しの送り直しで部屋が新しい中身に置き換わった
             room = ctx['room'] = rooms[room.code]
+
+        if t == 'hello':   # 画面がつないだ直後に送る: バトルのレートの合言葉（rk）と端末の控え（rc・rs）。サーバーが忘れていたら控えから戻す
+            rid = RT.rid_of(data.get('rk'))
+            if rid:
+                RT.restore(rid, data.get('rc'), data.get('rs'))
+                ctx['rid'] = rid
+                if room is not None and pid in room.players and not room.players[pid].rid:
+                    room.players[pid].rid = rid
+            return
 
         if t == 'create':
             cleanup_rooms()
@@ -995,7 +1099,7 @@ async def ws_session(ws):
             room = Room(new_code(), pid)
             rooms[room.code] = room
             p = Player(pid, name)
-            p.ws, p.connected = ws, True
+            p.ws, p.connected, p.rid = ws, True, ctx['rid']
             room.players[pid] = p
             room.order.append(pid)
             room.title = unique_title(name)   # 既定の部屋名はホストの名前。友だちはこの名前で参加する
@@ -1025,6 +1129,7 @@ async def ws_session(ws):
                 if migrating or moved or getattr(r, 'dead', False):   # 閉じるのを待つ間に引っ越し・置き換えが起きた: つなぎ直してもらう
                     return await ws.close()
                 p.ws, p.connected = ws, True
+                p.rid = p.rid or ctx['rid']
                 pid = want_pid
                 r.empty_since = None
                 log.info('room %s reconnect %s', r.code, p.name)
@@ -1039,7 +1144,7 @@ async def ws_session(ws):
                     return await error(why, why_code)
                 pid = uuid.uuid4().hex[:12]
                 p = Player(pid, name)
-                p.ws, p.connected = ws, True
+                p.ws, p.connected, p.rid = ws, True, ctx['rid']
                 r.players[pid] = p
                 r.order.append(pid)
                 if r.host not in r.players or r.players[r.host].is_bot:   # ホストがいない部屋（ひとりでリロードした等）に戻ってきた人をホストに
@@ -1279,6 +1384,50 @@ async def ws_session(ws):
 
 
 # ---------- REST
+async def read_json(request, limit=2000):
+    """小さな JSON の本文を読む（大きすぎる・形がおかしいときは None）"""
+    try:
+        body = await request.content.read(limit + 1)
+        if len(body) > limit:
+            return None
+        d = json.loads(body or b'{}')
+        return d if isinstance(d, dict) else None
+    except Exception:
+        return None
+
+
+async def api_rating(request):
+    """ホームの「あなたのレート」: 端末の合言葉（と控え）を受け取り、自分のレートと全国の順位を返す。サーバーが忘れていたら控えから戻す。
+    合言葉はアドレス（URL）に入れない（記録に残らないよう、本文で送る）"""
+    d = await read_json(request) or {}
+    rid = RT.rid_of(d.get('rk'))
+    if not rid:
+        return web.json_response({'ok': False}, status=400)
+    RT.restore(rid, d.get('rc'), d.get('rs'))
+    return web.json_response({'ok': True, 'me': RT.summary(rid), 'copy': RT.copy_of(rid)}, headers={'Cache-Control': 'no-store'})
+
+
+async def api_ranking(request):
+    """全国ランキング（バトル）: 上位50人と自分の記録"""
+    d = await read_json(request) or {}
+    rid = RT.rid_of(d.get('rk'))
+    if rid:
+        RT.restore(rid, d.get('rc'), d.get('rs'))
+    return web.json_response({'ok': True, **RT.ranking(rid)}, headers={'Cache-Control': 'no-store'})
+
+
+async def api_rating_hide(request):
+    """「ランキングに名前を出さない」の切り替え"""
+    d = await read_json(request) or {}
+    rid = RT.rid_of(d.get('rk'))
+    if not rid:
+        return web.json_response({'ok': False}, status=400)
+    RT.restore(rid, d.get('rc'), d.get('rs'))
+    if not RT.set_hide(rid, bool(d.get('hide'))):
+        return web.json_response({'ok': False, 'error': 'no_rating'}, status=404)
+    return web.json_response({'ok': True, 'me': RT.summary(rid), 'copy': RT.copy_of(rid)}, headers={'Cache-Control': 'no-store'})
+
+
 async def api_meta(request):
     return web.json_response({
         'countries': {c['id']: c for c in COUNTRIES},
@@ -1537,6 +1686,9 @@ def make_app():
     app.router.add_get('/api/meta', api_meta)
     app.router.add_get('/api/version', api_version)
     app.router.add_post('/api/visit', api_visit)
+    app.router.add_post('/api/rating', api_rating)
+    app.router.add_post('/api/ranking', api_ranking)
+    app.router.add_post('/api/rating/hide', api_rating_hide)
     app.router.add_get('/admin/visits', admin_visits)
     app.router.add_get('/api/rooms', api_rooms)
     app.router.add_get('/api/room/{code}', api_room)

@@ -80,7 +80,7 @@ const ok = (m) => { results.push('OK: ' + m); };
   assert.strictEqual(triggers.length, 1); assert.strictEqual(triggers[0].fn, 'deleteOldRows'); assert.strictEqual(triggers[0].days, 1);
   assert.ok(env.__logs.some((l) => l.includes(key1)), '合言葉が実行ログに出ない');
   assert.ok(env.__logs.some((l) => l.startsWith('書き込みの確認: OK')), '= の確かめの結果が出ない');
-  assert.deepStrictEqual(sheets.map((s) => s.name), ['ログ'], '確認用のシートが残っている');
+  assert.deepStrictEqual(sheets.map((s) => s.name), ['ログ', 'レート'], '確認用のシートが残っている／レートのシートがない');
   ok('setup: シート（7列だけ）・見出し・合言葉（実行ログに出す）・毎日の削除の予約（1つだけ）。= で始まる文字が数式にならないかを確かめ、確認用のシートは消す');
 }
 
@@ -165,6 +165,45 @@ const ok = (m) => { results.push('OK: ' + m); };
   assert.ok(env.doGet().text.includes('地理王'));
   assert.strictEqual(cells().length, 1);
   ok('アドレスをブラウザで開いても書き込まない（動いているかの確認だけ）');
+}
+
+{ // バトルのレート（シート「レート」）: 読む・書く（同じ番号は上書き、試合数が減る書き込みは受けない）・1年で消す
+  const { env, props, sheets } = makeEnv();
+  env.setup();
+  const rate = () => sheets.find((s) => s.name === 'レート');
+  assert.deepStrictEqual(rate().cells[0], ['番号', '名前', 'レート', '試合', '人との試合', '最高', '名前を出さない', '更新日時']);
+  assert.strictEqual(rate().maxCols, 8);
+  const A = 'a'.repeat(20), B = 'b'.repeat(20);
+  assert.strictEqual(post(env, { key: 'wrong', action: 'ratings_get' }).ok, false);
+  assert.strictEqual(post(env, { key: 'wrong', action: 'ratings_put', rows: [{ rid: A, r: 1024, n: 1, h: 1 }] }).ok, false);
+  assert.strictEqual(rate().cells.length, 1, '合言葉が違うのに書いた');
+  ok('レート: 合言葉が違う読み書きは断る');
+  const t0 = Math.round(now());
+  let r = post(env, { key: props.LOG_KEY, action: 'ratings_put', rows: [
+    { rid: A, name: '=はなこ', r: 1024.004, n: 1, h: 1, best: 1024, hide: false, t: t0 },
+    { rid: B, name: 'たろう', r: 976, n: 1, h: 1, best: 1000, hide: true, t: t0 },
+    { rid: 'bad', name: 'x', r: 1000, n: 1, h: 0, t: t0 }, { rid: 'c'.repeat(20), r: 'NaN', n: 1, h: 0, t: t0 },
+  ] });
+  assert.deepStrictEqual(r, { ok: true, updated: 0, added: 2, stale: 0 });
+  assert.strictEqual(rate().cells[1][1], "'=はなこ", '= で始まる名前が数式として入る');
+  assert.ok(rate().cells[1][7] instanceof Date, '更新日時が日付ではない');
+  let got = post(env, { key: props.LOG_KEY, action: 'ratings_get' });
+  assert.ok(got.ok && got.rows.length === 2);
+  assert.deepStrictEqual(got.rows[0], { rid: A, name: '=はなこ', r: 1024, n: 1, h: 1, best: 1024, hide: false, t: t0 });
+  assert.strictEqual(got.rows[1].hide, true);
+  ok('レート: 1人1行で書き、読むと番号・名前（先頭の \' なし）・数字・名前を出さない・更新日時（秒）で返す。番号や数字がおかしい行は書かない');
+  r = post(env, { key: props.LOG_KEY, action: 'ratings_put', rows: [{ rid: A, name: 'はなこ', r: 1050, n: 2, h: 2, best: 1050, t: t0 + 60 }, { rid: B, name: 'たろう', r: 1100, n: 0, h: 0, t: t0 + 60 }] });
+  assert.deepStrictEqual(r, { ok: true, updated: 1, added: 0, stale: 1 });
+  got = post(env, { key: props.LOG_KEY, action: 'ratings_get' }).rows;
+  assert.ok(got[0].r === 1050 && got[0].n === 2 && got[1].r === 976, '上書き・古い書き込みの扱いが違う');
+  assert.strictEqual(rate().cells.length, 3, '同じ番号の行が増えた');
+  ok('レート: 同じ番号は上書き（行は増えない）。試合数が減る古い書き込みは受けない');
+  rate().cells[2][7] = new Date(Date.now() - 400 * day * 1000);   // B は400日遊んでいない
+  env.deleteOldRows();
+  got = post(env, { key: props.LOG_KEY, action: 'ratings_get' }).rows;
+  assert.deepStrictEqual(got.map((x) => x.rid), [A], '1年より前のレートが消えない／新しいレートが消えた');
+  assert.strictEqual(env.__locks, env.__unlocks);
+  ok('レート: 毎日の片付け（deleteOldRows）で、最後に遊んでから1年たった行を消す（ログが空の日も）');
 }
 
 console.log(results.join('\n') + '\nALL OK');

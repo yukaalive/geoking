@@ -29,10 +29,10 @@ function connect(onOpen) {
   const base = API ? new URL(API) : location;
   const proto = base.protocol === 'https:' ? 'wss' : 'ws';
   const sock = ws = new WebSocket(`${proto}://${base.host}/ws`);
-  ws.onopen = () => { onOpen && onOpen(); };
+  ws.onopen = () => { send({ type: 'hello', ...RATE.creds() }); onOpen && onOpen(); };   // hello: バトルのレートの合言葉と端末の控え（rating.js）。部屋に入る前に送る
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
-    if (msg.type === 'state') { reconnectTries = 0; state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } render(); }
+    if (msg.type === 'state') { reconnectTries = 0; state = msg; pid = msg.you; sessionStorage.setItem('geoking_room', msg.room); if (msg.token) { sessionStorage.setItem('geoking_pid', msg.you); sessionStorage.setItem('geoking_token', msg.token); } if (msg.rate_copy) RATE.saveCopy(msg.rate_copy); render(); }
     else if (msg.type === 'pong') { clearTimeout(pongTimer); pongTimer = null; }
     else if (msg.type === 'toast') toast(tServer('t_', msg.code, msg.message));
     else if (msg.type === 'left') { leaveToHome(tServer('l_', msg.code, msg.message)); if (ws) { ws.onclose = null; ws.close(); } }
@@ -130,6 +130,8 @@ $('#joinBtn').onclick = () => {
   connect(() => send({ type: 'join', room: asCode, room_name: raw, name }));
 };
 $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
+$('#rateCard').onclick = () => RATE.showRanking();   // ホームの「あなたのバトルのレート」→ 全国ランキング（小窓を開く音は sfx.js が鳴らす）
+RATE.refreshHome();
 
 // ---------- ロビー操作
 function pushSettings() {
@@ -150,6 +152,7 @@ function leaveToHome(message) {
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
   document.querySelectorAll('.floatmsg').forEach(e => e.remove()); floatLastStart = 0; lastChatKey = ''; scrollTopPending = false;
   state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
+  RATE.refreshHome();   // バトルのあとならレートが変わっている
   sfx.leave();
   if (message) toast(message);
 }
@@ -221,7 +224,7 @@ function floatChat(c) {
   d.addEventListener('animationend', () => d.remove());
 }
 // 言語切り替え時: 今の画面を作り直す
-window.onLangChange = () => { document.title = t('app_title'); if (typeof RANK_CACHE_CLEAR === 'function') RANK_CACHE_CLEAR(); if (state) render(); else loadRooms(); renderPrefs(); };
+window.onLangChange = () => { document.title = t('app_title'); if (typeof RANK_CACHE_CLEAR === 'function') RANK_CACHE_CLEAR(); if (state) render(); else loadRooms(); renderPrefs(); RATE.drawHome(); };
 
 // 同じラウンドの結果をもう一度受け取ったとき（チャット・つなぎ直し・ページの読み直しなど）は、めくる動き・紙吹雪・音をやり直さない
 const revealKeyOf = (s) => s.reveal ? `${s.room}|${s.round}|${s.reveal.prompt.id}|${s.reveal.rows.map(r => r.pid + ':' + r.card).join(',')}` : '';
@@ -328,7 +331,7 @@ function renderLobby() {
   $('#playerCount').textContent = `${state.players.length} / 8`;
   const ul = $('#lobbyPlayers'); ul.innerHTML = '';
   for (const p of state.players) {
-    const li = el('li', '', `<span>${escapeHtml(pname(p))}${playerTag(p)}</span>`);
+    const li = el('li', '', `<span>${escapeHtml(pname(p))}${playerTag(p)}${RATE.lobbyLine(p)}</span>`);   // バトルの部屋では名前の下に称号とレート
     if (state.host === pid && p.pid !== pid) { const b = el('button', 'mini', t('kick')); b.onclick = () => send({ type: 'kick', pid: p.pid }); li.appendChild(b); }
     ul.appendChild(li);
   }
@@ -616,6 +619,7 @@ function renderEnd() {
     ol.appendChild(li);
     if (rank === 1) setTimeout(() => spawnConfetti(li.querySelector('.disc'), 'gold'), 400 + 150 * i);
   });
+  RATE.renderPanel($('#ratePanel'));   // バトルで自分のレートが動いたときの「あなたのレート」
   const rb = $('#rematchBtn'); rb.dataset.i18n = state.players.length < 2 ? 'start_with_bot' : 'rematch'; rb.textContent = t(rb.dataset.i18n);   // ひとりならボットを入れて始める
   const champs = sorted.filter(p => p.score === top).map(p => pname(p));
   $('#endTitle').innerHTML = SV.on() ? SV.endTitle() : `${ico('trophy', 'big')} ${t('is_champion', { names: escapeHtml(joinNames(champs)) })}`;
