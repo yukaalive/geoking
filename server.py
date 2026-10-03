@@ -757,6 +757,7 @@ MIGRATE_EXTRA_REVEAL = 1   # 秒。結果表示の残りに足す
 MIGRATE_GRACE = float(os.environ.get('MIGRATE_GRACE', '20'))   # 秒。引っ越してきた人がつなぎ直すまで「いる」ものとして待つ（その間にラウンドが勝手に決まらないように）
 MIGRATE_WAIT_JOIN = 8      # 秒。起動直後の新しいサーバーに、部屋が届く前につなぎ直してきた人を待たせる長さ（すぐ「部屋がない」と返してホームに戻さない）
 MIGRATE_MAX = 8 * 1024 * 1024   # 引っ越しで1回に受け取る中身の上限（バイト）
+RATING_PULL_TIMEOUT = float(os.environ.get('RATING_PULL_TIMEOUT', '4'))   # 秒。起動のとき古いサーバーからレートをもらうのを待つ長さ（眠りから起きるときは相手がいないので、これだけ待ってあきらめる）
 MIGRATE_BATCH = int(os.environ.get('MIGRATE_BATCH', '20'))   # 1回に送る部屋の数（大きな部屋でも1部屋 80KB ほどなので、上限に十分収まる）
 migrating = False   # 部屋の中身を送っている最中（この間に届いた操作は、送り終わるか失敗するまで待たせる）
 moved = False       # 部屋を新しいサーバーへ送り終えた（このサーバーはもう部屋を持たない）
@@ -945,6 +946,33 @@ async def internal_migrate(request):
             asyncio.create_task(broadcast(r))
     log.info('migrate in: %d room(s) from %s, skipped=%s, rooms=%d', len(got), data.get('from'), skipped, len(rooms))
     return web.json_response({'ok': True, 'rooms': len(got), 'skipped': skipped})
+
+
+async def internal_ratings(request):
+    """古いサーバー側: 起動中の新しいサーバー（rating_pull）に、レートを全部渡す。合言葉が合うときだけ。"""
+    if not key_ok(request.headers.get('X-Migrate-Key', '')):
+        raise web.HTTPNotFound()
+    return web.json_response({'ok': True, 'boot': BOOT_ID, 'rows': RT.export_rows()}, headers={'Cache-Control': 'no-store'})
+
+
+async def rating_pull(app):
+    """新しいサーバー側: 起動するとき（まだ外から入れない間）に、公開アドレスの先にいる古いサーバーからレートを全部もらう。
+    だれも遊んでいないとき（部屋がないとき）に更新しても、ランキングが消えないように（部屋の引っ越しは部屋があるときだけ動く。2026-10-03）。
+    Render は新しいサーバーが /healthz に応えるまで古いサーバーへつなぐので、ここで呼ぶと古いサーバーに届く。
+    眠っていたサーバーが起きるときは、届く先がない（自分はまだ待ち受けていない）ので、RATING_PULL_TIMEOUT 秒であきらめる"""
+    if not (MIGRATE_KEY and PUBLIC_URL):
+        return
+    from aiohttp import ClientSession, ClientTimeout
+    try:
+        async with ClientSession(timeout=ClientTimeout(total=RATING_PULL_TIMEOUT)) as s:
+            async with s.post(PUBLIC_URL + '/internal/ratings', headers={'X-Migrate-Key': MIGRATE_KEY}) as resp:
+                d = await resp.json(content_type=None) if resp.status == 200 else {'status': resp.status}
+    except Exception as e:
+        d = {'error': type(e).__name__}
+    if d.get('ok') and d.get('boot') != BOOT_ID and isinstance(d.get('rows'), list):
+        log.info('ratings: pulled %d of %d from the previous server %s', RT.merge(d['rows']), len(d['rows']), d.get('boot'))   # スプレッドシートへ送るのは古いサーバーの役目なので、ここでは送り直さない
+    else:
+        log.info('ratings: nothing pulled from a previous server (%s)', d)
 
 
 async def migrate_out(session, timeout=6):
@@ -1673,6 +1701,7 @@ def make_app():
     app.cleanup_ctx.append(periodic_cleanup)
     app.cleanup_ctx.append(migrate_watch)
     app.cleanup_ctx.append(sheet_log_ctx)
+    app.on_startup.append(rating_pull)   # 外から入れるようになる前に、古いサーバーからレートをもらう
     app.on_shutdown.append(migrate_on_shutdown)
     app.on_shutdown.append(sheet_log_on_shutdown)
     app.router.add_get('/', index)
@@ -1694,6 +1723,7 @@ def make_app():
     app.router.add_get('/api/room/{code}', api_room)
     app.router.add_get('/ws', ws_handler)
     app.router.add_post('/internal/migrate', internal_migrate)
+    app.router.add_post('/internal/ratings', internal_ratings)
     app.router.add_static('/static/', os.path.join(HERE, 'static'))
     if os.environ.get('GEOKING_DEV'):   # 開発用: tests/ にある画面の確認スクリプトをブラウザから読めるようにする（本番では環境変数を入れないので出ない）
         app.router.add_static('/dev/tests/', os.path.join(HERE, 'tests'))
