@@ -116,7 +116,14 @@ def unit_tests():
     rows[0]['n'] = 7
     assert RT.merge(rows) == 1 and RT.RATINGS[me]['n'] == 7
     assert RT.merge([{'rid': 'bad', 'r': 1, 'n': 1, 'h': 1}]) == 0
-    print('OK copy: restored after the server forgot; tampered, other, older copies refused; merges keep more games')
+    # スプレッドシートを設定したとき: シートにない・シートより新しい記録だけを送るものに入れる
+    fresh()
+    a, b, c, d = (RT.rid_of(rk()) for _ in range(4))
+    RT.get(a, True).update({'r': 1050.0, 'n': 3, 't': 100.0}); RT.get(b, True).update({'r': 1010.0, 'n': 2, 't': 90.0}); RT.get(c, True).update({'r': 990.0, 'n': 1, 't': 80.0})
+    RT.DIRTY.clear()
+    sheet = [{'rid': a, 'n': 3, 't': 100}, {'rid': b, 'n': 1, 't': 50}, {'rid': d, 'n': 5, 't': 70}]   # a は同じ、b はシートが古い、c はシートにない、d はシートだけ
+    assert RT.mark_unsaved(sheet) == 2 and RT.DIRTY == {b, c}, RT.DIRTY
+    print('OK copy: restored after the server forgot; tampered, other, older copies refused; merges keep more games; records missing from the sheet are sent')
 
     # 4. 部屋（Room を直接）
     import server

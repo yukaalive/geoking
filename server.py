@@ -107,6 +107,7 @@ def clean_name(v, room=None):
 # 環境変数 SHEET_LOG_URL（ウェブアプリのアドレス）と SHEET_LOG_KEY（合言葉。Apps Script のスクリプト プロパティ LOG_KEY と同じ値）がそろったときだけ動く
 SHEET_LOG_URL = os.environ.get('SHEET_LOG_URL', '').strip()
 SHEET_LOG_KEY = os.environ.get('SHEET_LOG_KEY', '').strip()
+SHEET_ON = bool(SHEET_LOG_URL and SHEET_LOG_KEY)
 SHEET_LOG_EVERY = float(os.environ.get('SHEET_LOG_EVERY', '30'))   # 秒。まとめて送る間隔
 SHEET_LOG_BATCH = 500             # 1回に送る行の上限
 SHEET_ROWS = collections.deque(maxlen=5000)   # 送る前の行。送れないまま増えたら古い方から捨てる（メモリを使いすぎない）
@@ -186,6 +187,9 @@ async def rating_load(session, timeout=15):
         d = {'error': repr(e)}
     if isinstance(d, dict) and d.get('ok') is True:
         log.info('ratings: loaded %d from the sheet', RT.merge(d.get('rows')))
+        n = RT.mark_unsaved(d.get('rows'))   # シートにない・古い記録（設定する前に遊んだ人・古いサーバーからもらった人）は、このあとシートへ書き写す
+        if n:
+            log.info('ratings: %d record(s) not in the sheet yet, sending', n)
         return True
     log.warning('ratings: could not load from the sheet (%s)', str(d)[:160])
     return False
@@ -922,8 +926,8 @@ async def internal_migrate(request):
     except Exception:
         return web.json_response({'ok': False, 'error': 'bad'}, status=400)
     now, got, skipped = time.time(), [], []
-    if isinstance(data.get('ratings'), list):   # レート（試合数の多い方を残す。スプレッドシートへ送るのは古いサーバーの役目なので、ここでは送り直さない）
-        RT.merge(data['ratings'])
+    if isinstance(data.get('ratings'), list):   # レート（試合数の多い方を残す。古いサーバーがスプレッドシートを使っていなかったときのため、こちらからも送る。同じ行は上書きなので2回送っても同じ）
+        RT.merge(data['ratings'], mark_dirty=SHEET_ON)
     for d in data.get('rooms') or []:
         try:
             if len(rooms) >= MAX_ROOMS and not (isinstance(d, dict) and str(d.get('code'))[:4] in rooms):
@@ -970,7 +974,7 @@ async def rating_pull(app):
     except Exception as e:
         d = {'error': type(e).__name__}
     if d.get('ok') and d.get('boot') != BOOT_ID and isinstance(d.get('rows'), list):
-        log.info('ratings: pulled %d of %d from the previous server %s', RT.merge(d['rows']), len(d['rows']), d.get('boot'))   # スプレッドシートへ送るのは古いサーバーの役目なので、ここでは送り直さない
+        log.info('ratings: pulled %d of %d from the previous server %s', RT.merge(d['rows'], mark_dirty=SHEET_ON), len(d['rows']), d.get('boot'))   # スプレッドシートを使っていれば、もらった分もシートへ（同じ行は上書き）
     else:
         log.info('ratings: nothing pulled from a previous server (%s)', d)
 

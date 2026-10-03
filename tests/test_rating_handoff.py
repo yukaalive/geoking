@@ -3,14 +3,19 @@ Render の入口の代わりに中継サーバーを立てる（test_migration.p
 新しいサーバー B を起動する。B は外から入れるようになる前に、中継（まだ A につながっている）から A のレートを全部もらう（server.py の rating_pull）。
 中継を B に切り替えたあと、ランキングが A と同じかを見る（2026-10-03「アプリをアップデートするだけで、ランキングがなくなっちゃいます」）。
   - A は合言葉なしでは渡さない（404）。合言葉の違うサーバー C はもらえない（ランキングは空のまま起動する）
-  - 返事が来ない先（眠りから起きるときの Render の入口の代わり）でも、D は RATING_PULL_TIMEOUT であきらめて起動する"""
+  - 返事が来ない先（眠りから起きるときの Render の入口の代わり）でも、D は RATING_PULL_TIMEOUT であきらめて起動する
+  - スプレッドシートを使う新しいサーバー E: 古いサーバー（シートなし）からもらった分と、シートにない・シートより新しい記録を、シートへ書き写す"""
 import asyncio, json, os, secrets, subprocess, sys, tempfile, time
 import aiohttp
 from aiohttp import web
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-PROXY, A, B, C, D, HOLE = 8390, 8391, 8392, 8393, 8394, 8395
+PROXY, A, B, C, D, HOLE, E, SHEET = 8390, 8391, 8392, 8393, 8394, 8395, 8396, 8397
+SHEET_KEY = 'test-sheet-key'
+sheet = {}   # スプレッドシートの「レート」の代わり（rid → 行）
+sys.path.insert(0, ROOT)
+import rating as RT
 KEY = 'test-handoff-key'
 backend = {'port': A}
 LOGS = tempfile.mkdtemp()
@@ -26,6 +31,19 @@ async def proxy_handler(request):   # Render の入口の代わり（HTTP だけ
             return web.Response(status=502)
 
 
+async def sheet_exec(request):   # Apps Script の代わり（ログは受け取るだけ。レートは本物と同じく、試合数が減る書き込みは受けない）
+    body = await request.json()
+    if body.get('key') != SHEET_KEY:
+        return web.json_response({'ok': False, 'error': 'bad key'})
+    if body.get('action') == 'ratings_get':
+        return web.json_response({'ok': True, 'rows': list(sheet.values())})
+    if body.get('action') == 'ratings_put':
+        for row in body.get('rows') or []:
+            if row['rid'] not in sheet or row['n'] >= sheet[row['rid']]['n']:
+                sheet[row['rid']] = row
+    return web.json_response({'ok': True})
+
+
 async def hole(reader, writer):   # つながるが返事をしない（眠っているサーバーが起きるまで Render の入口が待たせるのと同じ）
     await asyncio.sleep(60)
     writer.close()
@@ -33,7 +51,7 @@ async def hole(reader, writer):   # つながるが返事をしない（眠っ�
 
 def start_server(port, key, url, extra=None):
     env = {**os.environ, 'PORT': str(port), 'MIGRATE_KEY': key, 'MIGRATE_URL': url, **(extra or {})}
-    for k in ('GEOKING_DEMO', 'SHEET_LOG_URL', 'SHEET_LOG_KEY'):
+    for k in ('GEOKING_DEMO',) + (() if extra and 'SHEET_LOG_URL' in extra else ('SHEET_LOG_URL', 'SHEET_LOG_KEY')):
         env.pop(k, None)
     return subprocess.Popen([sys.executable, 'server.py'], cwd=ROOT, env=env, stdout=open(os.path.join(LOGS, f'{port}.log'), 'w'), stderr=subprocess.STDOUT)
 
@@ -81,6 +99,9 @@ async def main():
     papp.router.add_route('*', '/{tail:.*}', proxy_handler)
     prunner = web.AppRunner(papp); await prunner.setup(); await web.TCPSite(prunner, '127.0.0.1', PROXY).start()
     hole_server = await asyncio.start_server(hole, '127.0.0.1', HOLE)
+    sapp = web.Application()
+    sapp.router.add_post('/exec', sheet_exec)
+    srunner = web.AppRunner(sapp); await srunner.setup(); await web.TCPSite(srunner, '127.0.0.1', SHEET).start()
     procs = []
     try:
         async with aiohttp.ClientSession() as s:
@@ -109,6 +130,17 @@ async def main():
             assert 'ratings: pulled 3 of 3' in open(os.path.join(LOGS, f'{B}.log'), encoding='utf-8').read()
             print('OK new server B: took all ratings from A before opening (same ranking after the switch, my record too)')
 
+            # スプレッドシートを使う新しいサーバー E（中継は B。シートには Ken の古い行だけ）: もらった3人分をシートへ書き写す
+            sheet[RT.rid_of(ken[1])] = {'rid': RT.rid_of(ken[1]), 'r': 1024.0, 'n': 1, 'h': 1, 'best': 1024.0, 'name': 'Ken', 'hide': False, 't': 1}
+            procs.append(start_server(E, KEY, f'http://127.0.0.1:{PROXY}', {'SHEET_LOG_URL': f'http://127.0.0.1:{SHEET}/exec', 'SHEET_LOG_KEY': SHEET_KEY, 'SHEET_LOG_EVERY': '0.5'}))
+            await wait_up(s, E)
+            t0 = time.time()
+            while time.time() - t0 < 8 and not (len(sheet) == 3 and all(r['n'] >= 1 for r in sheet.values()) and sheet[RT.rid_of(ken[1])]['n'] == 2):
+                await asyncio.sleep(0.2)
+            assert len(sheet) == 3 and sheet[RT.rid_of(ken[1])]['n'] == 2, sheet
+            assert {r['name'] for r in sheet.values()} == {'Ken', 'はなこ', 'そら'}, sheet
+            print(f'OK new server E with the sheet: wrote all 3 ratings to the sheet ({time.time() - t0:.1f}s), including a newer row for Ken')
+
             # 合言葉の違うサーバー C（中継を A に戻して起動）: もらえない
             backend['port'] = A
             procs.append(start_server(C, 'wrong-key', f'http://127.0.0.1:{PROXY}'))
@@ -132,6 +164,7 @@ async def main():
                 p.kill()
         hole_server.close()
         await prunner.cleanup()
+        await srunner.cleanup()
     print('ALL OK')
 
 

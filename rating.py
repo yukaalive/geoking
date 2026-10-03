@@ -230,6 +230,23 @@ def export_rows(rids=None):
              'name': RATINGS[x]['name'], 'hide': RATINGS[x]['hide'], 't': round(RATINGS[x]['t'])} for x in ids]
 
 
+def mark_unsaved(rows):
+    """スプレッドシートから読んだ行と比べて、シートにない・シートより新しい記録を「送るもの」に入れる。入れた数を返す。
+    スプレッドシートを設定する前に遊んだ人や、古いサーバーからもらった人の分も、設定したあと最初の回にシートへ書き写すため"""
+    saved = {}
+    for d in rows or []:
+        try:
+            saved[str(d['rid'])] = (int(d['n']), float(d.get('t') or 0))
+        except (ValueError, KeyError, TypeError):
+            continue
+    got = 0
+    for rid, rec in RATINGS.items():
+        if rec['n'] > 0 and (rec['n'], rec['t']) > saved.get(rid, (-1, -1.0)):
+            DIRTY.add(rid)
+            got += 1
+    return got
+
+
 def merge(rows, mark_dirty=False):
     """スプレッドシート・引っ越しから受け取る。試合数が多い方（同じなら新しい方）を残す。受け取った数を返す"""
     got = 0
