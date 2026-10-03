@@ -61,7 +61,7 @@ const RATE = (() => {
     else {
       const sub = me.rank ? t('r_rank', { rank: fmt(me.rank), total: fmt(me.total) }) : t('r_need', { n: me.need });
       card.innerHTML = `<span class="rc-label">${t('r_my')}</span><span class="rc-main"><b class="rc-num">${fmt(me.rate)}</b>${chip(me.rate)}</span>`
-        + `<span class="rc-sub">${escapeHtml(sub)}</span><span class="rc-go">${ico('trophy', 'sm')} ${t('r_see')}</span>`;
+        + `<span class="rc-sub">${escapeHtml(sub)}</span>`;   // 押すとランキングが開くので「ランキングを見る」は書かない（2026-10-03 ユーザーの指定）
       card.classList.remove('hidden');
     }
     if (!home) { rank.classList.add('hidden'); return; }   // 読めなかったときは出さない（公開中の部屋の邪魔をしない）

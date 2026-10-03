@@ -5,7 +5,7 @@
    - setLang(lang): 切り替えて保存。各画面は window.onLangChange で再描画する */
 const I18N = {
   ja: {
-    app_title: '地理王｜国旗で対戦する地理カードゲーム', tagline: '国旗から、どんな国かを推測せよ！', your_name: 'あなたの名前（必須）', name_ph: 'ニックネームを入力',
+    app_title: '地理王｜国旗で対戦する地理カードゲーム', your_name: 'あなたの名前（必須）', name_ph: 'ニックネームを入力',
     create_room: '部屋を作る', code_ph: '友だちの部屋の名前', join: '参加する', enter_room_name: '部屋の名前を入力してください', learn_zukan: '図鑑で学ぶ', public_rooms: '公開中の部屋', refresh: '更新',
     loading: '読み込み中…',
     c_br: 'ブラジル', c_jp: '日本', c_mn: 'モンゴル', c_mt: 'マルタ',
@@ -83,7 +83,7 @@ const I18N = {
     // バトルのレートと全国ランキング（rating.js）。称号は rating.py の title_index と同じ区切り（1000・1100・1200・1350・1500）
     r_t0: '見習い', r_t1: '旅人', r_t2: '探検家', r_t3: '地理博士', r_t4: '地理名人', r_t5: '地理王',
     r_my: 'あなたのバトルのレート', r_rank: '全国 {rank} 位 ／ {total} 人', r_need: 'あと {n} 回バトルするとランキングに載ります',
-    r_next: '{title}まで あと {n}', r_top: 'いちばん上の称号です', r_see: 'ランキングを見る', r_title: '全国ランキング（バトル）',
+    r_next: '{title}まで あと {n}', r_top: 'いちばん上の称号です', r_see: 'ランキングを見る', r_title: 'バトルランキング',
     r_anon: '匿名さん', r_hide: 'ランキングに名前を出さない', r_you: 'あなた', r_empty: 'まだ誰も載っていません',
     r_rule: 'バトルを1回すると載ります（ボット戦でも）。ボット戦で上がるのは 1,200 まで', r_fail: 'ランキングを読めませんでした', r_rate: 'レート',
     r_my_short: 'あなたのレート', r_rank_move: '全国 {from} 位 → {to} 位', r_rank_new: '全国 {to} 位に登場', r_promo: '{title}に昇格！', r_first: 'はじめてのレート',
@@ -91,7 +91,7 @@ const I18N = {
     r_all: 'すべて見る', r_stamp: '昇格！', r_ladder_me: 'あなた', r_lad: '{rank} 位',
   },
   en: {
-    app_title: 'GeoKing | Flag card geography party game', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
+    app_title: 'GeoKing | Flag card geography party game', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
     create_room: 'Create room', code_ph: "Friend's room name", join: 'Join', enter_room_name: 'Enter the room name', learn_zukan: 'Study mode', public_rooms: 'Public rooms', refresh: 'Refresh',
     loading: 'Loading…',
     c_br: 'Brazil', c_jp: 'Japan', c_mn: 'Mongolia', c_mt: 'Malta',
