@@ -106,7 +106,8 @@ const SV = (() => {
       const tier = row.world_rank ? wrankTier(row.world_rank).cls : '';
       d.innerHTML = `<div class="sv-head"><span class="crown">${row.winner ? ico('crown') : (row.rank ? t('rank_n', { n: row.rank }) : '—')}</span>`
         + (hurt ? `<span class="sv-dmgline${fresh ? '' : ' show'}">−${row.damage}</span>` : '') + '</div>'
-        + `<div class="rflag"><div class="sv-flag"><img src="${flagUrl(row.card)}" alt=""></div><span class="sv-stamp">${t('sv_out')}</span></div>`   // rflag: 国旗の置き場（3:2。メインと同じ）。sv-flag は国旗にぴったりの枠（金の光・赤い光）。ハンコは置き場の中央（細い国旗でも切れない）
+        + `<div class="rflag"><div class="sv-flag"><img src="${flagUrl(row.card)}" alt=""></div><span class="sv-stamp">${t('sv_out')}</span>`
+        + (hurt && row.close ? `<span class="sv-close${fresh ? '' : ' show'}">${t('sv_close')}</span>` : '') + '</div>'   // 1位との差が小さくて少ししか減らなかった（2026-10-03 の減り方）: 国旗の左上に「惜しい！」   // rflag: 国旗の置き場（3:2。メインと同じ）。sv-flag は国旗にぴったりの枠（金の光・赤い光）。ハンコは置き場の中央（細い国旗でも切れない）
         + `<div class="sv-hprow">${bar(row.pid, shown[row.pid])}</div>`
         + `<div class="who">${escapeHtml(rowName(row))}</div>`
         + `<div class="country">${nm}</div>`
@@ -197,7 +198,8 @@ const SV = (() => {
       d.style.animationDelay = '0s';
       d.classList.add('sv-white');
       d.querySelector('.sv-dmgline').classList.add('show');
-      if (!calm()) { sparks(fx, flag, k, g.length); slashes(flag, k); pop(fx, flag, r.damage, k); }
+      const close = d.querySelector('.sv-close'); if (close) later(calm() ? 0 : 1100, () => close.classList.add('show'));   // 吹き出しの「惜しい！」が消えるころに、国旗の左上に残す（同時に2つ出さない）
+      if (!calm()) { sparks(fx, flag, k, g.length); slashes(flag, k); pop(fx, flag, r.damage, k, r.close); }
       const stop = 60 + 80 * k;   // 止まる時間（ミリ秒）。大きいダメージほど長い
       later(stop, () => {
         d.classList.remove('sv-white'); d.classList.add('sv-hit'); if (k > .67) d.classList.add('sv-big');
@@ -230,9 +232,10 @@ const SV = (() => {
       setTimeout(() => s.remove(), 1000);   // 画面が裏に回って動きが止まっていても消す
     }
   }
-  function pop(fx, flag, dmg, k) {   // ギザギザの吹き出しの大きい「−20」（大きいダメージほど大きく、濃い色）
+  function pop(fx, flag, dmg, k, close) {   // ギザギザの吹き出しの大きい「−20」（大きいダメージほど大きく、濃い色）。惜しいときは上に「惜しい！」
     const p = center(fx, flag), e = el('div', 'sv-pop ' + (k > .67 ? 'big' : k > .34 ? 'mid' : 'small'),
-      `<svg viewBox="-60 -50 120 100" preserveAspectRatio="none" aria-hidden="true"><path class="o" d="${burst(58, 48, 38, 30, 14)}"/><path class="i" d="${burst(42, 34, 30, 22, 11)}"/></svg><b>−${dmg}</b>`);
+      `<svg viewBox="-60 -50 120 100" preserveAspectRatio="none" aria-hidden="true"><path class="o" d="${burst(58, 48, 38, 30, 14)}"/><path class="i" d="${burst(42, 34, 30, 22, 11)}"/></svg><b>−${dmg}</b>`
+      + (close ? `<i class="sv-popclose">${t('sv_close')}</i>` : ''));
     e.style.left = p.x + 'px'; e.style.top = (p.y - p.h * .06) + 'px'; fx.appendChild(e);
     setTimeout(() => e.remove(), 1500);
     e.animate([{ transform: 'translate(-50%,-50%) scale(2.3) rotate(-8deg)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.86) rotate(3deg)', opacity: 1, offset: .1 }, { transform: 'translate(-50%,-50%) scale(1.1) rotate(-2deg)', offset: .18 },

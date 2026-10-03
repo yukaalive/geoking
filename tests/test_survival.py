@@ -1,8 +1,9 @@
 """バトル（体力を減らし合うゲーム。中の名前は survival）の確認。実行: GEOKING_WS=ws://localhost:8090/ws python3 tests/test_survival.py
-1. 減り方の計算（サーバーの Room を直接動かす）: 1位は0・順位が1つ下がるごとに10多く（いちばん大きくて30）、同じ値は同じだけ、データのない国は最下位と同じ、
+1. 減り方の計算（サーバーの Room を直接動かす）: 1位は0。ほかは1位の国旗との世界順位の差で、10以内は「惜しい」5・40以内は10・それより遠いと25（2026-10-03 から）。
+   区切りちょうど（差10・11・40・41）、同じ値は同じだけ、データのない国は遠いと同じ、
    全員データなしなら誰も減らない、体力0で脱落して手札を捨てる、残りが1人で決着、最後の順位（残った人 → あとまで残った人）
 2. 部屋で遊ぶ（WebSocket）: ロビーで部屋の設定の「ゲーム」をバトルにして（試作用のサーバーは最初から）、ボット3体と最後まで。毎ラウンドの減り方・手札が8枚のまま（1枚引く）・
-   脱落した人は出さない・最後の1人で終わる・もう一戦で体力が戻る。2人なら負けた方が10減る。ほかの人が抜けて1人になったら、その場で終わる。
+   脱落した人は出さない・最後の1人で終わる・もう一戦で体力が戻る。2人なら負けた方が差に合わせて減る。ほかの人が抜けて1人になったら、その場で終わる。
    ひとりで「botとバトル開始」を押すとボットが1体入って2人で始まる（パーティーと同じ）。
    部屋の設定の「ゲーム」はホストだけが変えられ、公開中の部屋の一覧（/api/rooms）にその部屋のゲームが出る"""
 import asyncio, json, os, sys
@@ -17,12 +18,14 @@ URL = os.environ.get('GEOKING_WS', 'ws://localhost:8090/ws')
 def expected_damage(rows):
     n = len(rows)
     anyone = any(not r['missing'] for r in rows)
+    best = next((r['world_rank'] for r in rows if r['rank'] == 1), None)   # 1位の国旗の世界順位
     out = {}
     for r in rows:
-        if not anyone or n < 2:
+        if not anyone or n < 2 or r['rank'] == 1:
             out[r['pid']] = 0
         else:
-            out[r['pid']] = min(30, 10 * ((n if r['rank'] is None else r['rank']) - 1))   # データのない国は最下位（n位）と同じ
+            gap = None if r['world_rank'] is None or best is None else r['world_rank'] - best
+            out[r['pid']] = 25 if gap is None or gap > 40 else 10 if gap > 10 else 5   # データのない国は遠いと同じ
     return out
 
 
@@ -50,33 +53,40 @@ def unit_tests():
         r.do_reveal()
         return {x['pid']: x for x in r.reveal['rows']}
 
-    # 4人・面積が大きい国: ロシア > カナダ > 日本 > マルタ → 0, 10, 20, 30
+    # 4人・面積が大きい国: ロシア（世界1位）・カナダ（2位、差1＝惜しい）・エジプト（29位、差28）・日本（61位、差60）→ 0, 5, 10, 25
     r = room_with(4, 'area_max')
     assert all(p.hp == 100 for p in r.players.values())
-    rows = play(r, {'p0': 'ru', 'p1': 'ca', 'p2': 'jp', 'p3': 'mt'})
-    assert [rows[f'p{i}']['damage'] for i in range(4)] == [0, 10, 20, 30], rows
-    assert [r.players[f'p{i}'].hp for i in range(4)] == [100, 90, 80, 70]
-    assert rows['p0']['hp_before'] == 100 and rows['p3']['hp'] == 70 and rows['p0']['winner']
+    rows = play(r, {'p0': 'ru', 'p1': 'ca', 'p2': 'eg', 'p3': 'jp'})
+    assert [rows[f'p{i}']['damage'] for i in range(4)] == [0, 5, 10, 25], rows
+    assert [rows[f'p{i}']['gap'] for i in range(4)] == [0, 1, 28, 60] and [rows[f'p{i}']['close'] for i in range(4)] == [False, True, False, False], rows
+    assert [r.players[f'p{i}'].hp for i in range(4)] == [100, 95, 90, 75]
+    assert rows['p0']['hp_before'] == 100 and rows['p3']['hp'] == 75 and rows['p0']['winner']
     assert r.reveal['alive'] == 4 and r.reveal['last'] is False
     assert all(len(p.hand) == 7 for p in r.players.values())   # 出した分は減る（次のラウンドの前に引く）
     r.next_round()
     assert r.phase == 'pick' and r.round == 2 and all(len(p.hand) == 8 and p.new_card in p.hand for p in r.players.values())
-    # 同じ値は同じ順位・同じだけ減る（ロシアが2人: どちらも0。日本・マルタは 1,1,3,4 の3位と4位）
+    # 同じ値は同じ順位・同じだけ減る（ロシアが2人: どちらも0。日本・マルタは遠いので25）
     rows = play(r, {'p0': 'ru', 'p1': 'ru', 'p2': 'jp', 'p3': 'mt'})
-    assert [rows[f'p{i}']['damage'] for i in range(4)] == [0, 0, 20, 30], rows
+    assert [rows[f'p{i}']['damage'] for i in range(4)] == [0, 0, 25, 25], rows
 
-    # 8人: 順位1つごとに10、いちばん大きくて30 → 0,10,20,30,30,30,30,30
+    # 8人: 順位ではなく1位との差で決まる（メキシコ13位・モンゴル18位・エジプト29位は10、フランス48位・日本61位・マルタ186位は25）
     r = room_with(8, 'area_max')
-    rows = play(r, {'p0': 'ru', 'p1': 'ca', 'p2': 'cn', 'p3': 'br', 'p4': 'au', 'p5': 'in', 'p6': 'ar', 'p7': 'kz'})
-    assert [rows[f'p{i}']['damage'] for i in range(8)] == [0, 10, 20, 30, 30, 30, 30, 30], [rows[f'p{i}']['damage'] for i in range(8)]
+    rows = play(r, {'p0': 'ru', 'p1': 'ca', 'p2': 'mx', 'p3': 'mn', 'p4': 'eg', 'p5': 'fr', 'p6': 'jp', 'p7': 'mt'})
+    assert [rows[f'p{i}']['damage'] for i in range(8)] == [0, 5, 10, 10, 10, 25, 25, 25], [rows[f'p{i}']['damage'] for i in range(8)]
     for row in rows.values():
         assert row['damage'] == expected_damage(r.reveal['rows'])[row['pid']]
 
-    # データのない国（バチカンの GDP）は最下位と同じだけ減る。ほかは順位のとおり
+    # 区切りちょうど: 1位はメキシコ（13位）。マリ23位（差10）は惜しい5、南アフリカ24位（差11）は10、カメルーン53位（差40）は10、パプアニューギニア54位（差41）は25
+    r = room_with(5, 'area_max')
+    rows = play(r, {'p0': 'mx', 'p1': 'ml', 'p2': 'za', 'p3': 'cm', 'p4': 'pg'})
+    assert [rows[f'p{i}']['gap'] for i in range(5)] == [0, 10, 11, 40, 41], rows
+    assert [rows[f'p{i}']['damage'] for i in range(5)] == [0, 5, 10, 10, 25] and rows['p1']['close'] and not rows['p2']['close'], rows
+
+    # データのない国（バチカンの GDP）は遠いと同じ25。日本（GDP 世界4位）は1位のアメリカ（1位）と差3で惜しい5
     r = room_with(3, 'gdp_max')
     rows = play(r, {'p0': 'us', 'p1': 'jp', 'p2': 'va'})
-    assert rows['p2']['missing'] and rows['p2']['damage'] == 20 and rows['p0']['damage'] == 0, rows   # 3人の最下位（3位）と同じ20
-    assert rows['p1']['damage'] == 10, rows   # 2位 → 10
+    assert rows['p2']['missing'] and rows['p2']['damage'] == 25 and rows['p2']['gap'] is None and rows['p0']['damage'] == 0, rows
+    assert rows['p1']['damage'] == 5 and rows['p1']['close'], rows
     # 全員データなし → 誰も減らない
     r = room_with(2, 'gdp_max')
     rows = play(r, {'p0': 'va', 'p1': 'va'})
@@ -86,7 +96,7 @@ def unit_tests():
     r = room_with(3, 'area_max')
     r.players['p2'].hp = 5
     rows = play(r, {'p0': 'ru', 'p1': 'jp', 'p2': 'mt'})
-    assert rows['p2']['out'] and rows['p2']['damage'] == 20 and r.players['p2'].hp == 0 and r.players['p2'].out_round == 1 and r.players['p2'].hand == []
+    assert rows['p2']['out'] and rows['p2']['damage'] == 25 and r.players['p2'].hp == 0 and r.players['p2'].out_round == 1 and r.players['p2'].hand == []
     assert r.reveal['alive'] == 2 and not r.reveal['last']
     r.next_round()
     assert r.phase == 'pick' and r.players['p2'].new_card is None and len(r.players['p2'].hand) == 0
@@ -94,10 +104,10 @@ def unit_tests():
     r.players['p0'].pick = r.players['p0'].hand[0]
     r.players['p1'].pick = r.players['p1'].hand[0]
     assert r.all_picked()   # 脱落した人は待たない
-    # 2人: 負けた方が10
+    # 2人: 負けた方が差に合わせて（マルタは遠いので25）
     r.players['p1'].hp = 10
     rows = play(r, {'p0': 'ru', 'p1': 'mt'})
-    assert set(rows) == {'p0', 'p1'} and rows['p1']['damage'] == 10 and rows['p1']['out'] and r.reveal['last'] is True
+    assert set(rows) == {'p0', 'p1'} and rows['p1']['damage'] == 25 and rows['p1']['out'] and r.reveal['last'] is True
     r.next_round()
     assert r.phase == 'end'
     assert [(e['pid'], e['place']) for e in r.final] == [('p0', 1), ('p1', 2), ('p2', 3)], r.final   # 残った人 → R2で脱落 → R1で脱落
@@ -116,7 +126,7 @@ def unit_tests():
     play(r, {'p0': 'ru', 'p1': 'jp', 'p2': 'mt'})
     r.next_round()
     r.remove_player('p1')
-    assert r.departed['p1']['out_round'] == 2 and r.departed['p1']['hp'] == 90
+    assert r.departed['p1']['out_round'] == 2 and r.departed['p1']['hp'] == 75
     r.players['p2'].hp = 1
     play(r, {'p0': 'ru', 'p2': 'mt'})
     r.next_round()
@@ -131,11 +141,11 @@ def unit_tests():
     d = json.loads(json.dumps(server.room_to_dict(r, time.time())))
     server.rooms.pop('TEST', None)
     r2 = server.room_from_dict(d, time.time(), source='x')
-    assert r2.settings['rule'] == 'survival' and r2.players['p1'].hp == 90 and r2.players['p2'].out_round == 1
+    assert r2.settings['rule'] == 'survival' and r2.players['p1'].hp == 75 and r2.players['p2'].out_round == 1
     assert r2.players['p0'].new_card == r.players['p0'].new_card and r2.players['p0'].new_card in r2.players['p0'].hand
     d['settings'].pop('rule')   # 前の版のサーバー（ルールの項目がない）からの部屋は、点のルール
     assert server.room_from_dict(d, time.time(), source='y').settings['rule'] == 'points'
-    print('OK unit: damage 0/10/20/30 (+10 per rank, max 30), ties, 8 players, missing data, all missing, knockout, 2 players, standings, round cap, leaver, migration')
+    print('OK unit: damage by the gap to 1st (close 5 / mid 10 / far 25, boundaries 10・11・40・41), ties, 8 players, missing data, all missing, knockout, 2 players, standings, round cap, leaver, migration')
 
 
 # ---------- 2. 部屋で遊ぶ
@@ -222,9 +232,9 @@ async def two_players(s):
     rv = await recv_state(a, lambda d: d['phase'] == 'reveal')
     rows = rv['reveal']['rows']
     dmg = sorted(x['damage'] for x in rows)
-    assert dmg in ([0, 10], [0, 0]), rows   # 負けた方が10（同じ値なら0と0）
+    assert dmg in ([0, 5], [0, 10], [0, 25], [0, 0]) and [x['damage'] for x in rows] == [expected_damage(rows)[x['pid']] for x in rows], rows   # 負けた方が差に合わせて（同じ値なら0と0）
     await a.close()
-    print('OK two players: loser -10')
+    print(f'OK two players: loser -{dmg[1]} (by the gap to 1st)')
 
 
 async def last_one_by_leaving(s):

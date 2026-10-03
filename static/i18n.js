@@ -76,7 +76,7 @@ const I18N = {
     ask_leave_ok: '退出する', ask_lobby_ok: 'ロビーに戻る', ask_quit_ok: 'やめる', ask_cancel: 'キャンセル', ask_continue: '続ける',
     // サバイバル（体力を減らし合う試作のルール。survival.js）
     sv_start: 'バトル開始', sv_start_bot: 'botとバトル開始', sv_hp: '体力', sv_alive: 'のこり{n}人',
-    sv_out: '脱落', sv_out_round: '{n}ラウンドで脱落',
+    sv_out: '脱落', sv_close: '惜しい！', sv_out_round: '{n}ラウンドで脱落',
     sv_next_label: '次のラウンド', sv_knocked: '{names} が脱落！', sv_decided: '決着！ {name} が最後の1人', sv_time_up: '時間切れ！ 体力の多い人の勝ち',
     sv_champion: '最後まで残った {names} が地理王！',
     sv_you_out_title: '脱落しました', sv_you_out_note: '最後まで観戦できます。みんなの手札で、誰がどの国旗を選んでいるかが見えます。',
@@ -155,7 +155,7 @@ const I18N = {
     review_wrong: 'Countries you missed', replay_same: 'Same questions again', play_again: 'New questions', choose_mode: 'Choose mode', confirm_quit: 'Quit the quiz and go back to mode select?',
     ask_leave_ok: 'Leave', ask_lobby_ok: 'Go to lobby', ask_quit_ok: 'Quit', ask_cancel: 'Cancel', ask_continue: 'Keep playing',
     sv_start: 'Start battle', sv_start_bot: 'Start battle with a bot', sv_hp: 'HP', sv_alive: '{n} left',
-    sv_out: 'OUT', sv_out_round: 'Out in round {n}',
+    sv_out: 'OUT', sv_close: 'So close!', sv_out_round: 'Out in round {n}',
     sv_next_label: 'next round', sv_knocked: 'Out: {names}', sv_decided: 'Game over! {name} is the last one standing', sv_time_up: "Time's up! Most HP wins",
     sv_champion: '{names} survived — the GeoKing!',
     sv_you_out_title: "You're out", sv_you_out_note: 'Keep watching to the end. You can see which flag each player is choosing.',

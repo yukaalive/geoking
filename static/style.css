@@ -630,6 +630,9 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .sv-pop b{position:relative;font-family:var(--font-head);font-weight:400;font-size:var(--fs);line-height:1;white-space:nowrap;color:var(--nc);
   text-shadow:3px 3px 0 #1c2b22,-2px -2px 0 #1c2b22,2px -2px 0 #1c2b22,-2px 2px 0 #1c2b22,2px 2px 0 #1c2b22}
 .sv-pop.small{--fs:30px;--b1:#ffd25e;--b2:#fff1b8;--nc:#ff6a2a}
+.sv-pop .sv-popclose{position:absolute;left:50%;top:0;transform:translate(-50%,-85%);padding:1px 10px;border:2px solid #1c2b22;border-radius:999px;background:#fffdf6;color:#1c2b22;font-family:var(--font-body);font-size:14px;font-style:normal;font-weight:900;line-height:1.4;white-space:nowrap}   /* 惜しいとき: 吹き出しの上に「惜しい！」 */
+.sv-close{position:absolute;left:4px;top:4px;z-index:3;padding:1px 8px;border:2px solid #1c2b22;border-radius:999px;background:#ffd25e;color:#1c2b22;font-size:11px;font-weight:900;line-height:1.4;white-space:nowrap;pointer-events:none;visibility:hidden}   /* 惜しくて少ししか減らなかったカード: 国旗の左上に残る札（当たった瞬間に出る） */
+.sv-close.show{visibility:visible;animation:svPopIn .45s cubic-bezier(.2,1.6,.4,1) both}
 .sv-pop.mid{--fs:38px;--b1:#ff9a3d;--b2:#ffd25e;--nc:#ff3d1f}
 .sv-pop.big{--fs:min(50px,14vw);--b1:#ff3d1f;--b2:#ffe066;--nc:#fff}
 .sv-chunk{position:absolute;left:0;top:0;z-index:5;border:2px solid #1c2b22;border-radius:4px;pointer-events:none}   /* 体力ゲージから割れて落ちるかけら */
@@ -663,7 +666,7 @@ button.askok.danger-fill{background:#b8391a;color:#fff}
 .history .sv-hdmg.safe{color:var(--primary)}
 .history .sv-hdmg .tag{margin-left:0}
 @media (prefers-reduced-motion:reduce){
-  .rev.sv-hit,.rev.sv-hit.sv-big,.rev.cheer .sv-flag,.rev.cheer .sv-flag::before,.rev.sv-hit .sv-flag::after,.rev.sv-ko .sv-stamp,.sv-hp.low .sv-fill,.flagcard.sv-new::after,.flagcard.sv-new .fimg::after,.rev .sv-dmgline.show,
+  .rev.sv-hit,.rev.sv-hit.sv-big,.rev.cheer .sv-flag,.rev.cheer .sv-flag::before,.rev.sv-hit .sv-flag::after,.rev.sv-ko .sv-stamp,.sv-hp.low .sv-fill,.flagcard.sv-new::after,.flagcard.sv-new .fimg::after,.rev .sv-dmgline.show,.sv-close.show,
   .rev.sv-charge .sv-flag,#revealRows.sv-quake,.sv-hp.sv-jolt{animation:none}
   .sv-pop,.sv-flash{display:none}
 }

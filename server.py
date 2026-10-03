@@ -30,16 +30,20 @@ BOT_NAMES_EN = ['Emily', 'Michael', 'Olivia', 'James', 'Sophia', 'Noah', 'Emma',
 
 # ---------- バトル（画面の名前。中の名前は survival。体力を減らし合う）。ロビーの「部屋の設定」の「ゲーム」でホストが選ぶ（2026-10-03 からバトルが最初）
 # 部屋の settings['rule'] が 'survival' のとき、点のかわりに体力（SURV_HP）を減らし合う。お題に合う国旗を全員が同時に1枚出すのは同じ。
-# めくったあと、1位は減らず、順位が1つ下がるごとに SURV_STEP ずつ多く減る（いちばん大きくて SURV_MAX_DAMAGE。4人なら 0・10・20・30、2人なら 0・10、6人なら 0・10・20・30・30・30）。
-# データのない国は最下位と同じ。体力0で脱落（そのゲームは観戦）。最後の1人が勝ち。毎ラウンド1枚引くので手札は減らない。
-# 長引いたときは SURV_MAX_ROUNDS で打ち切り、体力の多い人が勝ち（ふつう 2人で17・3人で12・4人で10・8人で7ラウンドほど。2人でも19ラウンドまでに終わる）。
+# めくったあと、1位は減らず、ほかの人は「1位の国旗との差」で3段階に減る（2026-10-03 ユーザーが選んだ案C「惜しい時はあまり体力が減らない」）。
+# 差は世界順位の差（どのお題でも同じものさしで測れ、カードの「世界〇位」どうしを見れば分かる）。SURV_CLOSE 以内は「惜しい！」で SURV_DMG_CLOSE、
+# SURV_MID 以内は SURV_DMG_MID、それより遠い・データのない国は SURV_DMG_FAR。何人でも、だいたい10ラウンドで決まる（本物の国のデータで試合を数千回ずつ試した。
+# 前の「順位が1つ下がるごとに10、いちばん大きくて30」では2人で17ラウンドかかり、1割は打ち切りまで続いていた）。
+# 体力0で脱落（そのゲームは観戦）。最後の1人が勝ち。毎ラウンド1枚引くので手札は減らない。
+# 長引いたときは SURV_MAX_ROUNDS で打ち切り、体力の多い人が勝ち（2026-10-03 の減り方では、2〜4人でふつう10ラウンドほど・9割は13ラウンドまでに終わり、打ち切りはほぼない）。
 # 2026-09-28: 体力 20・最下位 6 から、体力 100・最下位 30 に（ゲームの長さは同じ。数字が大きいほうが「ダメージ」らしい）
 # 2026-09-28: 最下位はいつも30（あいだは順位に合わせて）から、順位1つごとに10（案A）に。脱落して2人になると負けた方が毎回30減り、すぐ終わっていた
 # 新しい部屋はバトル（'survival'）から始まる（2026-10-03 からユーザーの指定で。それまではパーティーから）。ロビーの「ゲーム」でホストが変えられる
 RULES = ('points', 'survival')
 SURV_HP = 100
-SURV_STEP = 10         # 順位が1つ下がるごとに多く減る体力
-SURV_MAX_DAMAGE = 30   # いちばん大きく減る体力
+SURV_CLOSE, SURV_MID = 10, 40   # 1位との差（世界順位の差）の区切り。SURV_CLOSE 以内が「惜しい」
+SURV_DMG_CLOSE, SURV_DMG_MID, SURV_DMG_FAR = 5, 10, 25   # 減る体力（惜しい・ふつう・遠い）
+SURV_MAX_DAMAGE = SURV_DMG_FAR   # いちばん大きく減る体力
 SURV_MAX_ROUNDS = 20
 TEST_SERVER = os.environ.get('GEOKING_RULE') == 'survival'   # 試作用のサーバー。検索エンジンには載せない（security_headers・robots.txt）
 
@@ -421,15 +425,19 @@ class Room:
             r['rank'] = rank
         surv = self.survival()
         anyone = any(not r['missing'] for r in rows)
+        best_wr = next((r['world_rank'] for r in rows if r.get('rank') == 1), None)   # 1位の国旗の世界順位（同じ値の1位が何人いても同じ）
         for r in rows:
             r.setdefault('rank', None)
             r['winner'] = r['rank'] == 1
             p = self.players[r['pid']]
-            if surv:   # サバイバル: 1位は減らず、順位が1つ下がるごとに SURV_STEP ずつ多く（いちばん大きくて SURV_MAX_DAMAGE）。データのない国は最下位（n位）と同じ。全員データなしなら誰も減らない
-                if not anyone or n < 2:
-                    dmg = 0
+            if surv:   # バトル: 1位は減らない。ほかの人は1位の国旗との世界順位の差で3段階（惜しい・ふつう・遠い）。データのない国は遠いと同じ。全員データなしなら誰も減らない
+                gap = None if r['world_rank'] is None or best_wr is None else r['world_rank'] - best_wr
+                if not anyone or n < 2 or r['rank'] == 1:
+                    dmg, tier = 0, None
                 else:
-                    dmg = min(SURV_MAX_DAMAGE, SURV_STEP * ((n if r['rank'] is None else r['rank']) - 1))
+                    tier = 'far' if gap is None or gap > SURV_MID else 'mid' if gap > SURV_CLOSE else 'close'
+                    dmg = {'close': SURV_DMG_CLOSE, 'mid': SURV_DMG_MID, 'far': SURV_DMG_FAR}[tier]
+                r['gap'], r['close'] = gap, tier == 'close'   # 画面: 惜しいときは「惜しい！」の札
                 r['points'], r['damage'], r['hp_before'] = None, dmg, p.hp or 0
                 p.hp = max(0, (p.hp or 0) - dmg)
                 r['hp'], r['out'] = p.hp, p.hp == 0

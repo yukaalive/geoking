@@ -4,7 +4,7 @@
    幅 320/375/414px の枠の中でそれぞれ部屋を作り、ボット3体と最後まで遊ぶ（3つの枠は同時に進む）。ラウンドごとに日本語と英語を入れ替える。
    - 選ぶ画面・答え合わせ（演出の途中も 0.25 秒ごと）・結果発表で、ページが枠の幅より広くならないか（後光・弾・火花・ダメージの数字・揺れ・紙吹雪ではみ出さないか）
    - 体力ゲージ: 上の自分の体力・スコアの欄・答え合わせのカードの数字が、演出のあとサーバーの体力と同じか
-   - 答え合わせ: 減った人のカードにサーバーの減った体力「−N」、1位（減らなかった人）のカードには出さない。脱落した人のカードにハンコ
+   - 答え合わせ: 減った人のカードにサーバーの減った体力「−N」、1位（減らなかった人）のカードには出さない。惜しい（1位との差が小さい）カードにだけ「惜しい！」の札。脱落した人のカードにハンコ
    - 結果発表: 最後まで残った人が1位で体力つき、ほかは「Nラウンドで脱落」 */
 (async () => {
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -37,7 +37,7 @@
     for (let i = 0; i < 3; i++) { w.send({ type: 'add_bot' }); await sleep(250); }
     await sleep(400); over('ロビー');
     w.send({ type: 'start' });
-    let last = 0, rounds = 0, kos = 0;
+    let last = 0, rounds = 0, kos = 0, closes = 0;
     const t0 = Date.now();
     while (Date.now() - t0 < 240000 && st() && st().phase !== 'end') {
       const s = st();
@@ -64,6 +64,9 @@
         const dl = c.querySelector('.sv-dmgline');
         const safe = row.winner || !row.damage;
         if (safe ? !!dl : (!dl || !dl.classList.contains('show') || dl.textContent !== '−' + row.damage)) ng.push(`${tag('答え合わせ')} ${row.name}: 減った体力の表示「${dl ? dl.textContent : 'なし'}」（サーバーは ${row.damage}${row.winner ? '・1位' : ''}）`);
+        const cl = c.querySelector('.sv-close');   // 惜しい（1位との差が小さくて少しだけ減った）カードにだけ「惜しい！」の札
+        if (row.close && !row.winner && row.damage ? (!cl || !cl.classList.contains('show')) : !!cl) ng.push(`${tag('答え合わせ')} ${row.name}: 「惜しい」の札が${cl ? 'ある' : 'ない'}（サーバーは close=${row.close}・差 ${row.gap}・−${row.damage}）`);
+        if (row.close) closes++;
         if (row.out) { kos++; if (!c.classList.contains('sv-ko')) ng.push(`${tag('答え合わせ')} ${row.name}: 脱落のハンコがない`); }
         else if (c.classList.contains('sv-ko')) ng.push(`${tag('答え合わせ')} ${row.name}: 脱落していないのにハンコ`);
       });
@@ -85,9 +88,9 @@
       w.setLang('ja');
     }
     w.send({ type: 'leave' }); await sleep(400); fr.remove();
-    return { W, rounds, kos, ng };
+    return { W, rounds, kos, closes, ng };
   };
   const res = await Promise.all(WIDTHS.map(run));
   const bad = res.flatMap(r => r.ng.map(x => `${r.W}px ${x}`));
-  return (bad.length ? 'NG\n' + bad.slice(0, 40).join('\n') : 'ALL OK') + '\n' + res.map(r => `${r.W}px: ${r.rounds} ラウンド・脱落 ${r.kos} 回`).join(' ／ ');
+  return (bad.length ? 'NG\n' + bad.slice(0, 40).join('\n') : 'ALL OK') + '\n' + res.map(r => `${r.W}px: ${r.rounds} ラウンド・脱落 ${r.kos} 回・惜しい ${r.closes} 回`).join(' ／ ');
 })();
