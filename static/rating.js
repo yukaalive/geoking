@@ -92,7 +92,7 @@ const RATE = (() => {
     }
     html += '<ol class="rk-list">' + (d.top.length ? d.top.map(rowHtml).join('') : `<li class="rk-empty muted">${t('r_empty')}</li>`);
     if (me && me.rank && !d.top.some((x) => x.me)) html += `<li class="rk-gap" aria-hidden="true">…</li>` + rowHtml({ rank: me.rank, name: null, rate: me.rate, me: true });
-    html += '</ol>' + `<p class="muted small rk-rule">${t('r_rule', { n: d.need_games })}</p>`;
+    html += '</ol>';   // 順位の下の説明文は出さない（2026-10-03 ユーザーの指定「順位の下の説明文は不要です」）
     $('#modalBody').innerHTML = html;
     const hide = $('#rkHide');
     if (hide) hide.onchange = async () => {

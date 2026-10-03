@@ -711,7 +711,6 @@ label.rk-hide{display:flex;align-items:center;gap:6px;margin:6px 0 0;font-size:1
 .rk-row.me{background:var(--bg);box-shadow:inset 4px 0 0 var(--accent)}
 .rk-gap{text-align:center;color:var(--muted);padding:2px}
 .rk-empty{padding:12px 4px}
-.rk-rule{margin:10px 0 0}
 /* 結果発表（バトル）: 名前の下にレートの前と後、上に「あなたのレート」 */
 .final .nm .sv-rate{display:block;margin-top:2px;font-family:var(--font-body);font-size:13px;font-weight:700;letter-spacing:0;color:var(--muted)}
 .final .nm .sv-rate b{color:var(--ink);font-weight:900;font-variant-numeric:tabular-nums}
