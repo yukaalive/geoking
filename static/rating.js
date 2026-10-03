@@ -46,7 +46,7 @@ const RATE = (() => {
     + `${chip(x.rate)}<span class="rk-rate">${fmt(x.rate)}</span></li>`;
 
   // ---------- ホーム: 名前の欄の下の「あなたのバトルのレート」（一度でもバトルした端末だけ。押すと全国ランキング）と、
-  // 公開中の部屋の上の「全国ランキング」の枠（上位5人。だれでも見える。「すべて見る」で小窓）。開いたとき・部屋から戻ったとき・1分ごとに読み直す
+  // 公開中の部屋の上の「バトルランキング」の枠（3位まで。だれでも見える。「すべて見る」で小窓）。開いたとき・部屋から戻ったとき・1分ごとに読み直す
   let home = null;
   async function refreshHome() {
     if (!$('#rankCard')) return;
@@ -65,7 +65,7 @@ const RATE = (() => {
       card.classList.remove('hidden');
     }
     if (!home) { rank.classList.add('hidden'); return; }   // 読めなかったときは出さない（公開中の部屋の邪魔をしない）
-    const top = home.top.slice(0, 5);
+    const top = home.top.filter((x) => x.rank <= 3).slice(0, 10);   // 3位まで（同じ順位の人はみんな。多すぎるときは10人まで）。4位からは「すべて見る」の小窓で（2026-10-03 ユーザーの指定）
     $('#homeRankList').innerHTML = top.length ? top.map(rowHtml).join('') : `<li class="rk-empty muted">${t('r_empty')}<small>${escapeHtml(t('r_rule', { n: home.need_games }))}</small></li>`;
     $('#rankCard .rk-more').classList.toggle('hidden', !top.length);
     rank.classList.remove('hidden');

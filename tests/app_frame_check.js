@@ -46,8 +46,8 @@
   for (const lang of ['ja', 'en']) {
     setLang(lang); await sleep(200);
     for (const [name, sel, path, hasContent] of [
-      ['「図鑑で学ぶ」で開く', 'a.zukanlink[href="/static/zukan.html"]', '/static/zukan.html', (d) => d.querySelectorAll('img').length > 100],
-      ['「ひとりでクイズ」で開く', 'a.zukanlink[href="/static/quiz.html"]', '/static/quiz.html', (d) => d.querySelectorAll('.qmode').length === 3],   // 国旗・国名・首都モード
+      ['「図鑑」で開く', 'a.zukanlink[href="/static/zukan.html"]', '/static/zukan.html', (d) => d.querySelectorAll('img').length > 100],
+      ['「クイズ」で開く', 'a.zukanlink[href="/static/quiz.html"]', '/static/quiz.html', (d) => d.querySelectorAll('.qmode').length === 3],   // 国旗・国名・首都モード
     ]) {
       const label = `ホーム（${lang}）${name}`;
       try {

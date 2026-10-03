@@ -6,7 +6,7 @@
 const I18N = {
   ja: {
     app_title: '地理王｜国旗で対戦する地理カードゲーム', your_name: 'あなたの名前（必須）', name_ph: 'ニックネームを入力',
-    create_room: '部屋を作る', code_ph: '友だちの部屋の名前', join: '参加する', enter_room_name: '部屋の名前を入力してください', learn_zukan: '図鑑で学ぶ', public_rooms: '公開中の部屋', refresh: '更新',
+    create_room: '部屋を作る', code_ph: '友だちの部屋の名前', join: '参加する', enter_room_name: '部屋の名前を入力してください', learn_zukan: '図鑑', public_rooms: '公開中の部屋', refresh: '更新',
     loading: '読み込み中…',
     c_br: 'ブラジル', c_jp: '日本', c_mn: 'モンゴル', c_mt: 'マルタ',
     v_br: '851万km²', v_jp: '37.8万km²', v_mn: '156万km²', v_mt: '316km²',
@@ -67,7 +67,7 @@ const I18N = {
     rank_info: '{prompt}　{dir}並べています。{missing}{region}', dir_desc: '大きい方から', dir_asc: '小さい方から', excluded_missing: 'データなし {n} か国は除外。', only_region: '（{r}のみ）',
     zukan_title: '図鑑 - 地理王',
     // クイズ
-    quiz: 'クイズ', quiz_title: 'クイズ - 地理王', quiz_heading: 'ひとりでクイズ', solo_quiz: 'ひとりでクイズ',
+    quiz: 'クイズ', quiz_title: 'クイズ - 地理王', quiz_heading: 'ひとりでクイズ', solo_quiz: 'クイズ',
     mode_flag: '国旗モード', mode_flag_desc: '国名を見て、正しい国旗を4枚から選ぶ', mode_name: '国名モード', mode_name_desc: '国旗を見て、正しい国名を4つから選ぶ', mode_capital: '首都モード', mode_capital_desc: '国を見て、正しい首都を4つから選ぶ', level_normal: 'ふつう', level_hard: '激ムズ',
     learn_first: '先に図鑑で覚える', question: '問題', quit: 'やめる', which_flag: 'この国の国旗は？', which_name: 'この国旗の国は？', which_capital: 'この国の首都は？',
     correct: '正解！', wrong_answer: 'ざんねん… 正解は {name}', res_perfect: '全問正解！地理王！', res_great: 'すごい！', res_good: 'いいね！', res_tryagain: 'もう一度チャレンジ！',

@@ -109,8 +109,8 @@ How to test alone (1-2 minutes):
 To stop early, tap 「退出」 (Leave) at the top left. The host can also tap 「ロビーへ」 (Lobby) to stop the game and return to the lobby (scores are reset). Both buttons ask for confirmation.
 
 Single-player features on the home screen:
-- 「図鑑で学ぶ」 (Study mode): all 197 flags with search, rankings for each prompt, and a country sheet with data, world rank and a world map. Tap 「対戦へ戻る」 (Back to game) to return.
-- 「ひとりでクイズ」 (Solo quiz): 10 questions with 4 choices each (Flag mode / Name mode / Capital mode, each Normal or Hard).
+- 「図鑑」 (Study mode): all 197 flags with search, rankings for each prompt, and a country sheet with data, world rank and a world map. Tap 「対戦へ戻る」 (Back to game) to return.
+- 「クイズ」 (Solo quiz): 10 questions with 4 choices each (Flag mode / Name mode / Capital mode, each Normal or Hard).
 
 Playing with others (optional): in the lobby, tap the share icon at the top right to send an invite link with the iOS share sheet. On a second device, either open the link (it opens in Safari; enter a nickname and tap 「参加する」 (Join)), or in the app enter a nickname, type the room name shown in bold in the lobby into 「友だちの部屋の名前」 (Friend's room name) on the home screen, and tap 「参加する」 (Join). The shared message also shows a 4-letter room code; typing that code instead of the room name also works.
 
