@@ -141,7 +141,7 @@ def sheet_log(event, room=None, name='', detail='', kind='room'):
                        'count': len(room.players) if room else '', 'detail': str(detail or '')[:300]})
 
 
-async def sheet_flush(session, timeout=15):
+async def sheet_flush(session, timeout=30):   # Apps Script の返事は2〜17秒ほどでばらつく（2026-10-04 に測った）ので長めに
     """ためた行を送る。送れたら True。送れなかった分は次の回に同じ中身・同じ id で送り直す"""
     global sheet_fail_count, sheet_pending
     from aiohttp import ClientTimeout
@@ -180,7 +180,10 @@ async def sheet_flush(session, timeout=15):
 RATING_SYNC_BATCH = 500   # 1回に送るレートの行の上限
 
 
-async def rating_load(session, timeout=15):
+RATING_LOAD_RETRY = float(os.environ.get('RATING_LOAD_RETRY', '15'))   # 秒。起動時にレートを読めなかったら、この間をあけて読み直す（失敗が続くと倍ずつ、いちばん長くて5分）
+
+
+async def rating_load(session, timeout=30):
     """起動したとき: スプレッドシートの「レート」のシートを読む（試合数の多い方を残す。端末の控えから先に戻った人はそのまま）"""
     from aiohttp import ClientTimeout
     try:
@@ -199,20 +202,22 @@ async def rating_load(session, timeout=15):
     return False
 
 
-async def rating_flush(session, timeout=15):
+async def rating_flush(session, timeout=30):
     """変わったレートをスプレッドシートへ送る（同じ番号の行は上書き。スプレッドシート側は試合数が減る書き込みは受けない）。
     送れなかった分は次の回に。送っている間にまた変わった番号は、次の回にもう一度送る"""
     from aiohttp import ClientTimeout
     while RT.DIRTY:
         rows = RT.export_rows(list(RT.DIRTY)[:RATING_SYNC_BATCH])
+        why = ''
         try:
             async with session.post(SHEET_LOG_URL, json={'key': SHEET_LOG_KEY, 'action': 'ratings_put', 'rows': rows}, timeout=ClientTimeout(total=timeout)) as r:
                 body = await r.text()
             ok = r.status == 200 and json.loads(body).get('ok') is True
-        except Exception:
-            ok = False
+            why = '' if ok else f'status {r.status} {body[:120]}'
+        except Exception as e:
+            ok, why = False, repr(e)
         if not ok:
-            log.warning('ratings: could not send %d row(s) to the sheet (retry later)', len(rows))
+            log.warning('ratings: could not send %d row(s) to the sheet (%s; retry later)', len(rows), why)   # なぜ送れなかったかも残す（時間切れ・合言葉違いなど）
             return False
         for row in rows:
             rec = RT.RATINGS.get(row['rid'])
@@ -229,23 +234,35 @@ async def sheet_log_ctx(app):
     from aiohttp import ClientSession
     session = app['sheet_session'] = ClientSession()
     log.info('sheet log: on (every %.0fs)', SHEET_LOG_EVERY)
-    load = asyncio.create_task(rating_load(session))   # 起動を待たせない（読み終わる前につないだ人は、端末の控えから戻る）
+    tried = asyncio.Event()   # 起動時のレートの読み込みを1回試した（読めたかどうかは問わない）
+
+    async def load_until_ok():   # 起動を待たせない（読み終わる前につないだ人は、端末の控えから戻る）。読めなかったら読めるまで読み直す
+        wait = RATING_LOAD_RETRY   # 2026-10-04: 起動直後の読み込みが時間切れになり、そのまま読み直していなかった（眠りから起きたときだと、ランキングが次の起動まで欠ける）
+        while True:
+            ok = await rating_load(session)
+            tried.set()
+            if ok:
+                return
+            await asyncio.sleep(wait)
+            wait = min(wait * 2, 300)
+    load = asyncio.create_task(load_until_ok())
 
     async def _run():
         while True:
             await asyncio.sleep(SHEET_LOG_EVERY)
             try:
                 await sheet_flush(session)
-                if load.done():   # 読み終わってから送る（スプレッドシートのレートを読む前に、起動直後の空の記録を送らない）
+                if tried.is_set():   # 1回読みにいってから送る（読めなかったときも送ってよい。シート側は試合数が減る古い書き込みを受けないので、新しい行を消さない）
                     await rating_flush(session)
             except Exception:   # 見張りが止まらないように
                 log.exception('sheet log: flush error')
     task = asyncio.create_task(_run())
     yield
     task.cancel()
+    load.cancel()
     try:
         await sheet_flush(session, timeout=5)   # 止める前に残りを送る
-        if load.done():
+        if tried.is_set():
             await rating_flush(session, timeout=5)
     except Exception:
         pass

@@ -11,11 +11,11 @@ import aiohttp
 from aiohttp import web
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-FAKE, SERVER, SERVER2, SERVER3 = 18841, 18842, 18843, 18844
+FAKE, SERVER, SERVER2, SERVER3, SERVER4 = 18841, 18842, 18843, 18844, 18845
 sys.path.insert(0, ROOT)
 import rating   # レートの番号（合言葉 → 番号）を同じ計算で作る
 rates = {}          # 作り物の「レート」のシート: 番号 -> 行
-rate_posts = {'get': 0, 'put': 0}
+rate_posts = {'get': 0, 'put': 0, 'fail_get': 0}   # fail_get: 次の何回かの読み込みをわざと失敗させる（起動直後に読めなかったときの読み直し）
 KEY = 'test-sheet-key'
 ADMIN = 'test-admin-key'
 got = []            # 届いた行
@@ -30,6 +30,9 @@ async def fake_exec(request):   # 本物の Apps Script（…/exec）と同じ�
             return web.json_response({'ok': False, 'error': 'bad key'})
         if body['action'] == 'ratings_get':
             rate_posts['get'] += 1
+            if rate_posts['fail_get'] > 0:
+                rate_posts['fail_get'] -= 1
+                return web.Response(status=500, text='temporary error')
             return web.json_response({'ok': True, 'rows': list(rates.values())})
         rate_posts['put'] += 1
         for row in body.get('rows') or []:
@@ -60,8 +63,8 @@ async def fake_echo(request):
     return web.json_response({'ok': request.query.get('ok') == '1'})
 
 
-def start_server(port, every):
-    env = {**os.environ, 'PORT': str(port), 'SHEET_LOG_URL': f'http://127.0.0.1:{FAKE}/exec', 'SHEET_LOG_KEY': KEY, 'SHEET_LOG_EVERY': str(every), 'ADMIN_KEY': ADMIN}
+def start_server(port, every, extra=None):
+    env = {**os.environ, 'PORT': str(port), 'SHEET_LOG_URL': f'http://127.0.0.1:{FAKE}/exec', 'SHEET_LOG_KEY': KEY, 'SHEET_LOG_EVERY': str(every), 'ADMIN_KEY': ADMIN, **(extra or {})}
     env.pop('MIGRATE_KEY', None)
     return subprocess.Popen([sys.executable, 'server.py'], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -263,6 +266,21 @@ async def main():
             assert len(rates[ra]['rid']) == 20 and ka not in json.dumps(rates), '合言葉そのものを送っている'
             await a.close(); await b.close()
         print('OK: レート: バトルのあと、変わった人の行（番号・名前・レート・試合数）を送る。合言葉そのものは送らない')
+
+        # 起動直後にレートを読めなかった（時間切れなど）: 読めるまで読み直し、読めたらランキングに出る（2026-10-04 の本番のログ）
+        gets = rate_posts['get']
+        rate_posts['fail_get'] = 2
+        p4 = start_server(SERVER4, 1, {'RATING_LOAD_RETRY': '0.5'}); procs.append(p4); await wait_up(SERVER4)
+        async with aiohttp.ClientSession() as s:
+            top = []
+            for _ in range(80):
+                async with s.post(f'http://127.0.0.1:{SERVER4}/api/ranking', json={}) as r:
+                    top = (await r.json())['top']
+                if any(x['name'] == 'よしお' for x in top):
+                    break
+                await asyncio.sleep(0.1)
+            assert any(x['name'] == 'よしお' and x['rate'] == 1234 for x in top) and rate_posts['get'] - gets == 3, (top, rate_posts)
+        print('OK: レート: 起動直後に読めなくても、読めるまで読み直す（2回失敗 → 3回目で読めてランキングに出る）')
     finally:
         for pr in procs:
             if pr.poll() is None:
