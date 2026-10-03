@@ -1670,8 +1670,9 @@ async def admin_visits(request):
     body = ''.join(
         f"<tr><td>{datetime.fromtimestamp(v['start'], jst).strftime('%m/%d %H:%M')}</td><td>{screen(v)}</td><td>{html.escape(v['name'])}</td><td>{fmt(v['sec'])}</td><td>{v['state']}</td></tr>"
         for v in rows)
-    page = f"""<!DOCTYPE html><html lang=ja><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content=noindex><title>利用ログ - 地理王</title>
-<style>body{{font-family:system-ui,sans-serif;margin:16px;background:#f7f1df;color:#1c2b22}}table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{border-bottom:1px solid #ccc;padding:6px 8px;text-align:left;white-space:nowrap}}th{{background:#1f6f4a;color:#fff}}</style></head>
+    page = f"""<!DOCTYPE html><html lang=ja><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content=noindex><meta name=color-scheme content="light dark"><title>利用ログ - 地理王</title>
+<style>body{{font-family:system-ui,sans-serif;margin:16px;background:#f7f1df;color:#1c2b22}}table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{border-bottom:1px solid #ccc;padding:6px 8px;text-align:left;white-space:nowrap}}th{{background:#1f6f4a;color:#fff}}
+@media (prefers-color-scheme:dark){{body{{background:#182420;color:#f3eedc}}td,th{{border-bottom-color:#3a4a41}}th{{background:#2d6b4d}}}}</style></head>
 <body><h1>利用ログ（直近・サーバー起動後）</h1>
 <table><tr><th>開始（日本時間）</th><th>画面</th><th>名前</th><th>滞在</th><th>状態</th></tr>{body}</table></body></html>"""
     return web.Response(text=page, content_type='text/html', headers={'Cache-Control': 'no-store'})
