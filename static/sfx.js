@@ -81,6 +81,14 @@ const sfx = (() => {
     },
     ko()      { noise(0, .55, .2, 900, .6, 110); tone('sawtooth', 320, 0, .55, .09, 55); tone('square', 110, .08, .4, .06, 50); }, // 脱落（ハンコ）
     shatter() { this.ko(); const o = bus(); for (let i = 0; i < 9; i++) noise(.05 + i * .035 + Math.random() * .02, .06, .14, 4000 + Math.random() * 6000, 6, null, o); }, // 脱落（ハンコ＋国旗が砕ける）
+    // ---- バトルのレート（結果発表の「あなたのレート」。rating.js の案B「レベルアップ」）
+    ratePip(i = 0) { tone('square', 520 + Math.min(i, 30) * 26, 0, .035, .045, null, bus()); },   // 数字が1つ上がるごと（だんだん高く）
+    rateDownPip(i = 0) { tone('square', 520 - Math.min(i, 20) * 14, 0, .035, .04, null, bus()); },   // 数字が1つ下がるごと（だんだん低く）
+    rateCoin() { const o = bus(); tone('triangle', 1318, 0, .08, .14, null, o); tone('triangle', 1976, .07, .18, .12, null, o); },   // 「+24」が出る
+    rateBurst() { const o = bus(); noise(0, .25, .12, 5000, .9, 1200, o); tone('triangle', 988, 0, .1, .12, 1976, o); },   // ゲージがあふれる
+    rateSlam() { const o = bus(); tone('sine', 110, 0, .45, .35, 40, o); noise(0, .3, .2, 900, .7, 120, o); vibrate([60, 40, 120]); },   // 「昇格！」が落ちてくる
+    rateRise() { const o = bus(); [523, 659, 784, 1047, 1319].forEach((f, i) => tone('triangle', f, i * .07, .2, .11, null, o)); },   // 全国の順位が上がる
+    rateDown() { const o = bus(); tone('sine', 440, 0, .4, .1, 240, o); tone('triangle', 330, .12, .45, .07, 190, o); vibrate(40); },   // レートが下がった
   };
 })();
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });   // 最初のタップで音を許可

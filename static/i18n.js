@@ -88,6 +88,7 @@ const I18N = {
     r_rule: '人と{n}回バトルすると載ります。ボット戦で上がるのは 1,200 まで', r_fail: 'ランキングを読めませんでした', r_rate: 'レート',
     r_my_short: 'あなたのレート', r_rank_move: '全国 {from} 位 → {to} 位', r_rank_new: '全国 {to} 位に登場', r_promo: '{title}に昇格！', r_first: 'はじめてのレート',
     r_capped: 'ボット戦で上がるのは 1,200 まで',
+    r_all: 'すべて見る', r_stamp: '昇格！', r_ladder_me: 'あなた', r_lad: '{rank} 位',
   },
   en: {
     app_title: 'GeoKing | Flag card geography party game', tagline: 'Guess the country from its flag!', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -165,6 +166,7 @@ const I18N = {
     r_rule: 'Ranked after {n} battles with people. Bot games raise you up to 1,200', r_fail: "Couldn't load the ranking", r_rate: 'Rating',
     r_my_short: 'Your rating', r_rank_move: 'No. {from} → No. {to}', r_rank_new: 'New in the ranking: No. {to}', r_promo: 'Promoted to {title}!', r_first: 'Your first rating',
     r_capped: 'Bot games raise you up to 1,200',
+    r_all: 'See all', r_stamp: 'Promoted!', r_ladder_me: 'You', r_lad: 'No. {rank}',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

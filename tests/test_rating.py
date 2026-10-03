@@ -219,6 +219,10 @@ async def ws_tests():
         async with s.post(HTTP + '/api/ranking', json={'rk': ka}) as r:
             d = await r.json()
         assert d['ok'] and d['me']['rate'] == 1024 and isinstance(d['top'], list) and d['need_games'] == 10, d
+        assert d['copy'] and d['copy']['c'] and d['copy']['s'], 'ホームのランキングの枠は1回の読み込みで端末の控えも受け取る'
+        async with s.post(HTTP + '/api/ranking', json={}) as r:
+            d = await r.json()
+        assert d['ok'] and d['me'] is None and d['copy'] is None, 'レートのない人（合言葉なし）も上位は見られる'
         async with s.post(HTTP + '/api/rating/hide', json={'rk': ka, 'hide': True}) as r:
             d = await r.json()
         assert d['ok'] and d['me']['hide'] is True

@@ -1408,12 +1408,12 @@ async def api_rating(request):
 
 
 async def api_ranking(request):
-    """全国ランキング（バトル）: 上位50人と自分の記録"""
+    """全国ランキング（バトル）: 上位50人と自分の記録（ホームの上位5人の枠と、小窓）。端末の控えも返す"""
     d = await read_json(request) or {}
     rid = RT.rid_of(d.get('rk'))
     if rid:
         RT.restore(rid, d.get('rc'), d.get('rs'))
-    return web.json_response({'ok': True, **RT.ranking(rid)}, headers={'Cache-Control': 'no-store'})
+    return web.json_response({'ok': True, **RT.ranking(rid), 'copy': RT.copy_of(rid) if rid else None}, headers={'Cache-Control': 'no-store'})
 
 
 async def api_rating_hide(request):

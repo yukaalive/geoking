@@ -131,6 +131,7 @@ $('#joinBtn').onclick = () => {
 };
 $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
 $('#rateCard').onclick = () => RATE.showRanking();   // ホームの「あなたのバトルのレート」→ 全国ランキング（小窓を開く音は sfx.js が鳴らす）
+$('#rankAllBtn').onclick = () => RATE.showRanking();   // ホームの「全国ランキング」の枠（上位5人）の「すべて見る」
 RATE.refreshHome();
 
 // ---------- ロビー操作
