@@ -125,7 +125,9 @@ const RATE = (() => {
       + `<div class="rp-title">${chip(at)}${promo ? `<span class="rp-promo">${escapeHtml(t('r_promo', { title: titleName(m.after) }))}</span>` : ''}</div>`
       + `<div class="rp-gauge"><i style="width:${Math.round((nx ? nx.frac : 1) * 100)}%"></i><b class="rp-head" style="left:${Math.round((nx ? nx.frac : 1) * 100)}%"></b></div>`
       + `<div class="rp-next muted small">${nx ? escapeHtml(t('r_next', { title: nx.name, n: fmt(nx.left) })) : t('r_top')}</div>`
-      + `<div class="rp-rank">${escapeHtml(done ? rankText(m, m.rank_after) : (m.rank_before ? t('r_rank', { rank: fmt(m.rank_before), total: fmt(m.total) }) : t('r_need', { n: m.rank_after ? 1 : m.need })))}</div>`
+      + (done || m.rank_before || !m.rank_after
+        ? `<div class="rp-rank">${escapeHtml(done ? rankText(m, m.rank_after) : (m.rank_before ? t('r_rank', { rank: fmt(m.rank_before), total: fmt(m.total) }) : t('r_need', { n: m.need })))}</div>`
+        : `<div class="rp-rank pending">${escapeHtml(rankText(m, m.rank_after))}</div>`)   // はじめて載るとき: 場所だけ空けておき、数え終わってから「全国 N 位に登場」がポンと出る
       + (m.cap ? `<div class="rp-cap muted small${done ? '' : ' hidden'}">${t('r_capped')}</div>` : '')
       + `<button type="button" class="mini rp-see">${ico('trophy', 'sm')} ${t('r_see')}</button>`;
   }
@@ -261,7 +263,7 @@ const RATE = (() => {
       rk.textContent = rankText(m, m.rank_after);
     } else if (m.rank_after && !m.rank_before) {
       await wait(300); if (!ok()) return;
-      rk.textContent = rankText(m, m.rank_after);
+      rk.textContent = rankText(m, m.rank_after); rk.classList.remove('pending');
       rk.animate([{ transform: 'scale(.6)', opacity: 0 }, { transform: 'scale(1.15)', opacity: 1, offset: .6 }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.2,1.5,.4,1)' });
       sfx.rateRise(); const rp = at(rk); sparkles(rp.x, rp.y, 14, 60);
     } else rk.textContent = rankText(m, m.rank_after);

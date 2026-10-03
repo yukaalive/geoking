@@ -731,6 +731,7 @@ label.rk-hide{display:flex;align-items:center;gap:6px;margin:6px 0 0;font-size:1
 .rp-head{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:radial-gradient(circle,#fff 0 30%,rgba(255,226,120,.9) 45%,rgba(255,214,90,0) 70%);opacity:0;transition:opacity .2s;pointer-events:none}   /* ゲージの先の光（数字が上がっている間だけ） */
 .rp-head.on{opacity:1}
 .rp-rank{font-weight:900}
+.rp-rank.pending{visibility:hidden}   /* はじめてランキングに載るとき、「全国 N 位に登場」が出るまで */
 .rp-see{margin-top:4px}
 /* 案B「レベルアップ」の演出（rating.js の levelUp）。増減は数え終わってから出す（場所は先に空けておき、出たときに周りが動かない） */
 .rp-dslot{display:inline-block;visibility:hidden}

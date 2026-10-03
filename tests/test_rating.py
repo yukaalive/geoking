@@ -2,7 +2,7 @@
 1. 計算（rating.py を直接）: 最初は1000、同じ強さの2人なら勝ち +24・負け −24（はじめの10試合）、4人なら +24・+8・−8・−24。
    強い人に勝つほど大きく上がる。ボットは1000の相手で、ボットに勝って上がるのは1200まで（負けたらふつうに下がる）。
    人と戦った試合だけ「人との試合」に数える。同じ端末（同じ番号）が2人いる試合は、その番号を数えない
-2. ランキング: 人と10試合した人だけ載る・同じレートは同じ順位・名前を出さない設定・自分の順位
+2. ランキング: 1回でもバトルした人が載る（ボット戦も数える。2026-10-03 から。前は人と10試合）・同じレートは同じ順位・名前を出さない設定・自分の順位
 3. 端末の控え: サーバーが忘れても、署名つきの控えで戻る。書き換えた控え・古い控えは受け取らない。スプレッドシート・引っ越しから受け取るときは試合数の多い方
 4. 部屋（server.py の Room を直接）: バトルが終わるとレートが動き、最後の順位の行に前・後、本人に全国の順位の前後。途中で抜けた人も負けとして動く。
    1ゲームに1回だけ。パーティーでは動かない。引っ越し（room_to_dict → room_from_dict）でレートの番号と動きを引き継ぐ
@@ -58,6 +58,10 @@ def unit_tests():
     assert res[me]['cap'] and res[me]['after'] == res[me]['before'], res
     res = RT.apply_game([{'rid': me, 'is_bot': False, 'place': 2}, {'rid': None, 'is_bot': True, 'place': 1}])
     assert res[me]['after'] < 1200 - 20 and not res[me]['cap'], res
+    fresh()
+    solo = RT.rid_of(rk())
+    RT.apply_game([{'rid': solo, 'is_bot': False, 'place': 1}, {'rid': None, 'is_bot': True, 'place': 2}])
+    assert RT.rank_of(solo) == (1, 1) and RT.summary(solo)['need'] == 0, 'ボットと1回バトルしただけでランキングに載る'
     print('OK rating: bots count as 1000; wins against bots stop at 1200; losing to a bot still lowers it')
     # 人とボットがまざった試合: 人に勝った分はボットの上限に関係なく入る
     fresh()
@@ -77,14 +81,17 @@ def unit_tests():
     players = []
     for i, r in enumerate([1300, 1200, 1200, 1100, 1500]):
         x = RT.rid_of(rk()); players.append(x)
-        RT.get(x, True).update({'r': float(r), 'n': 12, 'h': 12 if i != 4 else 9, 'name': f'N{i}'})
+        RT.get(x, True).update({'r': float(r), 'n': 12 if i != 4 else 0, 'h': 12 if i != 4 else 0, 'name': f'N{i}'})
+    bot_only = RT.rid_of(rk())
+    RT.get(bot_only, True).update({'r': 1050.0, 'n': 1, 'h': 0, 'name': 'B'})   # ボットと1回だけ
     rk_ = RT.ranking(players[1])
-    assert [t['rate'] for t in rk_['top']] == [1300, 1200, 1200, 1100] and [t['rank'] for t in rk_['top']] == [1, 2, 2, 4], rk_['top']
-    assert rk_['total'] == 4 and rk_['me']['rank'] == 2 and [t['rank'] for t in rk_['top'] if t['me']] == [2], rk_   # 同じレートの2人の並びは決まっていない
-    assert RT.summary(players[4])['rank'] is None and RT.summary(players[4])['need'] == 1, '人と9試合では載らない'
+    assert [t['rate'] for t in rk_['top']] == [1300, 1200, 1200, 1100, 1050] and [t['rank'] for t in rk_['top']] == [1, 2, 2, 4, 5], rk_['top']
+    assert rk_['total'] == 5 and rk_['need_games'] == 1 and rk_['me']['rank'] == 2 and [t['rank'] for t in rk_['top'] if t['me']] == [2], rk_   # 同じレートの2人の並びは決まっていない
+    assert RT.summary(bot_only)['rank'] == 5 and RT.summary(bot_only)['need'] == 0, 'ボットと1回バトルしただけでも載る'
+    assert RT.summary(players[4])['rank'] is None and RT.summary(players[4])['need'] == 1, 'まだ1回もバトルしていない記録は載らない'
     RT.set_hide(players[0], True)
     assert RT.ranking()['top'][0]['name'] is None and RT.ranking()['top'][0]['rate'] == 1300
-    print('OK ranking: only players with 10 games against people, same rate same rank, hidden names, my rank')
+    print('OK ranking: players with 1+ battle (bot games count), same rate same rank, hidden names, my rank')
 
     # 3. 端末の控え
     fresh()
@@ -135,7 +142,8 @@ def unit_tests():
     assert fin['A']['place'] == 1 and fin['A']['rate_after'] > fin['A']['rate_before'] == 1000, fin
     assert fin['C']['rate_after'] < fin['B']['rate_after'] < fin['A']['rate_after'], fin
     info = r.rate_info['p0']
-    assert info['before'] == 1000 and info['after'] == fin['A']['rate_after'] and info['first'] is True and info['h'] == 1 and info['need'] == 9, info
+    assert info['before'] == 1000 and info['after'] == fin['A']['rate_after'] and info['first'] is True and info['h'] == 1 and info['need'] == 0, info
+    assert info['rank_before'] is None and info['rank_after'] == 1, 'はじめてのバトルで全国の順位に登場する'
     st = r.state_for('p0')
     assert st['rate_me'] == info and st['rate_copy'] and next(p for p in st['players'] if p['pid'] == 'p0')['rate'] == info['after']
     n_before = RT.RATINGS[r.players['p0'].rid]['n']
@@ -204,21 +212,21 @@ async def ws_tests():
         await b.send_json({'type': 'leave'})   # 相手が抜けて決着 → A の勝ち
         st = await recv_state(a, lambda d: d['phase'] == 'end')
         me = st['rate_me']
-        assert me and me['before'] == 1000 and me['after'] == 1024 and me['first'] and me['h'] == 1 and me['need'] == 9, me
+        assert me and me['before'] == 1000 and me['after'] == 1024 and me['first'] and me['h'] == 1 and me['need'] == 0 and me['rank_before'] is None and me['rank_after'] >= 1, me
         fin = {e['name']: e for e in st['final']}
         assert fin['レートA']['rate_after'] == 1024 and fin['レートB']['rate_after'] == 976, fin
         assert st['rate_copy'] and st['rate_copy']['c'] and st['rate_copy']['s']
         assert next(p for p in st['players'] if p['name'] == 'レートA')['rate'] == 1024
         async with s.post(HTTP + '/api/rating', json={'rk': ka}) as r:
             d = await r.json()
-        assert d['ok'] and d['me']['rate'] == 1024 and d['me']['rank'] is None and d['me']['need'] == 9 and d['copy'], d
+        assert d['ok'] and d['me']['rate'] == 1024 and d['me']['rank'] >= 1 and d['me']['need'] == 0 and d['copy'], d
         async with s.post(HTTP + '/api/rating', json={'rk': kb}) as r:
             assert (await r.json())['me']['rate'] == 976
         async with s.post(HTTP + '/api/rating', json={'rk': 'x'}) as r:
             assert r.status == 400
         async with s.post(HTTP + '/api/ranking', json={'rk': ka}) as r:
             d = await r.json()
-        assert d['ok'] and d['me']['rate'] == 1024 and isinstance(d['top'], list) and d['need_games'] == 10, d
+        assert d['ok'] and d['me']['rate'] == 1024 and isinstance(d['top'], list) and d['need_games'] == 1, d
         assert d['copy'] and d['copy']['c'] and d['copy']['s'], 'ホームのランキングの枠は1回の読み込みで端末の控えも受け取る'
         async with s.post(HTTP + '/api/ranking', json={}) as r:
             d = await r.json()

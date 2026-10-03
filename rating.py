@@ -7,7 +7,8 @@
   強い人に勝つほど大きく上がり、弱い人に負けるほど大きく下がる。はじめの NEW_GAMES 試合は動きを大きく（早く自分の強さに近づく）
 - ボットはいつも BOT_RATE の相手。ボットに勝って上がるのは BOT_CAP まで（ボットだけで上の称号やランキングの上位に届かないように）。
   ボットに負けたときは、ふつうに下がる
-- ランキングに載るのは、人と HUMAN_GAMES_TO_RANK 回以上バトルした人（ボットだけの試合は数えない）。名前を出さない設定もある
+- ランキングに載るのは、GAMES_TO_RANK 回以上バトルした人（ボット戦も数える。2026-10-03 ユーザーの指定「botと1回対戦しても乗るようにして」。
+  前は人と10回）。名前を出さない設定もある。人と戦った試合数 h は記録だけ続ける
 - 消えないように（Render の無料プランは止まるとメモリが消える）:
   ① 運営者のスプレッドシート（sheet_log と同じ Apps Script の「レート」のシート。server.py が起動時に読み、変わった分を送る）
   ② 更新時の部屋の引っ越しで、新しいサーバーへ一緒に送る
@@ -26,7 +27,7 @@ BOT_RATE = 1000.0
 BOT_CAP = 1200.0
 K_NEW, K = 48.0, 32.0
 NEW_GAMES = 10
-HUMAN_GAMES_TO_RANK = 10
+GAMES_TO_RANK = 1
 TOP_N = 50
 MAX_RECORDS = 200000
 
@@ -166,7 +167,7 @@ def apply_game(entries, now=None):
 
 
 def eligible(rec):
-    return bool(rec) and rec['h'] >= HUMAN_GAMES_TO_RANK
+    return bool(rec) and rec['n'] >= GAMES_TO_RANK
 
 
 def _sorted():
@@ -193,7 +194,7 @@ def summary(rid):
         return None
     rank, total = rank_of(rid)
     return {'rate': round(rec['r']), 'n': rec['n'], 'h': rec['h'], 'best': round(rec['best']), 'hide': rec['hide'],
-            'rank': rank, 'total': total, 'need': max(0, HUMAN_GAMES_TO_RANK - rec['h'])}
+            'rank': rank, 'total': total, 'need': max(0, GAMES_TO_RANK - rec['n'])}
 
 
 def ranking(rid=None):
@@ -208,7 +209,7 @@ def ranking(rid=None):
             break
         rec = RATINGS[x]
         top.append({'rank': rank, 'name': None if rec['hide'] else (rec['name'] or None), 'rate': rv, 'me': x == rid})
-    return {'top': top, 'total': len(lst), 'need_games': HUMAN_GAMES_TO_RANK, 'me': summary(rid) if rid else None}
+    return {'top': top, 'total': len(lst), 'need_games': GAMES_TO_RANK, 'me': summary(rid) if rid else None}
 
 
 def set_hide(rid, hide):
