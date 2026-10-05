@@ -87,7 +87,8 @@ const I18N = {
     r_anon: '匿名さん', r_hide: 'ランキングに名前を出さない', r_you: 'あなた', r_empty: 'まだ誰も載っていません',
     r_rule: 'バトルを1回すると載ります（ボット戦でも）', r_fail: 'ランキングを読めませんでした', r_rate: 'レート',
     r_my_short: 'あなたのレート', r_rank_move: '全国 {from} 位 → {to} 位', r_rank_new: '全国 {to} 位に登場', r_promo: '{title}に昇格！', r_first: 'はじめてのレート',
-    r_all: 'すべて見る', r_stamp: '昇格！', r_ladder_me: 'あなた', r_lad: '{rank} 位',
+    r_all: 'すべて見る', r_offline: 'つながったら、ランキングに反映します',
+    off_note: 'オフラインです。「部屋を作る」で、ボットとバトルできます。レートは次につながったときに反映します。', off_room: 'オフライン', off_no_join: 'オフラインでは、友だちの部屋に入れません', off_rooms: 'オフラインです', r_stamp: '昇格！', r_ladder_me: 'あなた', r_lad: '{rank} 位',
   },
   en: {
     app_title: 'GeoKing | Flag card geography party game', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -164,7 +165,8 @@ const I18N = {
     r_anon: 'Anonymous', r_hide: 'Hide my name in the ranking', r_you: 'You', r_empty: 'No one is ranked yet',
     r_rule: 'One battle puts you on it (bot games count)', r_fail: "Couldn't load the ranking", r_rate: 'Rating',
     r_my_short: 'Your rating', r_rank_move: 'No. {from} → No. {to}', r_rank_new: 'New in the ranking: No. {to}', r_promo: 'Promoted to {title}!', r_first: 'Your first rating',
-    r_all: 'See all', r_stamp: 'Promoted!', r_ladder_me: 'You', r_lad: 'No. {rank}',
+    r_all: 'See all', r_offline: 'Added to the ranking when you reconnect',
+    off_note: "You're offline. Create a room to battle bots. Your rating updates when you reconnect.", off_room: 'Offline', off_no_join: "You can't join friends' rooms offline", off_rooms: "You're offline", r_stamp: 'Promoted!', r_ladder_me: 'You', r_lad: 'No. {rank}',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

@@ -75,6 +75,7 @@
     <div class="herodemo">
       <div class="herotext">
         <h1><svg class="ico " aria-hidden="true"><use href="/static/icons.svg?v=2#crown"/></svg>地理王</h1>
+        <p id="offlineNote" class="offline-note hidden" data-i18n="off_note">オフラインです。「部屋を作る」で、ボットとバトルできます。レートは次につながったときに反映します。</p>
         <label><span data-i18n="your_name">あなたの名前（必須）</span><input id="nameInput" maxlength="16" placeholder="ニックネームを入力" data-i18n-ph="name_ph" required></label>
         <div class="row">
           <button id="createBtn" class="primary big-cta" data-i18n="create_room">部屋を作る</button>
@@ -115,13 +116,13 @@
         <div class="row hostonly">
           <button id="addBotBtn"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#bot"/></svg> <span data-i18n="add_bot">ボットを追加</span></button>
         </div>
-        <p class="muted small"><span data-i18n="lobby_note_pre">友だちはトップページの「参加する」に部屋の名前 </span><b id="lobbyCode" class="roomname-inline"></b><span data-i18n="lobby_note_post"> を入れるだけで入れます。</span></p>
+        <p id="lobbyNote" class="muted small"><span data-i18n="lobby_note_pre">友だちはトップページの「参加する」に部屋の名前 </span><b id="lobbyCode" class="roomname-inline"></b><span data-i18n="lobby_note_post"> を入れるだけで入れます。</span></p>
       </div>
       <div class="card">
         <h2><span data-i18n="room_settings">部屋の設定</span> <span class="muted small guestonly" data-i18n="host_only">（ホストのみ変更できます）</span></h2>
         <div class="settings hostonly-disable">
-          <label><span data-i18n="room_name">部屋の名前</span> <input id="setTitle" maxlength="20" placeholder="例：ゆかの部屋" data-i18n-ph="room_title_ph" style="width:180px"></label>
-          <label class="chk"><input type="checkbox" id="setPublic"> <svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="public_room_label">公開部屋にする</span></label>
+          <label id="setTitleRow"><span data-i18n="room_name">部屋の名前</span> <input id="setTitle" maxlength="20" placeholder="例：ゆかの部屋" data-i18n-ph="room_title_ph" style="width:180px"></label>
+          <label id="setPublicRow" class="chk"><input type="checkbox" id="setPublic"> <svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#globe"/></svg> <span data-i18n="public_room_label">公開部屋にする</span></label>
           <div class="moderow"><span data-i18n="game_mode">ゲーム</span><span class="modesel" role="radiogroup"><button type="button" class="modebtn" data-rule="survival" role="radio"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#heart"/></svg><span data-i18n="mode_survival">バトル</span></button><button type="button" class="modebtn" data-rule="points" role="radio"><svg class="ico sm" aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg><span data-i18n="mode_points">パーティー</span></button></span></div>
         </div>
         <button id="startBtn" class="primary big hostonly">ゲーム開始</button>
@@ -204,6 +205,7 @@
 <script src="/static/sfx.js"></script>
 <script src="/static/survival.js"></script>
 <script src="/static/rating.js"></script>
+<script src="/static/offline.js"></script>
 <script src="/static/app.js"></script>
 <script src="/static/native.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});</script>

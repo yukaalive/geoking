@@ -117,7 +117,7 @@ const RATE = (() => {
   // 演出の部品は画面に固定した層（.rfx。画面の外にはみ出さない）に出し、終わったら消す。チャットなどで描き直しても作り直さない
   const FX_KEY = 'geoking_ratefx';
   const reduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
-  const rankText = (m, rank) => (rank ? (m.rank_before && rank !== m.rank_before ? t('r_rank_move', { from: fmt(m.rank_before), to: fmt(rank) }) : (m.rank_before ? t('r_rank', { rank: fmt(rank), total: fmt(m.total) }) : t('r_rank_new', { to: fmt(rank) }))) : t('r_need', { n: m.need }));
+  const rankText = (m, rank) => (m.offline ? t('r_offline') : rank ? (m.rank_before && rank !== m.rank_before ? t('r_rank_move', { from: fmt(m.rank_before), to: fmt(rank) }) : (m.rank_before ? t('r_rank', { rank: fmt(rank), total: fmt(m.total) }) : t('r_rank_new', { to: fmt(rank) }))) : t('r_need', { n: m.need }));
   function panelHtml(m, at, done) {   // at: 大きい数字に出す値。done: 終わった形（増減・昇格・全国の順位）まで出す
     const d = m.after - m.before, nx = next(at), promo = done && tier(m.after) > tier(m.before);
     return `<div class="rp-label">${m.first ? t('r_first') : t('r_my_short')}</div>`
@@ -126,9 +126,9 @@ const RATE = (() => {
       + `<div class="rp-gauge"><i style="width:${Math.round((nx ? nx.frac : 1) * 100)}%"></i><b class="rp-head" style="left:${Math.round((nx ? nx.frac : 1) * 100)}%"></b></div>`
       + `<div class="rp-next muted small">${nx ? escapeHtml(t('r_next', { title: nx.name, n: fmt(nx.left) })) : t('r_top')}</div>`
       + (done || m.rank_before || !m.rank_after
-        ? `<div class="rp-rank">${escapeHtml(done ? rankText(m, m.rank_after) : (m.rank_before ? t('r_rank', { rank: fmt(m.rank_before), total: fmt(m.total) }) : t('r_need', { n: m.need })))}</div>`
+        ? `<div class="rp-rank">${escapeHtml(done || m.offline ? rankText(m, m.rank_after) : (m.rank_before ? t('r_rank', { rank: fmt(m.rank_before), total: fmt(m.total) }) : t('r_need', { n: m.need })))}</div>`
         : `<div class="rp-rank pending">${escapeHtml(rankText(m, m.rank_after))}</div>`)   // はじめて載るとき: 場所だけ空けておき、数え終わってから「全国 N 位に登場」がポンと出る
-      + `<button type="button" class="mini rp-see">${ico('trophy', 'sm')} ${t('r_see')}</button>`;
+      + (m.offline ? '' : `<button type="button" class="mini rp-see">${ico('trophy', 'sm')} ${t('r_see')}</button>`);   // オフラインではランキングを読めないので出さない
   }
   function renderPanel(box) {   // 結果発表で、自分のレートが動いたときだけ出す
     const m = state && state.rate_me;
@@ -142,7 +142,7 @@ const RATE = (() => {
     box.dataset.key = key;
     box.classList.remove('hidden');
     box.innerHTML = panelHtml(m, play ? m.before : m.after, !play);
-    box.querySelector('.rp-see').onclick = () => showRanking();
+    const see = box.querySelector('.rp-see'); if (see) see.onclick = () => showRanking();
     if (play) levelUp(box, m, key);
     else if (!seen) (m.after >= m.before ? (tier(m.after) > tier(m.before) ? sfx.fanfare() : sfx.rateCoin()) : sfx.rateDown());   // 動きを減らす設定の人も、音だけは
   }

@@ -28,7 +28,7 @@ $('#modal').onclick = (e) => { if (e.target.id === 'modal') { $('#modal').classL
 function connect(onOpen) {
   const base = API ? new URL(API) : location;
   const proto = base.protocol === 'https:' ? 'wss' : 'ws';
-  const sock = ws = new WebSocket(`${proto}://${base.host}/ws`);
+  const sock = ws = OFFLINE.active() ? OFFLINE.socket() : new WebSocket(`${proto}://${base.host}/ws`);   // オフラインのときは端末の中の部屋（offline.js）とやり取りする
   ws.onopen = () => { send({ type: 'hello', ...RATE.creds() }); onOpen && onOpen(); };   // hello: バトルのレートの合言葉と端末の控え（rating.js）。部屋に入る前に送る
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
@@ -121,8 +121,9 @@ function myName() {
 }
 $('#nameInput').value = localStorage.getItem('geoking_name') || '';
 $('#nameInput').addEventListener('focus', function () { this.select(); });   // 前回の名前が入っていても、そのまま打てば置き換わる
-$('#createBtn').onclick = () => { const name = myName(); if (!name) return; manualJoin = true; connect(() => send({ type: 'create', name })); };
+$('#createBtn').onclick = () => { const name = myName(); if (!name) return; manualJoin = true; if (navigator.onLine === false) OFFLINE.begin(); connect(() => send({ type: 'create', name })); };   // 通信がないときは、端末の中でボットと遊ぶ部屋
 $('#joinBtn').onclick = () => {
+  if (navigator.onLine === false) return toast(t('off_no_join'));   // 友だちの部屋はサーバーにある
   const raw = $('#codeInput').value.trim(); if (!raw) return toast(t('enter_room_name'));
   const name = myName(); if (!name) return; manualJoin = true;
   // 4文字の英数字なら招待コード、それ以外は部屋の名前として探す（両方送ってサーバーに任せる）
@@ -133,6 +134,9 @@ $('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#jo
 $('#rateCard').onclick = () => RATE.showRanking();   // ホームの「あなたのバトルのレート」→ 全国ランキング（小窓を開く音は sfx.js が鳴らす）
 $('#rankAllBtn').onclick = () => RATE.showRanking();   // ホームの「全国ランキング」の枠（上位5人）の「すべて見る」
 RATE.refreshHome();
+OFFLINE.sync();   // オフラインで遊んだ試合が残っていれば送る（レートとランキングに入る）
+const showOffline = () => { $('#offlineNote').classList.toggle('hidden', navigator.onLine !== false); if (!state && navigator.onLine !== false) loadRooms(); };   // ホームの「オフラインです」の一言
+window.addEventListener('online', showOffline); window.addEventListener('offline', showOffline); showOffline();
 
 // ---------- ロビー操作
 function pushSettings() {
@@ -153,6 +157,7 @@ function leaveToHome(message) {
   sessionStorage.removeItem('geoking_room'); sessionStorage.removeItem('geoking_token'); sessionStorage.removeItem('geoking_pid');
   document.querySelectorAll('.floatmsg').forEach(e => e.remove()); floatLastStart = 0; lastChatKey = ''; scrollTopPending = false;
   state = null; stopTimer(); $('#roomInfo').classList.add('hidden'); show('home'); startRoomsPoll();
+  document.body.classList.remove('offline-room'); OFFLINE.end();   // オフラインの部屋から出た: ためた試合を、つながっていれば送る
   RATE.refreshHome();   // バトルのあとならレートが変わっている
   sfx.leave();
   if (message) toast(message);
@@ -284,6 +289,7 @@ function render() {
   playTransitions();
   const isHost = state.host === pid;
   document.body.classList.toggle('host', isHost); document.body.classList.toggle('guest', !isHost);
+  document.body.classList.toggle('offline-room', !!state.offline);   // オフラインの部屋: 招待・部屋の名前・公開・チャットは使えないので出さない
   $('#roomInfo').classList.remove('hidden');
   $('#roomCountN').textContent = t('people_n', { n: state.players.filter(p => p.connected || p.is_bot).length });   // 上に出す「今部屋にいる人数」（ボットも数える。対戦中に接続が切れた人は数えない。ロビーでは切れた人はすぐ抜けるので「プレイヤー 3 / 8」と同じ）
   $('#lobbyBtn').classList.toggle('hidden', !(isHost && (state.phase === 'pick' || state.phase === 'reveal')));
@@ -699,7 +705,7 @@ async function loadRooms() {
       const b = el('button', 'mini primary', t('join_short')); b.onclick = () => { $('#codeInput').value = r.room; $('#joinBtn').click(); };
       li.appendChild(b); ul.appendChild(li);
     }
-  } catch { ul.innerHTML = `<li class="muted">${t('rooms_fetch_failed')}</li>`; }
+  } catch { ul.innerHTML = `<li class="muted">${t(navigator.onLine === false ? 'off_rooms' : 'rooms_fetch_failed')}</li>`; }
 }
 $('#refreshRooms').onclick = loadRooms;
 let roomsPoll = null;

@@ -758,6 +758,8 @@ label.rk-hide{display:flex;align-items:center;gap:6px;margin:6px 0 0;font-size:1
 .rfx-stamp{font-family:var(--font-head);font-weight:400;font-size:64px;line-height:1;white-space:nowrap;color:#f4c542;-webkit-text-stroke:3px #1c2b22;text-shadow:5px 5px 0 #1c2b22}
 @media (prefers-reduced-motion:reduce){.ratepanel.rp-glow,.ratepanel.rp-shake,.rp-dslot.on .rdelta.up{animation:none}}
 /* ホーム: 公開中の部屋の上の「全国ランキング」（上位5人。行は小窓のランキングと同じ） */
+.offline-note{margin:2px 0 10px;padding:8px 12px;border:2px solid var(--ink);border-radius:12px;background:var(--bg);font-size:14px;font-weight:800;line-height:1.5}   /* 通信がないときだけ、ホームの「地理王」の下に（offline.js） */
+body.offline-room #copyLink,body.offline-room #lobbyNote,body.offline-room #setTitleRow,body.offline-room #setPublicRow,body.offline-room #chatCard{display:none!important}   /* オフラインの部屋: 招待・部屋の名前・公開・チャットは使えない */
 #rankCard{max-width:none;margin:0 0 18px}   /* 上の枠との間（18px）と同じだけ、公開中の部屋との間を空ける */
 #rankCard h2,.rk-h{word-break:keep-all;overflow-wrap:anywhere}   /* 見出しが狭い画面で言葉の途中で割れないように */
 .rk-more{display:flex;justify-content:flex-end;margin-top:10px}

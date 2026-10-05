@@ -15,6 +15,9 @@ async function loadMeta() {
   } catch (e) { /* 外側が読めないときは通信で取る */ }
   const m = await (await fetch(API + '/api/meta')).json();
   META_AT = Date.now();
+  try {   // ウェブ版: 全部の国旗を Service Worker に覚えてもらう（通信がないときも、ボットとのバトル・図鑑・クイズで国旗が出るように。sw.js）
+    if (navigator.serviceWorker && navigator.onLine !== false) navigator.serviceWorker.ready.then((reg) => reg.active && reg.active.postMessage({ type: 'precache-flags', ids: Object.keys(m.countries) }));
+  } catch (e) {}
   return m;
 }
 // 外側のページとして国データを貸す。アプリは何日も開いたままのことがあるので、10分より古ければ貸さず（フレームが自分で取る）、次回用に裏で取り直す
