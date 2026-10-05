@@ -2,7 +2,7 @@
 """GeoKing（地理王） オンライン対戦サーバー。aiohttp + WebSocket。
     python3 server.py  →  http://localhost:8080
 """
-import asyncio, collections, json, logging, os, random, secrets, string, time, uuid
+import asyncio, collections, json, logging, os, random, re, secrets, string, time, uuid
 import hmac
 import html
 from datetime import datetime, timezone, timedelta
@@ -339,7 +339,7 @@ class Room:
         self.history = []   # 各ラウンドの公開結果（最終結果の一覧用）
         self.final = None   # ゲームが終わった時点の順位 [{pid, name, name_en, score, is_bot}]。結果画面で誰かが退出しても、この順位のまま見せる
         self.departed = {}  # ゲームの途中で退出した（退出させられた）人の、そのときの点数 pid -> {name, name_en, score, is_bot}。最後の順位に入れる
-        self.rate_info = {} # バトルが終わったときの、各人のレートの動き pid -> {before, after, cap, rank_before, rank_after, total, h, need, first}（結果発表の演出用）
+        self.rate_info = {} # バトルが終わったときの、各人のレートの動き pid -> {before, after, rank_before, rank_after, total, h, need, first}（結果発表の演出用）
         self.rated = False  # このゲームのレートを動かした（1ゲームに1回だけ）
         self.timer_task = None
         self.reveal_task = None
@@ -547,14 +547,12 @@ class Room:
             got = res.get(x['rid']) if x['rid'] else None
             if got:
                 e['rate_before'], e['rate_after'] = round(got['before']), round(got['after'])
-                if got['cap']:
-                    e['rate_cap'] = True
         for x, p in self.players.items():
             got = res.get(p.rid) if p.rid else None
             if not got:
                 continue
             b, a = before.get(p.rid) or {}, RT.summary(p.rid)
-            self.rate_info[x] = {'before': round(got['before']), 'after': round(got['after']), 'cap': got['cap'], 'rank_before': b.get('rank'),
+            self.rate_info[x] = {'before': round(got['before']), 'after': round(got['after']), 'rank_before': b.get('rank'),
                                  'rank_after': a['rank'], 'total': a['total'], 'h': a['h'], 'need': a['need'], 'first': not b.get('n')}
         log.info('room %s ratings: %s', self.code, ', '.join(f"{e['name']} {e['rate_before']}->{e['rate_after']}" for e in self.final if 'rate_before' in e))
 
@@ -829,7 +827,7 @@ def room_from_dict(d, now, source=None):
         raise ValueError('bad phase')
     r.reveal, r.chat, r.history = d['reveal'], list(d['chat'])[-60:], list(d['history'])
     opt_int = lambda v: None if v is None else int(v)   # サバイバルの体力・脱落したラウンドなど（前の版のサーバーからは届かない）
-    surv_keys = lambda x: {k: opt_int(x.get(k)) for k in ('hp', 'out_round', 'place', 'rate_before', 'rate_after') if k in x} | ({'rate_cap': True} if x.get('rate_cap') else {})
+    surv_keys = lambda x: {k: opt_int(x.get(k)) for k in ('hp', 'out_round', 'place', 'rate_before', 'rate_after') if k in x}
     rid_ok = lambda v: v if RT.valid_rid(v) else None   # レートの番号（前の版のサーバーからは届かない）
     f = d.get('final')   # 前の版のサーバーからは届かない（そのときは画面が今いる人から順位を作る）
     r.final = [{'pid': str(x['pid']), 'name': str(x['name']), 'name_en': x.get('name_en'), 'score': int(x['score']), 'is_bot': bool(x.get('is_bot')), **surv_keys(x)}
@@ -839,7 +837,7 @@ def room_from_dict(d, now, source=None):
                                 **({'rid': v['rid']} if rid_ok(v.get('rid')) else {})}   # レートの番号があるときだけ（前の版と同じ形のまま）
                   for k, v in dep.items()} if isinstance(dep, dict) else {}
     ri = d.get('rate_info')
-    r.rate_info = {str(k)[:12]: {kk: v.get(kk) for kk in ('before', 'after', 'cap', 'rank_before', 'rank_after', 'total', 'h', 'need', 'first')}
+    r.rate_info = {str(k)[:12]: {kk: v.get(kk) for kk in ('before', 'after', 'rank_before', 'rank_after', 'total', 'h', 'need', 'first')}
                    for k, v in ri.items() if isinstance(v, dict)} if isinstance(ri, dict) else {}
     r.rated = bool(d.get('rated'))
     r.deck = [c for c in d['deck'] if c in COUNTRY_BY_ID]
@@ -1473,6 +1471,57 @@ async def api_ranking(request):
     return web.json_response({'ok': True, **RT.ranking(rid), 'copy': RT.copy_of(rid) if rid else None}, headers={'Cache-Control': 'no-store'})
 
 
+OFFLINE_MAX_GAMES = 50      # 1回に受け取るオフラインの試合の数
+OFFLINE_MAX_PER_DAY = 300   # 1つの端末から1日に受け取るオフラインの試合の数（端末の結果をそのまま受け取るので、送りすぎだけは止める）
+OFFLINE_SEEN = {}           # rid -> 受け取った試合の id（同じ試合を2回数えない。メモリの中だけ）
+OFFLINE_DAY = {}            # rid -> [日, 受け取った数]
+OFFLINE_ID = re.compile(r'^[A-Za-z0-9_-]{8,40}$')
+
+
+async def api_rating_offline(request):
+    """オフラインで遊んだボットとのバトルの結果を受け取り、レートを動かす（2026-10-05 ユーザーの指定「端末の結果をそのまま受け取る」）。
+    games: [{id, t（遊んだ時刻）, place（自分の最後の順位）, bots: [ボットの最後の順位…]}]。古い順に1試合ずつ rating.apply_game（ボットは 1,000 の相手）。
+    返す done は受け取った（数えた・同じ id だった・形がおかしかった）試合の id。画面はそれを送るものから消す。1日の上限を超えた分は done に入れず、あとで送り直してもらう"""
+    d = await read_json(request, limit=20000) or {}
+    rid = RT.rid_of(d.get('rk'))
+    if not rid:
+        return web.json_response({'ok': False}, status=400)
+    RT.restore(rid, d.get('rc'), d.get('rs'))
+    name = clean_name(d.get('name'))
+    if name and not check_name(name)[0]:   # ランキングに出る名前なので、部屋に入るときと同じ確かめ方
+        name = ''
+    now = time.time()
+    day = OFFLINE_DAY.get(rid)
+    if not day or day[0] != int(now // 86400):
+        day = OFFLINE_DAY[rid] = [int(now // 86400), 0]
+    seen = OFFLINE_SEEN.setdefault(rid, collections.deque(maxlen=500))
+    games, done = [], []
+    for g in (d.get('games') if isinstance(d.get('games'), list) else [])[:OFFLINE_MAX_GAMES]:
+        try:
+            gid, t, place, bots = str(g['id']), float(g['t']), int(g['place']), [int(x) for x in g['bots']]
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not OFFLINE_ID.match(gid):
+            continue
+        n = len(bots) + 1
+        if gid in seen or not (1 <= len(bots) < MAX_PLAYERS) or not (1 <= place <= n) or any(not 1 <= b <= n for b in bots) or not (now - 30 * 86400 <= t <= now + 300):
+            done.append(gid)   # 同じ試合・形がおかしい・30日より前: 数えずに受け取ったことにする（画面の送るものに残り続けないように）
+            continue
+        games.append((t, gid, place, bots))
+    applied = 0
+    for t, gid, place, bots in sorted(games):
+        if day[1] >= OFFLINE_MAX_PER_DAY:
+            break
+        if RT.apply_game([{'rid': rid, 'is_bot': False, 'place': place, 'name': name}] + [{'rid': None, 'is_bot': True, 'place': b} for b in bots]):
+            applied += 1
+            day[1] += 1
+        seen.append(gid)
+        done.append(gid)
+    if applied:
+        log.info('ratings: %d offline game(s) from %s -> %s', applied, name or rid[:6], RT.rate_of(rid))
+    return web.json_response({'ok': True, 'applied': applied, 'done': done, 'me': RT.summary(rid), 'copy': RT.copy_of(rid)}, headers={'Cache-Control': 'no-store'})
+
+
 async def api_rating_hide(request):
     """「ランキングに名前を出さない」の切り替え"""
     d = await read_json(request) or {}
@@ -1748,6 +1797,7 @@ def make_app():
     app.router.add_post('/api/rating', api_rating)
     app.router.add_post('/api/ranking', api_ranking)
     app.router.add_post('/api/rating/hide', api_rating_hide)
+    app.router.add_post('/api/rating/offline', api_rating_offline)
     app.router.add_get('/admin/visits', admin_visits)
     app.router.add_get('/api/rooms', api_rooms)
     app.router.add_get('/api/room/{code}', api_room)

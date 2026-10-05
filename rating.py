@@ -5,8 +5,8 @@
   ハッシュした番号 rid だけを持つ（ランキングやスプレッドシートにも rid しか出さない）。登録はいらない
 - 計算: バトルの最後の順位で、ほかの全員と1対1の勝ち負けを数える（イロレーティング）。最初は START。
   強い人に勝つほど大きく上がり、弱い人に負けるほど大きく下がる。はじめの NEW_GAMES 試合は動きを大きく（早く自分の強さに近づく）
-- ボットはいつも BOT_RATE の相手。ボットに勝って上がるのは BOT_CAP まで（ボットだけで上の称号やランキングの上位に届かないように）。
-  ボットに負けたときは、ふつうに下がる
+- ボットはいつも BOT_RATE の相手。ボットに勝って上がる上限はない（2026-10-05 ユーザーの指定。前は 1,200 まで）。
+  高くなるほどボットに勝って当たり前になるので、上がり方は小さく・負けたときの下がり方は大きくなる（ボットに9割勝つ人で 1,380 ほどで止まる）
 - ランキングに載るのは、GAMES_TO_RANK 回以上バトルした人（ボット戦も数える。2026-10-03 ユーザーの指定「botと1回対戦しても乗るようにして」。
   前は人と10回）。名前を出さない設定もある。人と戦った試合数 h は記録だけ続ける
 - 消えないように（Render の無料プランは止まるとメモリが消える）:
@@ -24,7 +24,6 @@ import time
 
 START = 1000.0
 BOT_RATE = 1000.0
-BOT_CAP = 1200.0
 K_NEW, K = 48.0, 32.0
 NEW_GAMES = 10
 GAMES_TO_RANK = 1
@@ -117,7 +116,7 @@ def apply_game(entries, now=None):
     """1試合ぶんのレートを動かす。entries: [{'rid': 番号 or None, 'is_bot': bool, 'place': 順位, 'name': 名前}]
     （ボットは rid なし。人でも合言葉がない古い画面の人は rid なし＝数えない）。
     同じ番号が2人いる（同じ端末の2つの画面）ときは、その番号は数えない。
-    返り値: {rid: {'before', 'after', 'cap'}}（cap: ボットに勝った分を BOT_CAP で止めた）"""
+    返り値: {rid: {'before', 'after'}}"""
     now = time.time() if now is None else now
     seen = {}
     for e in entries:
@@ -146,12 +145,7 @@ def apply_game(entries, now=None):
             else:
                 vs_h += d
         n = len(players) - 1
-        d_h, d_b = k * vs_h / n, k * vs_b / n
-        cap = False
-        if d_b > 0 and rec['r'] + d_h + d_b > BOT_CAP:   # ボットに勝った分で上がるのは BOT_CAP まで（人に勝った分はそのまま）
-            d_b = max(0.0, BOT_CAP - (rec['r'] + d_h))
-            cap = True
-        out[e['rid']] = {'before': rec['r'], 'after': rec['r'] + d_h + d_b, 'cap': cap}
+        out[e['rid']] = {'before': rec['r'], 'after': rec['r'] + k * (vs_h + vs_b) / n}
     others = {e['rid']: any(o is not e and not o.get('is_bot') for o in players) for e in humans}
     for e in humans:
         rec, res = cur[e['rid']], out[e['rid']]

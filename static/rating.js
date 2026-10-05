@@ -128,7 +128,6 @@ const RATE = (() => {
       + (done || m.rank_before || !m.rank_after
         ? `<div class="rp-rank">${escapeHtml(done ? rankText(m, m.rank_after) : (m.rank_before ? t('r_rank', { rank: fmt(m.rank_before), total: fmt(m.total) }) : t('r_need', { n: m.need })))}</div>`
         : `<div class="rp-rank pending">${escapeHtml(rankText(m, m.rank_after))}</div>`)   // はじめて載るとき: 場所だけ空けておき、数え終わってから「全国 N 位に登場」がポンと出る
-      + (m.cap ? `<div class="rp-cap muted small${done ? '' : ' hidden'}">${t('r_capped')}</div>` : '')
       + `<button type="button" class="mini rp-see">${ico('trophy', 'sm')} ${t('r_see')}</button>`;
   }
   function renderPanel(box) {   // 結果発表で、自分のレートが動いたときだけ出す
@@ -243,7 +242,6 @@ const RATE = (() => {
     const slot = box.querySelector('.rp-dslot');
     if (slot) { slot.classList.add('on'); slot.animate([{ transform: 'scale(0) rotate(-20deg)' }, { transform: 'scale(1.5) rotate(6deg)', offset: .6 }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.2,1.6,.4,1)' }); }
     if (up) { sfx.rateCoin(); const dp = at(slot || num); sparkles(dp.x, dp.y, 10, 50); }
-    const cap = box.querySelector('.rp-cap'); if (cap) cap.classList.remove('hidden');
     // 全国の順位: はしごを上がる（初めて載ったときは「登場」）
     const rk = box.querySelector('.rp-rank');
     if (m.rank_after && m.rank_before && m.rank_after < m.rank_before) {   // 抜いた人の段（2段まで）の上へ、自分の段が上がる

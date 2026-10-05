@@ -1,6 +1,6 @@
 """バトルのレートと全国ランキング（rating.py と server.py）の確認。実行: GEOKING_WS=ws://localhost:8090/ws python3 tests/test_rating.py
 1. 計算（rating.py を直接）: 最初は1000、同じ強さの2人なら勝ち +24・負け −24（はじめの10試合）、4人なら +24・+8・−8・−24。
-   強い人に勝つほど大きく上がる。ボットは1000の相手で、ボットに勝って上がるのは1200まで（負けたらふつうに下がる）。
+   強い人に勝つほど大きく上がる。ボットは1000の相手で、ボットに勝って上がる上限はない（高くなるほど上がりにくい。負けたらふつうに下がる）。
    人と戦った試合だけ「人との試合」に数える。同じ端末（同じ番号）が2人いる試合は、その番号を数えない
 2. ランキング: 1回でもバトルした人が載る（ボット戦も数える。2026-10-03 から。前は人と10試合）・同じレートは同じ順位・名前を出さない設定・自分の順位
 3. 端末の控え: サーバーが忘れても、署名つきの控えで戻る。書き換えた控え・古い控えは受け取らない。スプレッドシート・引っ越しから受け取るときは試合数の多い方
@@ -8,7 +8,7 @@
    1ゲームに1回だけ。パーティーでは動かない。引っ越し（room_to_dict → room_from_dict）でレートの番号と動きを引き継ぐ
 5. つないで遊ぶ（WebSocket）: hello で合言葉を送って部屋を作り・入り、バトルで相手が抜けて決着 → 結果発表に自分のレートの動き、
    /api/rating と /api/ranking と名前を出さない設定。合言葉のない古い画面の人はレートが動かない"""
-import asyncio, json, os, secrets, sys
+import asyncio, json, os, secrets, sys, time
 import aiohttp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -47,34 +47,35 @@ def unit_tests():
     up = RT.apply_game([{'rid': weak, 'is_bot': False, 'place': 1}, {'rid': strong, 'is_bot': False, 'place': 2}])
     assert up[weak]['after'] - up[weak]['before'] > 27 and up[strong]['after'] - up[strong]['before'] < -27, up
     print('OK rating: beating a stronger player gives more')
-    # ボット: 1000 の相手。ボットに勝って上がるのは1200まで
+    # ボット: 1000 の相手。上限なし（2026-10-05 から）。高くなるほど勝っても上がりにくく、負けると大きく下がる
     fresh()
     me = RT.rid_of(rk())
-    RT.get(me, True).update({'r': 1195.0, 'n': 30})   # 1195 でボットに勝つと +8 ほど → 1200 で止まる
+    RT.get(me, True).update({'r': 1195.0, 'n': 30})   # 1195 でボットに勝つと +7.7 ほど（前は 1200 で止まっていた）
     res = RT.apply_game([{'rid': me, 'is_bot': False, 'place': 1}, {'rid': None, 'is_bot': True, 'place': 2}])
-    assert res[me]['cap'] and round(res[me]['after'], 6) == 1200.0, res
+    assert 1202 < res[me]['after'] < 1204 and set(res[me]) == {'before', 'after'}, res
     assert RT.RATINGS[me]['h'] == 0, 'ボットだけの試合は人との試合に数えない'
+    RT.RATINGS[me]['r'] = 1400.0
     res = RT.apply_game([{'rid': me, 'is_bot': False, 'place': 1}, {'rid': None, 'is_bot': True, 'place': 2}])
-    assert res[me]['cap'] and res[me]['after'] == res[me]['before'], res
+    assert 2.5 < res[me]['after'] - res[me]['before'] < 3.2, res   # 1400 でボットに勝つと +2.9
     res = RT.apply_game([{'rid': me, 'is_bot': False, 'place': 2}, {'rid': None, 'is_bot': True, 'place': 1}])
-    assert res[me]['after'] < 1200 - 20 and not res[me]['cap'], res
+    assert -29.5 < res[me]['after'] - res[me]['before'] < -28.5, res   # 負けると −29
     fresh()
     solo = RT.rid_of(rk())
     RT.apply_game([{'rid': solo, 'is_bot': False, 'place': 1}, {'rid': None, 'is_bot': True, 'place': 2}])
     assert RT.rank_of(solo) == (1, 1) and RT.summary(solo)['need'] == 0, 'ボットと1回バトルしただけでランキングに載る'
-    print('OK rating: bots count as 1000; wins against bots stop at 1200; losing to a bot still lowers it')
-    # 人とボットがまざった試合: 人に勝った分はボットの上限に関係なく入る
+    print('OK rating: bots count as 1000 with no cap (smaller gains as you go up, bigger losses); losing to a bot lowers it')
+    # 人とボットがまざった試合: 人もボットも同じ計算（ボットは 1000）。人と戦った試合数も数える
     fresh()
     p, q = RT.rid_of(rk()), RT.rid_of(rk())
     RT.get(p, True).update({'r': 1250.0, 'n': 30})
     res = RT.apply_game([{'rid': p, 'is_bot': False, 'place': 1}, {'rid': q, 'is_bot': False, 'place': 2}, {'rid': None, 'is_bot': True, 'place': 3}])
-    assert res[p]['after'] > 1250 and res[p]['cap'] and RT.RATINGS[p]['h'] == 1 and RT.RATINGS[q]['h'] == 1, res
+    assert res[p]['after'] > 1250 and RT.RATINGS[p]['h'] == 1 and RT.RATINGS[q]['h'] == 1, res
     # 同じ番号が2人（同じ端末の2つの画面）: その番号は数えない
     fresh()
     s1, s2 = RT.rid_of(rk()), RT.rid_of(rk())
     res = RT.apply_game([{'rid': s1, 'is_bot': False, 'place': 1}, {'rid': s1, 'is_bot': False, 'place': 3}, {'rid': s2, 'is_bot': False, 'place': 2}])
     assert res == {}, res   # s1 を外すと人が1人だけ → 試合にならない
-    print('OK rating: human wins count beyond the bot cap; the same device twice in one game is not counted')
+    print('OK rating: humans and bots in one game; the same device twice in one game is not counted')
 
     # 2. ランキング
     fresh()
@@ -241,10 +242,28 @@ async def ws_tests():
         async with s.post(HTTP + '/api/rating/hide', json={'rk': ka, 'hide': True}) as r:
             d = await r.json()
         assert d['ok'] and d['me']['hide'] is True
+        # オフラインで遊んだボットとのバトル（2026-10-05）: 端末がためた結果を、つないだときに受け取ってレートを動かす。同じ試合は2回数えない
+        ko = rk(); now = time.time()
+        games = [{'id': 'g' + secrets.token_hex(6), 't': now - 60, 'place': 1, 'bots': [2]},            # ボット1体に勝った（1,000 → 1,024）
+                 {'id': 'g' + secrets.token_hex(6), 't': now - 30, 'place': 3, 'bots': [1, 2]},         # ボット2体に負けた（最下位）
+                 {'id': 'bad', 't': now, 'place': 9, 'bots': [1]}]                                    # 形がおかしい（id が短い）→ 受け取らない
+        async with s.post(HTTP + '/api/rating/offline', json={'rk': ko, 'name': 'オフ子', 'games': games}) as r:
+            d = await r.json()
+        assert d['ok'] and d['applied'] == 2 and set(d['done']) == {games[0]['id'], games[1]['id']} and d['me']['n'] == 2 and d['me']['rank'] and d['copy'], d
+        rate2 = d['me']['rate']
+        assert rate2 < 1024, d   # 2試合目で下がった
+        async with s.post(HTTP + '/api/rating/offline', json={'rk': ko, 'games': games[:2]}) as r:
+            d = await r.json()
+        assert d['applied'] == 0 and set(d['done']) == {games[0]['id'], games[1]['id']} and d['me']['rate'] == rate2, '同じ試合は2回数えない'
+        async with s.post(HTTP + '/api/ranking', json={'rk': ko}) as r:
+            d = await r.json()
+        assert d['me']['rate'] == rate2 and any(x['me'] and x['name'] == 'オフ子' for x in d['top']), d
+        async with s.post(HTTP + '/api/rating/offline', json={'rk': 'x', 'games': games}) as r:
+            assert r.status == 400
         async with s.post(HTTP + '/api/rating/hide', json={'rk': rk(), 'hide': True}) as r:
             assert r.status == 404, 'レートのない人は切り替えられない'
         await a.close(); await b.close()
-        print('OK ws: hello key -> battle end shows my rating change, final rows, copy; /api/rating, /api/ranking, hide')
+        print('OK ws: hello key -> battle end shows my rating change, final rows, copy; /api/rating, /api/ranking, hide; offline games (applied once)')
         # 合言葉のない古い画面の人どうしでは動かない
         c = await s.ws_connect(URL)
         await c.send_json({'type': 'create', 'name': 'ふるいC'})

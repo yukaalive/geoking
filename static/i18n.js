@@ -85,9 +85,8 @@ const I18N = {
     r_my: 'あなたのバトルのレート', r_rank: '全国 {rank} 位 ／ {total} 人', r_need: 'あと {n} 回バトルするとランキングに載ります',
     r_next: '{title}まで あと {n}', r_top: 'いちばん上の称号です', r_see: 'ランキングを見る', r_title: 'バトルランキング',
     r_anon: '匿名さん', r_hide: 'ランキングに名前を出さない', r_you: 'あなた', r_empty: 'まだ誰も載っていません',
-    r_rule: 'バトルを1回すると載ります（ボット戦でも）。ボット戦で上がるのは 1,200 まで', r_fail: 'ランキングを読めませんでした', r_rate: 'レート',
+    r_rule: 'バトルを1回すると載ります（ボット戦でも）', r_fail: 'ランキングを読めませんでした', r_rate: 'レート',
     r_my_short: 'あなたのレート', r_rank_move: '全国 {from} 位 → {to} 位', r_rank_new: '全国 {to} 位に登場', r_promo: '{title}に昇格！', r_first: 'はじめてのレート',
-    r_capped: 'ボット戦で上がるのは 1,200 まで',
     r_all: 'すべて見る', r_stamp: '昇格！', r_ladder_me: 'あなた', r_lad: '{rank} 位',
   },
   en: {
@@ -163,9 +162,8 @@ const I18N = {
     r_my: 'Your battle rating', r_rank: 'No. {rank} of {total}', r_need: 'Battle {n} more time(s) to join the ranking',
     r_next: '{n} to {title}', r_top: 'You hold the top title', r_see: 'See the ranking', r_title: 'Battle ranking',
     r_anon: 'Anonymous', r_hide: 'Hide my name in the ranking', r_you: 'You', r_empty: 'No one is ranked yet',
-    r_rule: 'One battle puts you on it (bot games count). Bot games raise you up to 1,200', r_fail: "Couldn't load the ranking", r_rate: 'Rating',
+    r_rule: 'One battle puts you on it (bot games count)', r_fail: "Couldn't load the ranking", r_rate: 'Rating',
     r_my_short: 'Your rating', r_rank_move: 'No. {from} → No. {to}', r_rank_new: 'New in the ranking: No. {to}', r_promo: 'Promoted to {title}!', r_first: 'Your first rating',
-    r_capped: 'Bot games raise you up to 1,200',
     r_all: 'See all', r_stamp: 'Promoted!', r_ladder_me: 'You', r_lad: 'No. {rank}',
   },
 };
