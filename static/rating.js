@@ -6,8 +6,8 @@
      ホームの「あなたのバトルのレート」（名前の欄の下。一度でもバトルした端末だけ）、全国ランキング（小窓）
    - 国旗クイズのレート（2026-10-12、ユーザーが選んだ案C「ランキングは2つ（国旗とバトル）」）: ひとりでクイズの国旗モード・国名モードを10問解き終えるたびに動く
      （「国旗クイズでも国名クイズでも、同じ一つのレートに」。首都モードは入れない）。
-     ホームのランキングの枠の「バトル｜国旗クイズ」で切り替え、クイズの国旗モードのカードに「あなたのレート」と「ランキング」、
-     クイズの結果に、バトルと同じ演出でレートの動き。同じ合言葉・同じ控え・同じ「名前を出さない」を使う */
+     ホームのランキングの枠の「バトル｜国旗クイズ」で切り替え、クイズの結果に、バトルと同じ演出でレートの動き。クイズのモードのカードには出さない
+     （ユーザーの指定「トップだけでいい。バトルと国旗のところ」）。同じ合言葉・同じ控え・同じ「名前を出さない」を使う */
 const RATE = (() => {
   const STEPS = [1000, 1100, 1200, 1350, 1500];
   const store = {
@@ -312,14 +312,13 @@ const RATE = (() => {
   const jget = (k) => { try { return JSON.parse(store.get(k) || 'null'); } catch { return null; } };
   const jset = (k, v) => (v == null ? store.del(k) : store.set(k, JSON.stringify(v)));
   const quizPending = () => (jget(QQ) || []).length > 0;
-  let qme = null, qBusy = Promise.resolve();   // qme: 国旗クイズの自分の記録（サーバーの返事）
+  let qBusy = Promise.resolve();
   function quizSync() {   // ためた回を送る（1回に50回まで。同時に2つは送らない）。返り値: サーバーの返事（送るものがなければ null）
     const run = qBusy.then(async () => {
       const q = jget(QQ) || [];
       if (!q.length) return null;
       const d = await post('/api/rating/quiz', { ...creds(), name: store.get('geoking_name') || '', games: q.slice(0, 50) });
       saveCopy(d.copy);
-      if (d.me) qme = d.me;
       const done = new Set(d.done || []), rest = (jget(QQ) || []).filter((g) => !done.has(g.id));
       jset(QQ, rest.length ? rest : null);
       if (!rest.length) jset(QP, null);
@@ -351,27 +350,8 @@ const RATE = (() => {
     if (!m) { box.classList.add('hidden'); box.innerHTML = ''; delete box.dataset.key; return; }
     showPanel(box, m, `quiz:${m.id}|${m.before}>${m.after}|${LANG}`, alive);
   }
-  // クイズの国旗モードのカード: 「あなたのレート」（称号・全国の順位）と「ランキング」ボタン。まだ遊んでいなければ「遊ぶとレートがつきます」
-  function drawQuizCard(box) {
-    if (!box) return;
-    const p = quizPending() && jget(QP), me = qme && qme.n ? qme : null, c = jget('geoking_rc');
-    const rate = p ? Math.round(p.r) : me ? me.rate : c && +c.qn > 0 ? Math.round(+c.qr) : null;
-    const sub = p ? t('r_offline') : me ? (me.rank ? t('r_rank', { rank: fmt(me.rank), total: fmt(me.total) }) : t('rq_need', { n: me.need })) : '';
-    box.innerHTML = (rate == null ? `<span class="qr-none">${t('rq_none')}</span>`
-      : `<span class="qr-label">${t('r_my_short')}</span><span class="qr-main"><b class="qr-num">${fmt(rate)}</b>${chip(rate)}</span>${sub ? `<span class="qr-sub">${escapeHtml(sub)}</span>` : ''}`)
-      + `<button type="button" class="mini qr-see">${ico('trophy', 'sm')} ${t('rq_ranking')}</button>`;
-    box.querySelector('.qr-see').onclick = () => showRanking('flag');
-  }
-  async function quizCard(box) {   // クイズを開いたとき・モードを選ぶに戻ったとき: ためた回を送り、自分の記録を読んで出す
-    drawQuizCard(box);
-    try {
-      if (quizPending()) await quizSync();
-      else if (hasRating()) { const d = await post('/api/rating', { ...creds(), kind: 'flag' }); saveCopy(d.copy); qme = d.me; }
-    } catch {}
-    drawQuizCard(box);
-  }
-  window.addEventListener('online', () => { if (quizPending()) quizSync().then(() => { drawQuizCard($('#qRate')); if ($('#rankCard')) refreshHome(); }).catch(() => {}); });
+  window.addEventListener('online', () => { if (quizPending()) quizSync().then(() => { if ($('#rankCard')) refreshHome(); }).catch(() => {}); });   // 通信が戻ったら、ためた回を送る
 
   return { creds, saveCopy, hasRating, refreshHome, drawHome, showRanking, kind: () => homeKind, lobbyLine, finalLine, renderPanel, chip, fmt, tier, next, titleName,
-    quizResult, quizPanel, quizCard, quizSync };
+    quizResult, quizPanel, quizSync };
 })();

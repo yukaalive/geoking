@@ -90,7 +90,7 @@ const I18N = {
     r_all: 'すべて見る', r_offline: 'つながったら、ランキングに反映します',
     off_note: 'オフラインです。「部屋を作る」で、ボットとバトルできます。レートは次につながったときに反映します。', off_room: 'オフライン', off_no_join: 'オフラインでは、友だちの部屋に入れません', off_rooms: 'オフラインです', r_stamp: '昇格！', r_ladder_me: 'あなた', r_lad: '{rank} 位',
     rk_battle: 'バトル', rk_flag: '国旗クイズ', rq_title: '国旗クイズ\u200bランキング', rq_rule: 'クイズの国旗モードか国名モードを1回（10問）解くと載ります',
-    rq_need: 'あと {n} 回、国旗モードか国名モードを解くとランキングに載ります', rq_none: '遊ぶとレートがつきます', rq_label: '国旗クイズのレート（{level}）', rq_ranking: 'ランキング',
+    rq_need: 'あと {n} 回、国旗モードか国名モードを解くとランキングに載ります', rq_label: '国旗クイズのレート（{level}）',
   },
   en: {
     app_title: 'GeoKing | Flag card geography party game', your_name: 'Your name (required)', name_ph: 'Enter a nickname',
@@ -170,7 +170,7 @@ const I18N = {
     r_all: 'See all', r_offline: 'Added to the ranking when you reconnect',
     off_note: "You're offline. Create a room to battle bots. Your rating updates when you reconnect.", off_room: 'Offline', off_no_join: "You can't join friends' rooms offline", off_rooms: "You're offline", r_stamp: 'Promoted!', r_ladder_me: 'You', r_lad: 'No. {rank}',
     rk_battle: 'Battle', rk_flag: 'Flag quiz', rq_title: 'Flag quiz ranking', rq_rule: 'Finish one quiz in Flag or Name mode (10 questions) to join',
-    rq_need: 'Finish {n} more quiz(zes) in Flag or Name mode to join the ranking', rq_none: 'Play to get a rating', rq_label: 'Flag quiz rating ({level})', rq_ranking: 'Ranking',
+    rq_need: 'Finish {n} more quiz(zes) in Flag or Name mode to join the ranking', rq_label: 'Flag quiz rating ({level})',
   },
 };
 let LANG = (() => { try { const v = localStorage.getItem('geoking_lang'); if (v === 'ja' || v === 'en') return v; } catch {} return (navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en'; })();

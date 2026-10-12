@@ -770,15 +770,6 @@ body.offline-room #copyLink,body.offline-room #lobbyNote,body.offline-room #setT
 .rk-tabs .rk-tab+.rk-tab{border-left:2px solid var(--ink)}
 .rk-tabs .rk-tab.on{background:var(--accent);color:#1c2b22}   /* 金色の上の文字は、ダークモードでも濃い色 */
 .rk-tabs .rk-tab:focus-visible{outline:3px solid var(--primary);outline-offset:-3px}
-/* クイズの国旗モードのカードの「あなたのレート」と「ランキング」（2026-10-12。ホームの「あなたのバトルのレート」と同じ並び） */
-.qm-rate{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;margin-top:2px;padding:10px 12px;border:2px solid var(--ink);border-radius:14px;background:var(--bg)}
-.qm-rate:empty{display:none}
-.qm-rate .qr-label{width:100%;font-size:12px;font-weight:800;color:var(--muted)}
-.qm-rate .qr-main{display:flex;align-items:center;gap:2px}
-.qm-rate .qr-num{font-family:var(--font-head);font-weight:400;font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
-.qm-rate .qr-sub{font-size:13px;font-weight:700;color:var(--muted)}
-.qm-rate .qr-none{font-size:14px;font-weight:800;color:var(--muted)}
-.qm-rate .qr-see{margin-left:auto}
 .qres .ratepanel{text-align:left;margin:14px 0 6px}   /* クイズの結果: 点数の下の「国旗クイズのレート」 */
 @media (prefers-color-scheme:dark){
   .rk-name .tag.you{color:#1c2b22}   /* 金色の「あなた」の札は濃い文字に */

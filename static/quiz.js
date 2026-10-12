@@ -5,7 +5,8 @@
    10問・4択。むずかしさ「ふつう」はまちがい選択肢を同じ地域の国から優先して選ぶ。
    「激ムズ」は、似ている国旗のグループ（SIMILAR_FLAGS）と名前が似ている国のグループ（SIMILAR_NAMES）をまぜて、1問ごとに別のグループから4つを選択肢にする。どちらのモードも同じ
    国旗モードと国名モードは、新しい問題を10問解き終えるたびに、同じ一つの「国旗クイズのレート」が動く（2026-10-12 ユーザーが選んだ案C・「国旗クイズでも国名クイズでも、同じ一つのレートに」。
-   rating.js。「同じ問題でもう一度」は数えない。首都モードは入れない） */
+   rating.js。「同じ問題でもう一度」は数えない。首都モードは入れない）。動きは結果の点数の下に出す。自分のレートはホームのランキングの枠で見る
+   （モードのカードには出さない。ユーザーの指定「トップだけでいい。バトルと国旗のところ」） */
 const Q_TOTAL = 10;
 let qMode = 'flag', qHard = false, qList = [], qIdx = 0, qScore = 0, qWrong = [], qLocked = false, qRated = false, qRun = 0;   // qRated: この回はレートに入る。qRun: 何回目か（遅れて届いたレートを前の回の結果に出さない）
 
@@ -162,7 +163,6 @@ function showScreen(id) { document.querySelectorAll('.qscreen').forEach(s => s.c
 
 function renderMenu() {
   showScreen('qmenu');
-  RATE.quizCard($('#qRate'));   // 国旗モードのカードの「あなたのレート」
 }
 
 function startQuiz(mode, same = false, hard = false) {   // same: 直前と全く同じ問題（問題の順番・4つの選択肢と並びも同じ）でもう一度。hard: 激ムズ
@@ -275,6 +275,7 @@ function spawnConfetti(target, tier) {
   $('#modal').onclick = (e) => { if (e.target.id === 'modal') { $('#modal').classList.add('hidden'); sfx.close(); } };
   window.onLangChange = () => { document.title = t('quiz_title'); if (!$('#qmenu').classList.contains('hidden')) renderMenu(); renderPrefs(); };
   const q = new URLSearchParams(location.search);
-  if (['flag', 'name', 'capital'].includes(q.get('mode'))) { startQuiz(q.get('mode'), false, q.get('level') === 'hard'); RATE.quizCard($('#qRate')); } else renderMenu();   // 通信のないときに解いた回が残っていれば送る
+  RATE.quizSync().catch(() => {});   // 通信のないときに解いた回が残っていれば送る
+  if (['flag', 'name', 'capital'].includes(q.get('mode'))) startQuiz(q.get('mode'), false, q.get('level') === 'hard'); else renderMenu();
   frameReady();
 })();
