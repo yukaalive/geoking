@@ -9,11 +9,15 @@
   高くなるほどボットに勝って当たり前になるので、上がり方は小さく・負けたときの下がり方は大きくなる（ボットに9割勝つ人で 1,380 ほどで止まる）
 - ランキングに載るのは、GAMES_TO_RANK 回以上バトルした人（ボット戦も数える。2026-10-03 ユーザーの指定「botと1回対戦しても乗るようにして」。
   前は人と10回）。名前を出さない設定もある。人と戦った試合数 h は記録だけ続ける
+- 国旗クイズのレート（2026-10-12 ユーザーの指定「ランキングは2つ（国旗とバトル）」「国旗クイズでも国名クイズでも、同じ一つのレートに」）:
+  ひとりでクイズの国旗モード・国名モードを1回（10問）遊ぶごとに、正解数で動く（どちらのモードも同じレート。首都モードは入れない）。
+  クイズを「相手」と見て、ふつうは強さ QUIZ_D['normal']・激ムズは QUIZ_D['hard']。動く大きさは QUIZ_K（激ムズは大きく動く）。
+  同じ記録の qr（レート）・qn（回数）・qbest（最高）に持ち、ランキングは kind='flag' で別に並べる。名前を出さない設定はバトルと共通
 - 消えないように（Render の無料プランは止まるとメモリが消える）:
   ① 運営者のスプレッドシート（sheet_log と同じ Apps Script の「レート」のシート。server.py が起動時に読み、変わった分を送る）
   ② 更新のとき: 新しいサーバーが起動する前に、古いサーバーから全部もらう（server.py の rating_pull。部屋がなくても）。部屋の引っ越しでも一緒に送る
   ③ 端末の控え: サーバーの署名つきの控え（copy_of）を画面が持ち、サーバーが忘れていたら、つないだときに戻す（restore）。
-     署名はサーバーしか作れないので、書き換えた控えは受け取らない。古い控えは、今の記録より試合数が多いときだけ使う
+     署名はサーバーしか作れないので、書き換えた控えは受け取らない。古い控えは、今の記録より遊んだ回数（バトル＋国旗クイズ）が多いときだけ使う
 """
 import hashlib
 import hmac
@@ -29,10 +33,16 @@ NEW_GAMES = 10
 GAMES_TO_RANK = 1
 TOP_N = 50
 MAX_RECORDS = 200000
+QUIZ_TOTAL = 10
+QUIZ_MODES = ('flag', 'name')   # レートに入るクイズのモード（国旗モード・国名モード。同じ一つのレート）
+QUIZ_D = {'normal': 1000.0, 'hard': 1200.0}   # 国旗クイズを「相手」と見たときの強さ（激ムズは強い相手）
+QUIZ_K = {'normal': 16.0, 'hard': 32.0}       # 1回で動く大きさ（激ムズは大きく動く）
+KINDS = {'battle': ('r', 'n', 'best'), 'flag': ('qr', 'qn', 'qbest')}   # ランキングの種類 → 記録の欄（レート・回数・最高）
 
-RATINGS = {}    # rid -> {'r': レート, 'n': 試合数, 'h': 人と戦った試合数, 'best': いちばん高かったレート, 'name': 最後の名前, 'hide': 名前を出さない, 't': 更新した時刻}
+RATINGS = {}    # rid -> {'r': レート, 'n': 試合数, 'h': 人と戦った試合数, 'best': いちばん高かったレート, 'name': 最後の名前, 'hide': 名前を出さない, 't': 更新した時刻,
+                #         'qr': 国旗クイズのレート, 'qn': 国旗クイズの回数, 'qbest': 国旗クイズのいちばん高かったレート}
 DIRTY = set()   # スプレッドシートへまだ送っていない rid
-_cache = {'ver': 0, 'at': -1, 'sorted': []}   # ランキングの並べ替えの使い回し（変わったら作り直す）
+_cache = {}   # ランキングの並べ替えの使い回し（種類ごと。変わったら作り直す）
 _ver = [0]
 
 _SECRET = hashlib.sha256(('geoking-rating\n' + (os.environ.get('RATING_SECRET') or os.environ.get('MIGRATE_KEY') or 'dev-only')).encode('utf-8')).digest()
@@ -56,16 +66,28 @@ def _changed(rid):
     _ver[0] += 1
 
 
+def _fill(rec):
+    """国旗クイズの欄がない記録（2026-10-12 より前・古いサーバーやスプレッドシートから来た記録）に、はじめの値を入れる"""
+    rec.setdefault('qr', START); rec.setdefault('qn', 0); rec.setdefault('qbest', START)
+    return rec
+
+
+def games(rec):
+    """遊んだ回数（バトル＋国旗クイズ）。どちらの記録が新しいかを比べるのに使う"""
+    return rec['n'] + rec.get('qn', 0)
+
+
 def get(rid, create=False):
     rec = RATINGS.get(rid)
     if rec is None and create and valid_rid(rid) and len(RATINGS) < MAX_RECORDS:
         rec = RATINGS[rid] = {'r': START, 'n': 0, 'h': 0, 'best': START, 'name': '', 'hide': False, 't': 0.0}
-    return rec
+    return _fill(rec) if rec is not None else None
 
 
 def rate_of(rid):
+    """バトルのレート（ロビーの名前の下など）。バトルをしたことがなければ None（国旗クイズだけ遊んだ人にも記録はあるが、バトルのレートは出さない）"""
     rec = RATINGS.get(rid) if rid else None
-    return round(rec['r']) if rec else None
+    return round(rec['r']) if rec and rec['n'] else None
 
 
 def _sign(text):
@@ -75,15 +97,16 @@ def _sign(text):
 def copy_of(rid):
     """端末に持たせる控え（c: 中身の文字、s: 署名）。試合をしたことがなければ None"""
     rec = RATINGS.get(rid) if rid else None
-    if not rec or not rec['n']:
+    if not rec or not games(rec):
         return None
-    c = json.dumps({'rid': rid, 'r': round(rec['r'], 2), 'n': rec['n'], 'h': rec['h'], 'best': round(rec['best'], 2), 'hide': rec['hide'], 't': round(rec['t'])},
-                   separators=(',', ':'))
+    _fill(rec)
+    c = json.dumps({'rid': rid, 'r': round(rec['r'], 2), 'n': rec['n'], 'h': rec['h'], 'best': round(rec['best'], 2), 'hide': rec['hide'], 't': round(rec['t']),
+                    'qr': round(rec['qr'], 2), 'qn': rec['qn'], 'qbest': round(rec['qbest'], 2)}, separators=(',', ':'))
     return {'c': c, 's': _sign(c)}
 
 
 def restore(rid, c, s):
-    """端末の控えから戻す。署名が合い、番号が同じで、今の記録より試合数が多いときだけ。戻したら True"""
+    """端末の控えから戻す。署名が合い、番号が同じで、今の記録より遊んだ回数（バトル＋国旗クイズ）が多いときだけ。戻したら True"""
     if not (valid_rid(rid) and isinstance(c, str) and isinstance(s, str) and len(c) < 400):
         return False
     if not hmac.compare_digest(_sign(c), s[:64]):
@@ -91,14 +114,17 @@ def restore(rid, c, s):
     try:
         d = json.loads(c)
         r, n, h, best = float(d['r']), int(d['n']), int(d['h']), float(d['best'])
+        qr, qn = float(d.get('qr', START)), int(d.get('qn', 0))
+        qbest = float(d.get('qbest', qr))
     except (ValueError, KeyError, TypeError):
         return False
-    if d.get('rid') != rid or n <= 0:
+    if d.get('rid') != rid or n + qn <= 0:
         return False
     rec = get(rid, create=True)
-    if rec is None or n <= rec['n']:
+    if rec is None or n + qn <= games(rec):
         return False
-    rec.update({'r': r, 'n': n, 'h': h, 'best': max(best, r), 'hide': bool(d.get('hide')), 't': float(d.get('t') or time.time())})
+    rec.update({'r': r, 'n': n, 'h': h, 'best': max(best, r), 'hide': bool(d.get('hide')), 't': float(d.get('t') or time.time()),
+                'qr': qr, 'qn': qn, 'qbest': max(qbest, qr)})
     _changed(rid)
     return True
 
@@ -160,50 +186,73 @@ def apply_game(entries, now=None):
     return out
 
 
-def eligible(rec):
-    return bool(rec) and rec['n'] >= GAMES_TO_RANK
+def apply_quiz(rid, level, correct, total=QUIZ_TOTAL, name=None, now=None):
+    """国旗クイズ（国旗モード・国名モード）を1回（10問）遊んだ: 正解の割合でレートを動かす（クイズを強さ QUIZ_D[level] の相手と見たイロレーティング）。
+    返り値: {'before', 'after'}。むずかしさや正解数がおかしいときは None"""
+    if not isinstance(level, str) or level not in QUIZ_D or type(correct) is not int or type(total) is not int or total <= 0 or not 0 <= correct <= total:
+        return None
+    rec = get(rid, create=True)
+    if rec is None:
+        return None
+    before = rec['qr']
+    after = before + QUIZ_K[level] * (correct / total - expected(before, QUIZ_D[level]))
+    rec.update({'qr': after, 'qn': rec['qn'] + 1, 'qbest': max(rec['qbest'], after), 't': time.time() if now is None else now})
+    if name:
+        rec['name'] = str(name)[:16]
+    _changed(rid)
+    return {'before': before, 'after': after}
 
 
-def _sorted():
-    if _cache['ver'] != _ver[0] or _cache['at'] < 0:
-        _cache['sorted'] = sorted((rid for rid, rec in RATINGS.items() if eligible(rec)), key=lambda x: (-RATINGS[x]['r'], -RATINGS[x]['n'], x))
-        _cache['ver'], _cache['at'] = _ver[0], 1
-    return _cache['sorted']
+def eligible(rec, kind='battle'):
+    return bool(rec) and rec.get(KINDS[kind][1], 0) >= GAMES_TO_RANK
 
 
-def rank_of(rid):
+def _sorted(kind='battle'):
+    c = _cache.get(kind)
+    if not c or c['ver'] != _ver[0]:
+        rk, nk, _ = KINDS[kind]
+        c = _cache[kind] = {'ver': _ver[0], 'sorted': sorted((rid for rid, rec in RATINGS.items() if eligible(rec, kind)),
+                                                             key=lambda x: (-RATINGS[x].get(rk, START), -RATINGS[x].get(nk, 0), x))}
+    return c['sorted']
+
+
+def rank_of(rid, kind='battle'):
     """(全国の順位 or None, ランキングに載っている人数)。順位は表示のレート（四捨五入）が同じなら同じ順位"""
-    lst = _sorted()
+    lst = _sorted(kind)
     rec = RATINGS.get(rid)
-    if not eligible(rec):
+    if not eligible(rec, kind):
         return None, len(lst)
-    mine = round(rec['r'])
-    return 1 + sum(1 for x in lst if round(RATINGS[x]['r']) > mine), len(lst)
+    rk = KINDS[kind][0]
+    mine = round(rec[rk])
+    return 1 + sum(1 for x in lst if round(RATINGS[x][rk]) > mine), len(lst)
 
 
-def summary(rid):
-    """ホームの「あなたのレート」と、結果発表のための自分の記録"""
+def summary(rid, kind='battle'):
+    """ホームの「あなたのレート」と、結果発表のための自分の記録（kind: 'battle' バトル・'flag' 国旗クイズ）"""
     rec = RATINGS.get(rid)
     if not rec:
         return None
-    rank, total = rank_of(rid)
-    return {'rate': round(rec['r']), 'n': rec['n'], 'h': rec['h'], 'best': round(rec['best']), 'hide': rec['hide'],
-            'rank': rank, 'total': total, 'need': max(0, GAMES_TO_RANK - rec['n'])}
+    _fill(rec)
+    rk, nk, bk = KINDS[kind]
+    rank, total = rank_of(rid, kind)
+    return {'rate': round(rec[rk]), 'n': rec[nk], 'h': rec['h'], 'best': round(rec[bk]), 'hide': rec['hide'],
+            'rank': rank, 'total': total, 'need': max(0, GAMES_TO_RANK - rec[nk])}
 
 
-def ranking(rid=None):
+def ranking(rid=None, kind='battle'):
     """上位 TOP_N 人と、自分の記録"""
-    lst = _sorted()
+    lst = _sorted(kind)
+    rk = KINDS[kind][0]
     top, rank, prev = [], 0, None
     for i, x in enumerate(lst):
-        rv = round(RATINGS[x]['r'])
+        rv = round(RATINGS[x][rk])
         if rv != prev:
             rank, prev = i + 1, rv
         if i >= TOP_N:
             break
         rec = RATINGS[x]
         top.append({'rank': rank, 'name': None if rec['hide'] else (rec['name'] or None), 'rate': rv, 'me': x == rid})
-    return {'top': top, 'total': len(lst), 'need_games': GAMES_TO_RANK, 'me': summary(rid) if rid else None}
+    return {'top': top, 'total': len(lst), 'need_games': GAMES_TO_RANK, 'kind': kind, 'me': summary(rid, kind) if rid else None}
 
 
 def set_hide(rid, hide):
@@ -221,7 +270,8 @@ def export_rows(rids=None):
     """スプレッドシート・引っ越しへ送る形"""
     ids = RATINGS.keys() if rids is None else [x for x in rids if x in RATINGS]
     return [{'rid': x, 'r': round(RATINGS[x]['r'], 2), 'n': RATINGS[x]['n'], 'h': RATINGS[x]['h'], 'best': round(RATINGS[x]['best'], 2),
-             'name': RATINGS[x]['name'], 'hide': RATINGS[x]['hide'], 't': round(RATINGS[x]['t'])} for x in ids]
+             'name': RATINGS[x]['name'], 'hide': RATINGS[x]['hide'], 't': round(RATINGS[x]['t']),
+             'qr': round(_fill(RATINGS[x])['qr'], 2), 'qn': RATINGS[x]['qn'], 'qbest': round(RATINGS[x]['qbest'], 2)} for x in ids]
 
 
 def mark_unsaved(rows):
@@ -230,35 +280,40 @@ def mark_unsaved(rows):
     saved = {}
     for d in rows or []:
         try:
-            saved[str(d['rid'])] = (int(d['n']), float(d.get('t') or 0))
+            saved[str(d['rid'])] = (int(d['n']) + int(d.get('qn') or 0), float(d.get('t') or 0))
         except (ValueError, KeyError, TypeError):
             continue
     got = 0
     for rid, rec in RATINGS.items():
-        if rec['n'] > 0 and (rec['n'], rec['t']) > saved.get(rid, (-1, -1.0)):
+        if games(rec) > 0 and (games(rec), rec['t']) > saved.get(rid, (-1, -1.0)):
             DIRTY.add(rid)
             got += 1
     return got
 
 
 def merge(rows, mark_dirty=False):
-    """スプレッドシート・引っ越しから受け取る。試合数が多い方（同じなら新しい方）を残す。受け取った数を返す"""
+    """スプレッドシート・引っ越しから受け取る。遊んだ回数（バトル＋国旗クイズ）が多い方（同じなら新しい方）を残す。受け取った数を返す。
+    国旗クイズの欄がない行（2026-10-12 より前のサーバー・スプレッドシート）は、国旗クイズをしていない記録として受け取る"""
     got = 0
     for d in rows or []:
         try:
             rid = str(d['rid'])
             n, h, r = int(d['n']), int(d['h']), float(d['r'])
             best, t = float(d.get('best') or r), float(d.get('t') or 0)
+            qn = int(d.get('qn') or 0)
+            qr = float(d.get('qr') or START) if qn else START
+            qbest = float(d.get('qbest') or qr) if qn else START
         except (ValueError, KeyError, TypeError):
             continue
-        if not valid_rid(rid) or n < 0 or h < 0 or not (0 < r < 10000):
+        if not valid_rid(rid) or n < 0 or h < 0 or qn < 0 or not (0 < r < 10000) or not (0 < qr < 10000):
             continue
         rec = RATINGS.get(rid)
-        if rec is not None and (n, t) <= (rec['n'], rec['t']):
+        if rec is not None and (n + qn, t) <= (games(rec), rec['t']):
             continue
         if rec is None and len(RATINGS) >= MAX_RECORDS:
             continue
-        RATINGS[rid] = {'r': r, 'n': n, 'h': h, 'best': max(best, r), 'name': str(d.get('name') or '')[:16], 'hide': bool(d.get('hide')), 't': t}
+        RATINGS[rid] = {'r': r, 'n': n, 'h': h, 'best': max(best, r), 'name': str(d.get('name') or '')[:16], 'hide': bool(d.get('hide')), 't': t,
+                        'qr': qr, 'qn': qn, 'qbest': max(qbest, qr)}
         _ver[0] += 1
         if mark_dirty:
             DIRTY.add(rid)

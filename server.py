@@ -221,7 +221,7 @@ async def rating_flush(session, timeout=30):
             return False
         for row in rows:
             rec = RT.RATINGS.get(row['rid'])
-            if rec and (rec['n'], round(rec['r'], 2), rec['hide']) == (row['n'], row['r'], row['hide']):
+            if rec and (rec['n'], round(rec['r'], 2), rec['hide'], rec.get('qn', 0), round(rec.get('qr', RT.START), 2)) == (row['n'], row['r'], row['hide'], row['qn'], row['qr']):
                 RT.DIRTY.discard(row['rid'])
     return True
 
@@ -1451,24 +1451,31 @@ async def read_json(request, limit=2000):
         return None
 
 
+def rating_kind(d):
+    """ランキングの種類（'battle' バトル・'flag' 国旗クイズ）。送られてこない・おかしいときはバトル"""
+    k = d.get('kind')
+    return k if isinstance(k, str) and k in RT.KINDS else 'battle'
+
+
 async def api_rating(request):
-    """ホームの「あなたのレート」: 端末の合言葉（と控え）を受け取り、自分のレートと全国の順位を返す。サーバーが忘れていたら控えから戻す。
-    合言葉はアドレス（URL）に入れない（記録に残らないよう、本文で送る）"""
+    """自分のレートと全国の順位（kind: バトル・国旗クイズ。クイズの国旗モードのカードは 'flag'）: 端末の合言葉（と控え）を受け取り返す。
+    サーバーが忘れていたら控えから戻す。合言葉はアドレス（URL）に入れない（記録に残らないよう、本文で送る）"""
     d = await read_json(request) or {}
     rid = RT.rid_of(d.get('rk'))
     if not rid:
         return web.json_response({'ok': False}, status=400)
     RT.restore(rid, d.get('rc'), d.get('rs'))
-    return web.json_response({'ok': True, 'me': RT.summary(rid), 'copy': RT.copy_of(rid)}, headers={'Cache-Control': 'no-store'})
+    return web.json_response({'ok': True, 'me': RT.summary(rid, rating_kind(d)), 'copy': RT.copy_of(rid)}, headers={'Cache-Control': 'no-store'})
 
 
 async def api_ranking(request):
-    """全国ランキング（バトル）: 上位50人と自分の記録（ホームの上位5人の枠と、小窓）。端末の控えも返す"""
+    """全国ランキング: 上位50人と自分の記録（ホームの3位までの枠と、小窓）。端末の控えも返す。
+    kind: 'battle'（バトル。送られてこなければこれ）・'flag'（国旗クイズ）"""
     d = await read_json(request) or {}
     rid = RT.rid_of(d.get('rk'))
     if rid:
         RT.restore(rid, d.get('rc'), d.get('rs'))
-    return web.json_response({'ok': True, **RT.ranking(rid), 'copy': RT.copy_of(rid) if rid else None}, headers={'Cache-Control': 'no-store'})
+    return web.json_response({'ok': True, **RT.ranking(rid, rating_kind(d)), 'copy': RT.copy_of(rid) if rid else None}, headers={'Cache-Control': 'no-store'})
 
 
 OFFLINE_MAX_GAMES = 50      # 1回に受け取るオフラインの試合の数
@@ -1504,7 +1511,8 @@ async def api_rating_offline(request):
         if not OFFLINE_ID.match(gid):
             continue
         n = len(bots) + 1
-        if gid in seen or not (1 <= len(bots) < MAX_PLAYERS) or not (1 <= place <= n) or any(not 1 <= b <= n for b in bots) or not (now - 30 * 86400 <= t <= now + 300):
+        t = min(t, now)   # 端末の時計が進んでいても数える（遊んだ時刻は、並べる順と「30日より前」を見るのに使うだけ）
+        if gid in seen or not (1 <= len(bots) < MAX_PLAYERS) or not (1 <= place <= n) or any(not 1 <= b <= n for b in bots) or not (now - 30 * 86400 <= t):
             done.append(gid)   # 同じ試合・形がおかしい・30日より前: 数えずに受け取ったことにする（画面の送るものに残り続けないように）
             continue
         games.append((t, gid, place, bots))
@@ -1520,6 +1528,63 @@ async def api_rating_offline(request):
     if applied:
         log.info('ratings: %d offline game(s) from %s -> %s', applied, name or rid[:6], RT.rate_of(rid))
     return web.json_response({'ok': True, 'applied': applied, 'done': done, 'me': RT.summary(rid), 'copy': RT.copy_of(rid)}, headers={'Cache-Control': 'no-store'})
+
+
+QUIZ_SEEN = {}   # rid -> 受け取った国旗クイズの id（同じ回を2回数えない。メモリの中だけ）
+QUIZ_DAY = {}    # rid -> [日, 受け取った数]
+QUIZ_MAX_PER_DAY = 300
+
+
+async def api_rating_quiz(request):
+    """ひとりでクイズの国旗モード・国名モード（10問）の結果を受け取り、国旗クイズのレートを動かす（2026-10-12 ユーザーが選んだ案C「ランキングは2つ（国旗とバトル）」、
+    「国旗クイズでも国名クイズでも、同じ一つのレートに」）。
+    games: [{id, t（遊んだ時刻）, mode（'flag' 国旗モード・'name' 国名モード。なければ国旗モード）, level（'normal' ふつう・'hard' 激ムズ）, correct（正解数）, total（10）}]。
+    オフラインで遊んだ回もたまっていれば一緒に来る。
+    クイズは端末の中で動くので、結果は端末のものをそのまま受け取る（送りすぎだけは止める）。「同じ問題でもう一度」は画面が送らない。
+    返す res は、いちばん新しい回の前・後と全国の順位の前後（バトルの結果発表と同じ形）。done は受け取った id（画面はそれを送るものから消す）"""
+    d = await read_json(request, limit=20000) or {}
+    rid = RT.rid_of(d.get('rk'))
+    if not rid:
+        return web.json_response({'ok': False}, status=400)
+    RT.restore(rid, d.get('rc'), d.get('rs'))
+    name = clean_name(d.get('name'))
+    if name and not check_name(name)[0]:   # ランキングに出る名前なので、部屋に入るときと同じ確かめ方
+        name = ''
+    now = time.time()
+    day = QUIZ_DAY.get(rid)
+    if not day or day[0] != int(now // 86400):
+        day = QUIZ_DAY[rid] = [int(now // 86400), 0]
+    seen = QUIZ_SEEN.setdefault(rid, collections.deque(maxlen=500))
+    games, done = [], []
+    for g in (d.get('games') if isinstance(d.get('games'), list) else [])[:OFFLINE_MAX_GAMES]:
+        try:
+            gid, t, level, correct, total, mode = str(g['id']), float(g['t']), g['level'], g['correct'], g['total'], g.get('mode', 'flag')
+        except (KeyError, TypeError, ValueError, AttributeError):
+            continue
+        if not OFFLINE_ID.match(gid):
+            continue
+        t = min(t, now)   # 端末の時計が進んでいても数える
+        if (gid in seen or mode not in RT.QUIZ_MODES or not isinstance(level, str) or level not in RT.QUIZ_D or type(correct) is not int or total != RT.QUIZ_TOTAL or type(total) is not int
+                or not 0 <= correct <= total or not (now - 30 * 86400 <= t)):
+            done.append(gid)   # 同じ回・形がおかしい・30日より前: 数えずに受け取ったことにする（画面の送るものに残り続けないように）
+            continue
+        games.append((t, gid, level, correct, total, mode))
+    before = RT.summary(rid, 'flag') or {}
+    res = None
+    for t, gid, level, correct, total, mode in sorted(games):
+        if day[1] >= QUIZ_MAX_PER_DAY:
+            break
+        got = RT.apply_quiz(rid, level, correct, total, name)
+        if got:
+            day[1] += 1
+            res = {'id': gid, 'mode': mode, 'before': round(got['before']), 'after': round(got['after'])}
+        seen.append(gid)
+        done.append(gid)
+    me = RT.summary(rid, 'flag')
+    if res:
+        res.update({'rank_before': before.get('rank'), 'rank_after': me['rank'], 'total': me['total'], 'need': me['need'], 'first': not before.get('n')})
+        log.info('ratings: flag quiz (%s) from %s -> %s', res['mode'], name or rid[:6], res['after'])
+    return web.json_response({'ok': True, 'res': res, 'done': done, 'me': me, 'copy': RT.copy_of(rid)}, headers={'Cache-Control': 'no-store'})
 
 
 async def api_rating_hide(request):
@@ -1798,6 +1863,7 @@ def make_app():
     app.router.add_post('/api/ranking', api_ranking)
     app.router.add_post('/api/rating/hide', api_rating_hide)
     app.router.add_post('/api/rating/offline', api_rating_offline)
+    app.router.add_post('/api/rating/quiz', api_rating_quiz)
     app.router.add_get('/admin/visits', admin_visits)
     app.router.add_get('/api/rooms', api_rooms)
     app.router.add_get('/api/room/{code}', api_room)

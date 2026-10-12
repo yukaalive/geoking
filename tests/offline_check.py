@@ -57,6 +57,9 @@ async def main():
         await cmd('Network.emulateNetworkConditions', offline=True, latency=0, downloadThroughput=-1, uploadThroughput=-1)
         srv.terminate(); srv.wait(5)
         await cmd('Page.navigate', url=f'{HTTP}/static/index.html'); await asyncio.sleep(2.5)
+        for _ in range(30):   # 通信のない読み込みは、国旗を覚えている最中などで遅いことがある（2.5秒では画面の部品がまだ動いていなかった）
+            if await ev("typeof META !== 'undefined' && !!META"): break
+            await asyncio.sleep(0.5)
         print('offline home:', await ev("JSON.stringify({ online: navigator.onLine, note: !document.getElementById('offlineNote').classList.contains('hidden'), noteText: document.getElementById('offlineNote').innerText, rooms: document.getElementById('publicRoomList').innerText, meta: !!META, docW: document.documentElement.scrollWidth })"))
         await shot('1_home')
         await ev(f"(async () => {{ {SLEEP} document.getElementById('createBtn').click(); for (let i = 0; i < 50 && !(state && state.phase === 'lobby'); i++) await sleep(100); return 1; }})()")

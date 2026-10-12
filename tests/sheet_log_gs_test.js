@@ -26,6 +26,7 @@ function makeSheet(name) {
     getLastRow: () => sh.cells.length, getMaxRows: () => sh.maxRows, getMaxColumns: () => sh.maxCols, getRange: range,
     insertRowsAfter(after, n) { assert.strictEqual(after, sh.maxRows); sh.maxRows += n; },
     deleteColumns(start, n) { assert.ok(start + n - 1 <= sh.maxCols); sh.maxCols -= n; },
+    insertColumnsAfter(after, n) { assert.strictEqual(after, sh.maxCols); sh.maxCols += n; },
     setFrozenRows(n) { sh.frozen = n; }, setColumnWidth() {},
     deleteRows(start, n) {
       assert.ok(start > sh.frozen && start + n - 1 <= sh.maxRows, `deleteRows(${start}, ${n}) outside`);
@@ -171,8 +172,8 @@ const ok = (m) => { results.push('OK: ' + m); };
   const { env, props, sheets } = makeEnv();
   env.setup();
   const rate = () => sheets.find((s) => s.name === 'レート');
-  assert.deepStrictEqual(rate().cells[0], ['番号', '名前', 'レート', '試合', '人との試合', '最高', '名前を出さない', '更新日時']);
-  assert.strictEqual(rate().maxCols, 8);
+  assert.deepStrictEqual(rate().cells[0], ['番号', '名前', 'レート', '試合', '人との試合', '最高', '名前を出さない', '更新日時', '国旗クイズのレート', '国旗クイズの回数', '国旗クイズの最高']);
+  assert.strictEqual(rate().maxCols, 11);
   const A = 'a'.repeat(20), B = 'b'.repeat(20);
   assert.strictEqual(post(env, { key: 'wrong', action: 'ratings_get' }).ok, false);
   assert.strictEqual(post(env, { key: 'wrong', action: 'ratings_put', rows: [{ rid: A, r: 1024, n: 1, h: 1 }] }).ok, false);
@@ -189,7 +190,7 @@ const ok = (m) => { results.push('OK: ' + m); };
   assert.ok(rate().cells[1][7] instanceof Date, '更新日時が日付ではない');
   let got = post(env, { key: props.LOG_KEY, action: 'ratings_get' });
   assert.ok(got.ok && got.rows.length === 2);
-  assert.deepStrictEqual(got.rows[0], { rid: A, name: '=はなこ', r: 1024, n: 1, h: 1, best: 1024, hide: false, t: t0 });
+  assert.deepStrictEqual(got.rows[0], { rid: A, name: '=はなこ', r: 1024, n: 1, h: 1, best: 1024, hide: false, t: t0, qr: 1000, qn: 0, qbest: 1000 });
   assert.strictEqual(got.rows[1].hide, true);
   ok('レート: 1人1行で書き、読むと番号・名前（先頭の \' なし）・数字・名前を出さない・更新日時（秒）で返す。番号や数字がおかしい行は書かない');
   r = post(env, { key: props.LOG_KEY, action: 'ratings_put', rows: [{ rid: A, name: 'はなこ', r: 1050, n: 2, h: 2, best: 1050, t: t0 + 60 }, { rid: B, name: 'たろう', r: 1100, n: 0, h: 0, t: t0 + 60 }] });
@@ -204,6 +205,31 @@ const ok = (m) => { results.push('OK: ' + m); };
   assert.deepStrictEqual(got.map((x) => x.rid), [A], '1年より前のレートが消えない／新しいレートが消えた');
   assert.strictEqual(env.__locks, env.__unlocks);
   ok('レート: 毎日の片付け（deleteOldRows）で、最後に遊んでから1年たった行を消す（ログが空の日も）');
+  r = post(env, { key: props.LOG_KEY, action: 'ratings_put', rows: [{ rid: A, name: 'はなこ', r: 1050, n: 2, h: 2, best: 1050, t: t0 + 120, qr: 1012.345, qn: 1, qbest: 1012.345 }] });
+  assert.deepStrictEqual(r, { ok: true, updated: 1, added: 0, stale: 0 }, 'バトルの試合数が同じで国旗クイズだけ増えた行を受けない');
+  got = post(env, { key: props.LOG_KEY, action: 'ratings_get' }).rows;
+  assert.deepStrictEqual([got[0].qr, got[0].qn, got[0].qbest, got[0].n], [1012.35, 1, 1012.35, 2]);
+  r = post(env, { key: props.LOG_KEY, action: 'ratings_put', rows: [{ rid: A, name: 'はなこ', r: 1060, n: 2, h: 2, best: 1060, t: t0 + 180, qr: 1000, qn: 0 }] });
+  assert.deepStrictEqual(r, { ok: true, updated: 0, added: 0, stale: 1 }, '国旗クイズの回数が減る古い書き込みを受けた');
+  ok('国旗クイズ: 同じ行の右の3列に書き、読むと qr・qn・qbest で返す。古いかどうかはバトル＋国旗クイズの回数で見る');
+}
+
+{ // 2026-10-12 より前に作った8列の「レート」のシート: 国旗クイズの3列を右に足し、前の行はそのまま読める
+  const { env, props, sheets } = makeEnv();
+  env.setup();
+  const rate = () => sheets.find((s) => s.name === 'レート');
+  rate().maxCols = 8;
+  rate().cells[0] = rate().cells[0].slice(0, 8);
+  const A = 'a'.repeat(20), t0 = Math.round(now());
+  rate().cells[1] = ["'" + A, "'はなこ", 1024, 1, 1, 1024, false, new Date(t0 * 1000)];
+  let got = post(env, { key: props.LOG_KEY, action: 'ratings_get' });
+  assert.strictEqual(rate().maxCols, 11, '列を足していない');
+  assert.deepStrictEqual(rate().cells[0].slice(8), ['国旗クイズのレート', '国旗クイズの回数', '国旗クイズの最高']);
+  assert.deepStrictEqual(got.rows[0], { rid: A, name: 'はなこ', r: 1024, n: 1, h: 1, best: 1024, hide: false, t: t0, qr: 1000, qn: 0, qbest: 1000 });
+  const r = post(env, { key: props.LOG_KEY, action: 'ratings_put', rows: [{ rid: A, name: 'はなこ', r: 1024, n: 1, h: 1, best: 1024, t: t0 + 60, qr: 1008, qn: 1, qbest: 1008 }] });
+  assert.deepStrictEqual(r, { ok: true, updated: 1, added: 0, stale: 0 });
+  assert.deepStrictEqual(rate().cells[1].slice(8), [1008, 1, 1008]);
+  ok('前に作った8列のシート: 国旗クイズの3列（見出しつき）を右に足す。前の行は国旗クイズ 1,000・0回として読み、上書きもできる');
 }
 
 console.log(results.join('\n') + '\nALL OK');

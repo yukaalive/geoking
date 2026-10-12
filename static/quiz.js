@@ -3,9 +3,11 @@
    - 国名モード: 国旗 → 国名を4つから選ぶ
    - 首都モード: 国（国旗＋国名）→ 首都を4つから選ぶ（2026-09-28。激ムズは SIMILAR_CAPITALS）
    10問・4択。むずかしさ「ふつう」はまちがい選択肢を同じ地域の国から優先して選ぶ。
-   「激ムズ」は、似ている国旗のグループ（SIMILAR_FLAGS）と名前が似ている国のグループ（SIMILAR_NAMES）をまぜて、1問ごとに別のグループから4つを選択肢にする。どちらのモードも同じ */
+   「激ムズ」は、似ている国旗のグループ（SIMILAR_FLAGS）と名前が似ている国のグループ（SIMILAR_NAMES）をまぜて、1問ごとに別のグループから4つを選択肢にする。どちらのモードも同じ
+   国旗モードと国名モードは、新しい問題を10問解き終えるたびに、同じ一つの「国旗クイズのレート」が動く（2026-10-12 ユーザーが選んだ案C・「国旗クイズでも国名クイズでも、同じ一つのレートに」。
+   rating.js。「同じ問題でもう一度」は数えない。首都モードは入れない） */
 const Q_TOTAL = 10;
-let qMode = 'flag', qHard = false, qList = [], qIdx = 0, qScore = 0, qWrong = [], qLocked = false;
+let qMode = 'flag', qHard = false, qList = [], qIdx = 0, qScore = 0, qWrong = [], qLocked = false, qRated = false, qRun = 0;   // qRated: この回はレートに入る。qRun: 何回目か（遅れて届いたレートを前の回の結果に出さない）
 
 // 似ている国旗のグループ（激ムズ用）。1グループ4か国以上。2026-09-26 に作った一覧（参考: geoguessrtips.com の「似ている国旗」と、197か国の見直し）
 const SIMILAR_FLAGS = [
@@ -160,10 +162,13 @@ function showScreen(id) { document.querySelectorAll('.qscreen').forEach(s => s.c
 
 function renderMenu() {
   showScreen('qmenu');
+  RATE.quizCard($('#qRate'));   // 国旗モードのカードの「あなたのレート」
 }
 
 function startQuiz(mode, same = false, hard = false) {   // same: 直前と全く同じ問題（問題の順番・4つの選択肢と並びも同じ）でもう一度。hard: 激ムズ
-  qMode = mode; qHard = hard; if (!same || !qList.length) qList = makeQuestions(hard, mode); qIdx = 0; qScore = 0; qWrong = [];
+  const fresh = !same || !qList.length;
+  qMode = mode; qHard = hard; if (fresh) qList = makeQuestions(hard, mode); qIdx = 0; qScore = 0; qWrong = [];
+  qRated = (mode === 'flag' || mode === 'name') && fresh; qRun++;   // 国旗モード・国名モードの新しい問題だけレートに入る（同じ問題は答えを覚えているので数えない）
   $('#qTotal').textContent = Q_TOTAL;
   sfx.start();
   showScreen('qplay');
@@ -238,6 +243,9 @@ function finish() {
     d.onclick = () => { sfx.select(); showCountry(c.id); }; box.appendChild(d);
   }
   showScreen('qresult');
+  const panel = $('#qRatePanel'), run = qRun, alive = () => run === qRun && !$('#qresult').classList.contains('hidden');
+  RATE.quizPanel(panel, null);   // 前の回の分を消す（同じ問題でもう一度は出さない）
+  if (qRated) RATE.quizResult(qMode, qHard ? 'hard' : 'normal', qScore, Q_TOTAL).then((m) => { if (alive()) RATE.quizPanel(panel, m, alive); });   // 点数の下に、国旗クイズのレートの動き
   setTimeout(() => { if (rate === 1) sfx.champion(); else if (rate >= 0.5) sfx.win(); else sfx.lose(); }, 250);
   if (rate >= 0.8 && typeof spawnConfetti === 'function') setTimeout(() => spawnConfetti($('#qResDisc'), rate === 1 ? 'gold' : 'silver'), 400);
 }
@@ -267,6 +275,6 @@ function spawnConfetti(target, tier) {
   $('#modal').onclick = (e) => { if (e.target.id === 'modal') { $('#modal').classList.add('hidden'); sfx.close(); } };
   window.onLangChange = () => { document.title = t('quiz_title'); if (!$('#qmenu').classList.contains('hidden')) renderMenu(); renderPrefs(); };
   const q = new URLSearchParams(location.search);
-  if (['flag', 'name', 'capital'].includes(q.get('mode'))) startQuiz(q.get('mode'), false, q.get('level') === 'hard'); else renderMenu();
+  if (['flag', 'name', 'capital'].includes(q.get('mode'))) { startQuiz(q.get('mode'), false, q.get('level') === 'hard'); RATE.quizCard($('#qRate')); } else renderMenu();   // 通信のないときに解いた回が残っていれば送る
   frameReady();
 })();

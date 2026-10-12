@@ -7,7 +7,11 @@
 4. 部屋（server.py の Room を直接）: バトルが終わるとレートが動き、最後の順位の行に前・後、本人に全国の順位の前後。途中で抜けた人も負けとして動く。
    1ゲームに1回だけ。パーティーでは動かない。引っ越し（room_to_dict → room_from_dict）でレートの番号と動きを引き継ぐ
 5. つないで遊ぶ（WebSocket）: hello で合言葉を送って部屋を作り・入り、バトルで相手が抜けて決着 → 結果発表に自分のレートの動き、
-   /api/rating と /api/ranking と名前を出さない設定。合言葉のない古い画面の人はレートが動かない"""
+   /api/rating と /api/ranking と名前を出さない設定。合言葉のない古い画面の人はレートが動かない
+6. 国旗クイズのレート（2026-10-12）: 国旗モード・国名モードの10問の正解数で、同じ一つのレートが動く（ふつうは小さく・激ムズは大きく。
+   上手な人ほどふつうでは上がりにくい。首都モードは入れない）。
+   ランキングはバトルと別（kind='flag'）。控え・スプレッドシート・引っ越しでも消えない（国旗クイズの欄がない古い行も受け取る）。
+   /api/rating/quiz（同じ回は2回数えない・形がおかしい回は数えない）と /api/ranking の kind"""
 import asyncio, json, os, secrets, sys, time
 import aiohttp
 
@@ -190,6 +194,61 @@ def unit_tests():
     server.rooms.pop('RATE', None)
     print('OK room: moving to a new server keeps rating ids and the rating changes')
 
+    # 6. 国旗クイズ
+    fresh()
+    k = rk(); me = RT.rid_of(k)
+    expect = {('normal', 10): 8.0, ('normal', 8): 4.8, ('normal', 5): 0.0, ('hard', 10): 24.31, ('hard', 8): 17.91, ('hard', 5): 8.31}
+    for (level, correct), dv in expect.items():
+        RT.RATINGS.clear()
+        got = RT.apply_quiz(me, level, correct)
+        assert abs(got['before'] - 1000) < 1e-9 and abs(got['after'] - 1000 - dv) < 0.01, (level, correct, got)
+    for (level, correct), dv in {('normal', 10): 2.42, ('normal', 8): -0.78, ('normal', 5): -5.58, ('hard', 10): 11.52, ('hard', 8): 5.12, ('hard', 5): -4.48}.items():
+        RT.RATINGS.clear()
+        RT.get(me, True)['qr'] = 1300.0
+        got = RT.apply_quiz(me, level, correct)
+        assert abs(got['after'] - 1300 - dv) < 0.01, (level, correct, got)
+    print('OK flag quiz: normal moves a little, hard a lot (1,000: +8/+5/0 vs +24/+18/+8; 1,300: +2/-1/-6 vs +12/+5/-4)')
+    fresh()
+    q, b = RT.rid_of(rk()), RT.rid_of(rk())
+    for bad in [('x', 5, 10), ('normal', 11, 10), ('normal', '8', 10), ('normal', True, 10), ('normal', 5, 0), (['hard'], 5, 10)]:
+        assert RT.apply_quiz(q, *bad) is None and q not in RT.RATINGS, bad
+    RT.apply_quiz(q, 'hard', 9, name='クイズ子')
+    RT.apply_game([{'rid': b, 'is_bot': False, 'place': 1, 'name': 'バトル子'}, {'rid': None, 'is_bot': True, 'place': 2}])
+    rec = RT.RATINGS[q]
+    assert rec['qn'] == 1 and rec['n'] == 0 and rec['r'] == 1000 and rec['qbest'] == rec['qr'] > 1000 and rec['name'] == 'クイズ子', rec
+    assert RT.rate_of(q) is None and RT.rate_of(b) == 1024, 'クイズだけの人には、ロビーなどでバトルのレートを出さない'
+    fl, bt = RT.ranking(q, 'flag'), RT.ranking(q)
+    assert fl['total'] == 1 and [x['name'] for x in fl['top']] == ['クイズ子'] and fl['me']['rank'] == 1 and fl['me']['n'] == 1 and fl['kind'] == 'flag', fl
+    assert bt['total'] == 1 and [x['name'] for x in bt['top']] == ['バトル子'] and bt['me']['rank'] is None and bt['me']['need'] == 1, bt
+    RT.apply_game([{'rid': q, 'is_bot': False, 'place': 2}, {'rid': None, 'is_bot': True, 'place': 1}])
+    assert RT.RATINGS[q]['qn'] == 1 and RT.ranking(q)['total'] == 2 and RT.ranking(q, 'flag')['total'] == 1
+    RT.set_hide(q, True)
+    assert RT.ranking(None, 'flag')['top'][0]['name'] is None, '名前を出さない設定はバトルと共通'
+    print('OK flag quiz: own ranking (separate from battles), bad results not counted, hide is shared')
+    # 控え・スプレッドシート・引っ越し
+    cp = RT.copy_of(q)
+    qr = RT.RATINGS[q]['qr']
+    RT.RATINGS.clear()
+    assert RT.restore(q, cp['c'], cp['s']) and abs(RT.RATINGS[q]['qr'] - qr) < 0.01 and RT.RATINGS[q]['qn'] == 1 and RT.RATINGS[q]['n'] == 1
+    RT.apply_quiz(q, 'normal', 10)
+    assert not RT.restore(q, cp['c'], cp['s']), '国旗クイズを遊んだあとの記録は、前の控えで戻さない'
+    RT.RATINGS.clear()
+    cq = RT.rid_of(rk()); RT.apply_quiz(cq, 'normal', 7)
+    cp = RT.copy_of(cq)
+    assert cp and '"qn":1' in cp['c'], '国旗クイズだけ遊んだ人にも控えがある'
+    rows = RT.export_rows()
+    assert rows[0]['qn'] == 1 and rows[0]['n'] == 0 and abs(rows[0]['qr'] - RT.RATINGS[cq]['qr']) < 0.01
+    RT.RATINGS.clear()
+    old = {'rid': cq, 'r': 1010, 'n': 1, 'h': 0, 'best': 1010, 'name': 'む', 'hide': False, 't': 50}   # 国旗クイズの欄がない（前のサーバー・シート）
+    assert RT.merge([old]) == 1 and RT.RATINGS[cq]['qn'] == 0 and RT.RATINGS[cq]['qr'] == 1000
+    assert RT.merge([{**old, 'qr': 1020.5, 'qn': 2, 'qbest': 1030, 't': 40}]) == 1 and RT.RATINGS[cq]['qn'] == 2 and RT.RATINGS[cq]['qbest'] == 1030, '国旗クイズの回数が多い方を残す'
+    assert RT.merge([{**old, 't': 99}]) == 0, '回数（バトル＋国旗クイズ）の少ない行では戻らない'
+    RT.DIRTY.clear()
+    assert RT.mark_unsaved([{**old, 'qn': 1}]) == 1 and RT.DIRTY == {cq}, 'シートの国旗クイズが古ければ送り直す'
+    RT.DIRTY.clear()
+    assert RT.mark_unsaved([{**old, 'qn': 2, 't': 40}]) == 0
+    print('OK flag quiz: kept by the device copy, the sheet and server moves (old rows without quiz fields still load)')
+
 
 # ---------- 5. つないで遊ぶ
 async def recv_state(ws, pred=lambda d: True, timeout=10):
@@ -264,6 +323,40 @@ async def ws_tests():
             assert r.status == 404, 'レートのない人は切り替えられない'
         await a.close(); await b.close()
         print('OK ws: hello key -> battle end shows my rating change, final rows, copy; /api/rating, /api/ranking, hide; offline games (applied once)')
+        # 国旗クイズ（2026-10-12）: 10問の結果を送るとレートが動き、国旗クイズのランキングに載る（バトルのランキングには載らない）
+        kq = rk(); now = time.time()
+        g1 = {'id': 'q' + secrets.token_hex(6), 't': now - 5, 'level': 'hard', 'correct': 10, 'total': 10}
+        bads = [{'id': 'q-bad-level', 't': now, 'level': 'x', 'correct': 5, 'total': 10}, {'id': 'q' + secrets.token_hex(6), 't': now, 'level': 'normal', 'correct': 11, 'total': 10},
+                {'id': 'q' + secrets.token_hex(6), 't': now, 'level': 'normal', 'correct': 5, 'total': 20}, {'id': 'q' + secrets.token_hex(6), 't': now - 40 * 86400, 'level': 'normal', 'correct': 5, 'total': 10}]
+        async with s.post(HTTP + '/api/rating/quiz', json={'rk': kq, 'name': 'クイズ子', 'games': [g1] + bads}) as r:
+            d = await r.json()
+        res = d['res']
+        assert d['ok'] and res['id'] == g1['id'] and res['before'] == 1000 and res['after'] == 1024 and res['first'] and res['rank_before'] is None and res['rank_after'] >= 1, d
+        assert d['me']['n'] == 1 and d['me']['rate'] == 1024 and set(d['done']) == {g['id'] for g in [g1] + bads} and d['copy'], d
+        async with s.post(HTTP + '/api/rating/quiz', json={'rk': kq, 'games': [g1]}) as r:
+            d = await r.json()
+        assert d['res'] is None and d['done'] == [g1['id']] and d['me']['rate'] == 1024, '同じ回は2回数えない'
+        g2 = {'id': 'q' + secrets.token_hex(6), 't': now, 'level': 'normal', 'correct': 2, 'total': 10}   # ふつうで2問 → 下がる
+        async with s.post(HTTP + '/api/rating/quiz', json={'rk': kq, 'name': 'クイズ子', 'games': [g2]}) as r:
+            d = await r.json()
+        assert d['res']['before'] == 1024 and d['res']['after'] < 1024 and not d['res']['first'] and d['res']['rank_before'] >= 1, d
+        # 国名モードも同じ一つのレート（「国旗クイズでも国名クイズでも、同じ一つのレートに」）。首都モードは数えない。端末の時計が進んでいても数える
+        rate2 = d['res']['after']
+        g3 = {'id': 'q' + secrets.token_hex(6), 't': now + 3600, 'mode': 'name', 'level': 'hard', 'correct': 10, 'total': 10}
+        gc = {'id': 'q' + secrets.token_hex(6), 't': now, 'mode': 'capital', 'level': 'hard', 'correct': 10, 'total': 10}
+        async with s.post(HTTP + '/api/rating/quiz', json={'rk': kq, 'name': 'クイズ子', 'games': [g3, gc]}) as r:
+            d = await r.json()
+        assert d['res']['id'] == g3['id'] and d['res']['mode'] == 'name' and d['res']['before'] == rate2 and d['res']['after'] > rate2 and d['me']['n'] == 3, d
+        assert set(d['done']) == {g3['id'], gc['id']}, d
+        async with s.post(HTTP + '/api/ranking', json={'rk': kq, 'kind': 'flag'}) as r:
+            d = await r.json()
+        assert d['kind'] == 'flag' and d['me']['n'] == 3 and any(x['me'] and x['name'] == 'クイズ子' for x in d['top']), d
+        async with s.post(HTTP + '/api/ranking', json={'rk': kq, 'kind': ['flag']}) as r:
+            d = await r.json()
+        assert d['kind'] == 'battle' and d['me']['rank'] is None and not any(x['name'] == 'クイズ子' for x in d['top']), 'バトルのランキングには載らない'
+        async with s.post(HTTP + '/api/rating/quiz', json={'rk': 'x', 'games': [g2]}) as r:
+            assert r.status == 400
+        print('OK ws: flag and name mode results move the same flag-quiz rating once (capital mode and bad ones ignored); /api/ranking kind=flag; not in the battle ranking')
         # 合言葉のない古い画面の人どうしでは動かない
         c = await s.ws_connect(URL)
         await c.send_json({'type': 'create', 'name': 'ふるいC'})

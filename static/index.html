@@ -97,7 +97,8 @@
       </div>
     </div>
     <div class="card hero hidden" id="rankCard">
-      <h2><svg class="ico " aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> <span data-i18n="r_title">バトルランキング</span></h2>
+      <h2><svg class="ico " aria-hidden="true"><use href="/static/icons.svg?v=2#trophy"/></svg> <span id="rankTitle">バトルランキング</span></h2>
+      <div class="rk-tabs" role="tablist"><button type="button" class="rk-tab on" data-kind="battle" role="tab" aria-selected="true" data-i18n="rk_battle">バトル</button><button type="button" class="rk-tab" data-kind="flag" role="tab" aria-selected="false" data-i18n="rk_flag">国旗クイズ</button></div>
       <ol id="homeRankList" class="rk-list"></ol>
       <div class="rk-more"><button id="rankAllBtn" class="mini" type="button" data-i18n="r_all">すべて見る</button></div>
     </div>

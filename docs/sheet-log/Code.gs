@@ -10,6 +10,8 @@
  * - バトルのレート（2026-10-03〜）: シート「レート」に、端末ごとの番号（合言葉そのものではない）・名前・レート・試合数などを1人1行で残す。
  *   サーバーが起動したときに全部読み（action: ratings_get）、変わった人の行を送ってくる（action: ratings_put。同じ番号は上書き、
  *   試合数が減る古い書き込みは受けない）。最後に遊んでから RATE_KEEP_DAYS 日たった行は、毎日の deleteOldRows で一緒に消す（プライバシーポリシー）
+ * - 国旗クイズのレート（2026-10-12〜）: 同じ行の右に「国旗クイズのレート・回数・最高」の3列。前に作った8列のシートには、自動で3列を足す。
+ *   古い書き込みかどうかは、バトルと国旗クイズを合わせた回数で見る
  */
 const SHEET_NAME = 'ログ';
 const KEEP_DAYS = 85;           // 1日1回消す。失敗した日があっても90日以内に消えるよう余裕をもたせる
@@ -17,7 +19,7 @@ const MAX_KEEP_ROWS = 200000;   // 7列×20万行 = 140万セル（スプレッ�
 const HEADER = ['日時', '出来事', '部屋コード', '部屋名', 'ニックネーム', '人数', 'くわしく'];
 const MAX_ROWS_PER_POST = 1000;
 const RATE_SHEET = 'レート';
-const RATE_HEADER = ['番号', '名前', 'レート', '試合', '人との試合', '最高', '名前を出さない', '更新日時'];
+const RATE_HEADER = ['番号', '名前', 'レート', '試合', '人との試合', '最高', '名前を出さない', '更新日時', '国旗クイズのレート', '国旗クイズの回数', '国旗クイズの最高'];
 const RATE_KEEP_DAYS = 365;     // 最後に遊んでから1年たったレートは消す
 const MAX_RATES_PER_POST = 1000;
 
@@ -96,6 +98,9 @@ function rateSheet() {
     sh.getRange(1, 1, 1, RATE_HEADER.length).setValues([RATE_HEADER]).setFontWeight('bold');
     sh.setFrozenRows(1);
     sh.setColumnWidth(1, 190); sh.setColumnWidth(2, 130); sh.setColumnWidth(8, 150);
+  } else if (sh.getMaxColumns() < RATE_HEADER.length) {   // 2026-10-12 より前に作ったシート（8列）: 国旗クイズの列を右に足す
+    sh.insertColumnsAfter(sh.getMaxColumns(), RATE_HEADER.length - sh.getMaxColumns());
+    sh.getRange(1, 1, 1, RATE_HEADER.length).setValues([RATE_HEADER]).setFontWeight('bold');
   }
   return sh;
 }
@@ -109,8 +114,15 @@ function plain(v) {
 function toRateRow(r) {
   const num = (v) => Math.round(Number(v) * 100) / 100;
   const t = Number(r.t);
+  const qr = Number(r.qr) > 0 && Number(r.qr) < 10000 ? Number(r.qr) : 1000;
   return ["'" + r.rid, "'" + String(r.name == null ? '' : r.name).slice(0, 16), num(r.r), Math.floor(Number(r.n)), Math.floor(Number(r.h) || 0),
-    num(isFinite(Number(r.best)) ? r.best : r.r), !!r.hide, isFinite(t) && t > 0 ? new Date(t * 1000) : new Date()];
+    num(isFinite(Number(r.best)) ? r.best : r.r), !!r.hide, isFinite(t) && t > 0 ? new Date(t * 1000) : new Date(),
+    num(qr), Math.floor(Number(r.qn) || 0), num(Number(r.qbest) > 0 ? r.qbest : qr)];
+}
+
+/** バトルと国旗クイズを合わせた回数（どちらの書き込みが新しいかを比べる） */
+function gamesOf(n, qn) {
+  return (Number(n) || 0) + (Number(qn) || 0);
 }
 
 function okRate(r) {
@@ -124,11 +136,12 @@ function getRatings() {
   if (last < 2) return [];
   return sh.getRange(2, 1, last - 1, RATE_HEADER.length).getValues()
     .map((v) => ({ rid: plain(v[0]), name: plain(v[1]), r: Number(v[2]), n: Number(v[3]), h: Number(v[4]), best: Number(v[5]),
-      hide: v[6] === true || String(v[6]).toUpperCase() === 'TRUE', t: v[7] instanceof Date ? Math.round(v[7].getTime() / 1000) : Number(v[7]) || 0 }))
+      hide: v[6] === true || String(v[6]).toUpperCase() === 'TRUE', t: v[7] instanceof Date ? Math.round(v[7].getTime() / 1000) : Number(v[7]) || 0,
+      qr: Number(v[8]) || 1000, qn: Number(v[9]) || 0, qbest: Number(v[10]) || Number(v[8]) || 1000 }))
     .filter(okRate);
 }
 
-/** 変わった人の行を書く。同じ番号の行は上書き（試合数が減る古い書き込みは受けない）、新しい人は下に足す */
+/** 変わった人の行を書く。同じ番号の行は上書き（遊んだ回数（バトル＋国旗クイズ）が減る古い書き込みは受けない）、新しい人は下に足す */
 function putRatings(rows) {
   const byId = new Map();
   (Array.isArray(rows) ? rows : []).slice(0, MAX_RATES_PER_POST).filter(okRate).forEach((r) => byId.set(String(r.rid), r));   // 同じ番号が2回あれば後の方
@@ -137,14 +150,14 @@ function putRatings(rows) {
   try {
     const sh = rateSheet();
     const last = sh.getLastRow();
-    const have = last >= 2 ? sh.getRange(2, 1, last - 1, 4).getValues() : [];
+    const have = last >= 2 ? sh.getRange(2, 1, last - 1, RATE_HEADER.length).getValues() : [];
     const at = new Map(have.map((v, i) => [plain(v[0]), i]));
     let updated = 0, stale = 0;
     const add = [];
     byId.forEach((r, rid) => {
       const i = at.get(rid);
       if (i === undefined) { add.push(toRateRow(r)); return; }
-      if (Number(r.n) < Number(have[i][3])) { stale++; return; }
+      if (gamesOf(r.n, r.qn) < gamesOf(have[i][3], have[i][9])) { stale++; return; }
       sh.getRange(2 + i, 1, 1, RATE_HEADER.length).setValues([toRateRow(r)]);
       updated++;
     });

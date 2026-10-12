@@ -3,13 +3,19 @@
      サーバーの署名つきの控え（geoking_rc・geoking_rs）も持っておき、サーバーが忘れていたら、つないだときに戻してもらう
    - 称号は rating.py の title_index と同じ区切り（1000・1100・1200・1350・1500）
    - 見せる所（どれもレートの持ち主の「プレイヤー」のそば）: ロビーの名前の下（バトルの部屋だけ）、バトルの結果発表の名前の下と「あなたのレート」、
-     ホームの「あなたのバトルのレート」（名前の欄の下。一度でもバトルした端末だけ）、全国ランキング（小窓） */
+     ホームの「あなたのバトルのレート」（名前の欄の下。一度でもバトルした端末だけ）、全国ランキング（小窓）
+   - 国旗クイズのレート（2026-10-12、ユーザーが選んだ案C「ランキングは2つ（国旗とバトル）」）: ひとりでクイズの国旗モード・国名モードを10問解き終えるたびに動く
+     （「国旗クイズでも国名クイズでも、同じ一つのレートに」。首都モードは入れない）。
+     ホームのランキングの枠の「バトル｜国旗クイズ」で切り替え、クイズの国旗モードのカードに「あなたのレート」と「ランキング」、
+     クイズの結果に、バトルと同じ演出でレートの動き。同じ合言葉・同じ控え・同じ「名前を出さない」を使う */
 const RATE = (() => {
   const STEPS = [1000, 1100, 1200, 1350, 1500];
   const store = {
     get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+    del: (k) => { try { localStorage.removeItem(k); } catch {} },
   };
+  const uid = () => { const a = new Uint8Array(8); crypto.getRandomValues(a); return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join(''); };
   function key() {   // 端末の合言葉（なければ作る）
     let k = store.get('geoking_rk');
     if (!k || !/^[A-Za-z0-9_-]{16,64}$/.test(k)) {
@@ -45,18 +51,38 @@ const RATE = (() => {
     + `<span class="rk-name">${x.me ? `<span class="tag you">${t('r_you')}</span> ` : ''}${x.name ? escapeHtml(x.name) : (x.me ? '' : `<span class="muted">${t('r_anon')}</span>`)}</span>`
     + `${chip(x.rate)}<span class="rk-rate">${fmt(x.rate)}</span></li>`;
 
-  // ---------- ホーム: 名前の欄の下の「あなたのバトルのレート」（一度でもバトルした端末だけ。押すと全国ランキング）と、
-  // 公開中の部屋の上の「バトルランキング」の枠（3位まで。だれでも見える。「すべて見る」で小窓）。開いたとき・部屋から戻ったとき・1分ごとに読み直す
-  let home = null;
+  // ---------- ホーム: 名前の欄の下の「あなたのバトルのレート」（一度でもバトルした端末だけ。押すとバトルランキング）と、
+  // 公開中の部屋の上のランキングの枠（3位まで。だれでも見える。「すべて見る」で小窓）。開いたとき・部屋から戻ったとき・1分ごとに読み直す。
+  // 枠の「バトル｜国旗クイズ」で、出すランキングを切り替える（2026-10-12 ユーザーが選んだ案C。選んだ方は端末に覚えておく）
+  const home = { battle: null, flag: null };   // 読んだランキング（null: まだ・false: 読めなかった）
+  let homeKind = store.get('geoking_rank_kind') === 'flag' ? 'flag' : 'battle', homeShown = false;
+  const titleOf = (kind) => t(kind === 'flag' ? 'rq_title' : 'r_title');
+  async function load(kind) {
+    const d = await post('/api/ranking', { ...(hasRating() ? creds() : {}), kind });
+    saveCopy(d.copy);
+    return d;
+  }
   async function refreshHome() {
     if (!$('#rankCard')) return;
-    try { home = await post('/api/ranking', hasRating() ? creds() : {}); saveCopy(home.copy); } catch {}   // 読めなかったときは前のまま
+    if (quizPending()) await quizSync().catch(() => null);   // クイズを通信のないときに解いた回が残っていれば、先に送る
+    await Promise.all([...new Set(['battle', homeKind])].map(async (k) => {   // 「あなたのバトルのレート」には、いつもバトルの記録がいる
+      try { home[k] = await load(k); } catch { if (!home[k]) home[k] = false; }   // 読めなかったときは前のまま
+    }));
     drawHome();
   }
+  async function setKind(kind) {   // 枠の「バトル｜国旗クイズ」
+    if (kind === homeKind || !(kind in home)) return;
+    homeKind = kind; store.set('geoking_rank_kind', kind);
+    if (!home[kind]) home[kind] = null;
+    drawHome();   // 前に読んだ分があればすぐ出す（なければ「読み込み中…」）
+    try { home[kind] = await load(kind); } catch { if (!home[kind]) home[kind] = false; }
+    if (kind === homeKind) drawHome();
+  }
+  document.querySelectorAll('#rankCard .rk-tab').forEach((b) => { b.onclick = () => setKind(b.dataset.kind); });
   function drawHome() {
     const card = $('#rateCard'), rank = $('#rankCard');
     if (!card || !rank) return;
-    const me = home && home.me && home.me.n && hasRating() ? home.me : null;
+    const b = home.battle, me = b && b.me && b.me.n && hasRating() ? b.me : null;
     if (!me) card.classList.add('hidden');
     else {
       const sub = me.rank ? t('r_rank', { rank: fmt(me.rank), total: fmt(me.total) }) : t('r_need', { n: me.need });
@@ -64,30 +90,36 @@ const RATE = (() => {
         + `<span class="rc-sub">${escapeHtml(sub)}</span>`;   // 押すとランキングが開くので「ランキングを見る」は書かない（2026-10-03 ユーザーの指定）
       card.classList.remove('hidden');
     }
-    if (!home) { rank.classList.add('hidden'); return; }   // 読めなかったときは出さない（公開中の部屋の邪魔をしない）
-    const top = home.top.filter((x) => x.rank <= 3).slice(0, 10);   // 3位まで（同じ順位の人はみんな。多すぎるときは10人まで）。4位からは「すべて見る」の小窓で（2026-10-03 ユーザーの指定）
-    $('#homeRankList').innerHTML = top.length ? top.map(rowHtml).join('') : `<li class="rk-empty muted">${t('r_empty')}<small>${escapeHtml(t('r_rule', { n: home.need_games }))}</small></li>`;
+    const d = home[homeKind];
+    if (!d && !homeShown) { rank.classList.add('hidden'); return; }   // 読めなかったときは出さない（公開中の部屋の邪魔をしない）。切り替えたあとは枠を残す
+    homeShown = true;
+    $('#rankTitle').textContent = titleOf(homeKind);
+    rank.querySelectorAll('.rk-tab').forEach((x) => { const on = x.dataset.kind === homeKind; x.classList.toggle('on', on); x.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    const top = d ? d.top.filter((x) => x.rank <= 3).slice(0, 10) : [];   // 3位まで（同じ順位の人はみんな。多すぎるときは10人まで）。4位からは「すべて見る」の小窓で（2026-10-03 ユーザーの指定）
+    $('#homeRankList').innerHTML = !d ? `<li class="rk-empty muted">${t(d === false ? 'r_fail' : 'loading')}</li>`
+      : top.length ? top.map(rowHtml).join('') : `<li class="rk-empty muted">${t('r_empty')}<small>${escapeHtml(t(homeKind === 'flag' ? 'rq_rule' : 'r_rule', { n: d.need_games }))}</small></li>`;
     $('#rankCard .rk-more').classList.toggle('hidden', !top.length);
     rank.classList.remove('hidden');
   }
-  setInterval(() => { if (!state && $('#home') && !$('#home').classList.contains('hidden') && document.visibilityState === 'visible') refreshHome(); }, 60000);
+  setInterval(() => { if ((typeof state === 'undefined' || !state) && $('#home') && !$('#home').classList.contains('hidden') && document.visibilityState === 'visible') refreshHome(); }, 60000);   // クイズの画面（state がない）では動かない
 
-  // ---------- 全国ランキング（小窓）
-  async function showRanking() {
+  // ---------- 全国ランキング（小窓。kind: 'battle' バトル・'flag' 国旗クイズ）
+  async function showRanking(kind = 'battle') {
+    const head = `<h2 class="rk-h">${ico('trophy')} ${titleOf(kind)}</h2>`;
     $('#modalBody').classList.remove('wide');
-    $('#modalBody').innerHTML = `<h2 class="rk-h">${ico('trophy')} ${t('r_title')}</h2><p class="muted">${t('loading')}</p>`;
+    $('#modalBody').innerHTML = head + `<p class="muted">${t('loading')}</p>`;
     $('#modal').classList.remove('hidden');
     $('#modal .modalbox').scrollTop = 0;
     let d;
-    try { d = await post('/api/ranking', hasRating() ? creds() : {}); } catch { $('#modalBody').innerHTML = `<h2 class="rk-h">${ico('trophy')} ${t('r_title')}</h2><p class="muted">${t('r_fail')}</p>`; return; }
-    drawRanking(d);
+    try { d = await load(kind); } catch { $('#modalBody').innerHTML = head + `<p class="muted">${t('r_fail')}</p>`; return; }
+    drawRanking(d, kind);
   }
-  function drawRanking(d) {
+  function drawRanking(d, kind) {
     const me = d.me && d.me.n ? d.me : null;
-    let html = `<h2 class="rk-h">${ico('trophy')} ${t('r_title')}</h2>`;
+    let html = `<h2 class="rk-h">${ico('trophy')} ${titleOf(kind)}</h2>`;
     if (me) {
       html += `<div class="rk-me"><div class="rk-me-top"><span class="muted small">${t('r_my_short')}</span> <b class="rk-me-num">${fmt(me.rate)}</b> ${chip(me.rate)}</div>`
-        + `<div class="rk-me-sub">${escapeHtml(me.rank ? t('r_rank', { rank: fmt(me.rank), total: fmt(me.total) }) : t('r_need', { n: me.need }))}</div>`
+        + `<div class="rk-me-sub">${escapeHtml(me.rank ? t('r_rank', { rank: fmt(me.rank), total: fmt(me.total) }) : t(kind === 'flag' ? 'rq_need' : 'r_need', { n: me.need }))}</div>`
         + `<label class="chk rk-hide"><input type="checkbox" id="rkHide"${me.hide ? ' checked' : ''}> ${t('r_hide')}</label></div>`;
     }
     html += '<ol class="rk-list">' + (d.top.length ? d.top.map(rowHtml).join('') : `<li class="rk-empty muted">${t('r_empty')}</li>`);
@@ -97,7 +129,7 @@ const RATE = (() => {
     const hide = $('#rkHide');
     if (hide) hide.onchange = async () => {
       try { const r = await post('/api/rating/hide', { ...creds(), hide: hide.checked }); saveCopy(r.copy); d.me = r.me; } catch { hide.checked = !hide.checked; return; }
-      try { const n = await post('/api/ranking', creds()); saveCopy(n.copy); drawRanking(n); home = n; drawHome(); } catch {}
+      try { const n = await load(kind); drawRanking(n, kind); home[kind] = n; drawHome(); } catch {}   // 名前を出さない設定はバトルと国旗クイズで共通
     };
   }
 
@@ -117,24 +149,29 @@ const RATE = (() => {
   // 演出の部品は画面に固定した層（.rfx。画面の外にはみ出さない）に出し、終わったら消す。チャットなどで描き直しても作り直さない
   const FX_KEY = 'geoking_ratefx';
   const reduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
-  const rankText = (m, rank) => (m.offline ? t('r_offline') : rank ? (m.rank_before && rank !== m.rank_before ? t('r_rank_move', { from: fmt(m.rank_before), to: fmt(rank) }) : (m.rank_before ? t('r_rank', { rank: fmt(rank), total: fmt(m.total) }) : t('r_rank_new', { to: fmt(rank) }))) : t('r_need', { n: m.need }));
+  const needText = (m) => t(m.kind === 'flag' ? 'rq_need' : 'r_need', { n: m.need });
+  const rankText = (m, rank) => (m.offline ? t('r_offline') : rank ? (m.rank_before && rank !== m.rank_before ? t('r_rank_move', { from: fmt(m.rank_before), to: fmt(rank) }) : (m.rank_before ? t('r_rank', { rank: fmt(rank), total: fmt(m.total) }) : t('r_rank_new', { to: fmt(rank) }))) : needText(m));
   function panelHtml(m, at, done) {   // at: 大きい数字に出す値。done: 終わった形（増減・昇格・全国の順位）まで出す
     const d = m.after - m.before, nx = next(at), promo = done && tier(m.after) > tier(m.before);
-    return `<div class="rp-label">${m.first ? t('r_first') : t('r_my_short')}</div>`
+    const label = m.kind === 'flag' ? t('rq_label', { level: t(m.level === 'hard' ? 'level_hard' : 'level_normal') }) : m.first ? t('r_first') : t('r_my_short');   // 国旗クイズは、どのむずかしさで動いたか
+    return `<div class="rp-label">${escapeHtml(label)}</div>`
       + `<div class="rp-nums"><span class="rp-from">${fmt(m.before)}</span><span class="rp-arrow">→</span><b class="rp-to">${fmt(at)}</b>${done ? delta(d) : `<span class="rp-dslot">${delta(d)}</span>`}</div>`
       + `<div class="rp-title">${chip(at)}${promo ? `<span class="rp-promo">${escapeHtml(t('r_promo', { title: titleName(m.after) }))}</span>` : ''}</div>`
       + `<div class="rp-gauge"><i style="width:${Math.round((nx ? nx.frac : 1) * 100)}%"></i><b class="rp-head" style="left:${Math.round((nx ? nx.frac : 1) * 100)}%"></b></div>`
       + `<div class="rp-next muted small">${nx ? escapeHtml(t('r_next', { title: nx.name, n: fmt(nx.left) })) : t('r_top')}</div>`
       + (done || m.rank_before || !m.rank_after
-        ? `<div class="rp-rank">${escapeHtml(done || m.offline ? rankText(m, m.rank_after) : (m.rank_before ? t('r_rank', { rank: fmt(m.rank_before), total: fmt(m.total) }) : t('r_need', { n: m.need })))}</div>`
+        ? `<div class="rp-rank">${escapeHtml(done || m.offline ? rankText(m, m.rank_after) : (m.rank_before ? t('r_rank', { rank: fmt(m.rank_before), total: fmt(m.total) }) : needText(m)))}</div>`
         : `<div class="rp-rank pending">${escapeHtml(rankText(m, m.rank_after))}</div>`)   // はじめて載るとき: 場所だけ空けておき、数え終わってから「全国 N 位に登場」がポンと出る
       + (m.offline ? '' : `<button type="button" class="mini rp-see">${ico('trophy', 'sm')} ${t('r_see')}</button>`);   // オフラインではランキングを読めないので出さない
   }
-  function renderPanel(box) {   // 結果発表で、自分のレートが動いたときだけ出す
+  function renderPanel(box) {   // 結果発表（バトル）で、自分のレートが動いたときだけ出す
     const m = state && state.rate_me;
     if (!box) return;
     if (!m || !SV.on()) { box.classList.add('hidden'); box.innerHTML = ''; delete box.dataset.key; return; }
     const key = `${state.room}:${(state.final || []).map((e) => `${e.pid}:${e.rate_after ?? ''}`).join(',')}|${m.before}>${m.after}|${LANG}`;
+    showPanel(box, m, key, () => state && state.phase === 'end');
+  }
+  function showPanel(box, m, key, alive) {   // alive(): 結果の画面を見ている間 true（部屋を出た・次のゲームや問題に進んだら、演出を止める）
     if (box.dataset.key === key && box.innerHTML) return;   // 描き直し（チャットなど）では作り直さない（演出の途中で消さない）
     let seen = false;
     try { seen = sessionStorage.getItem(FX_KEY) === key.replace(/\|[a-z]+$/, ''); sessionStorage.setItem(FX_KEY, key.replace(/\|[a-z]+$/, '')); } catch {}
@@ -142,8 +179,8 @@ const RATE = (() => {
     box.dataset.key = key;
     box.classList.remove('hidden');
     box.innerHTML = panelHtml(m, play ? m.before : m.after, !play);
-    const see = box.querySelector('.rp-see'); if (see) see.onclick = () => showRanking();
-    if (play) levelUp(box, m, key);
+    const see = box.querySelector('.rp-see'); if (see) see.onclick = () => showRanking(m.kind || 'battle');
+    if (play) levelUp(box, m, key, alive);
     else if (!seen) (m.after >= m.before ? (tier(m.after) > tier(m.before) ? sfx.fanfare() : sfx.rateCoin()) : sfx.rateDown());   // 動きを減らす設定の人も、音だけは
   }
 
@@ -180,8 +217,8 @@ const RATE = (() => {
       { duration: 1800 + Math.random() * 1400, delay: Math.random() * 900, easing: 'cubic-bezier(.3,.1,.6,1)' }, { background: cols[i % cols.length] });
   }
 
-  async function levelUp(box, m, key) {
-    const ok = () => box.isConnected && box.dataset.key === key && num.isConnected && state && state.phase === 'end';   // 描き直した・部屋を出た・次のゲームに進んだら止める
+  async function levelUp(box, m, key, alive) {
+    const ok = () => box.isConnected && box.dataset.key === key && num.isConnected && alive();   // 描き直した・部屋を出た・次のゲームに進んだら止める
     const up = m.after >= m.before, promo = tier(m.after) > tier(m.before), T = promo ? STEPS[tier(m.before)] : m.after;
     const num = box.querySelector('.rp-to'), fill = box.querySelector('.rp-gauge i'), head = box.querySelector('.rp-head'), nextEl = box.querySelector('.rp-next');
     let shown = tier(m.before);   // いま札に出ている称号
@@ -267,5 +304,74 @@ const RATE = (() => {
     } else rk.textContent = rankText(m, m.rank_after);
   }
 
-  return { creds, saveCopy, hasRating, refreshHome, drawHome, showRanking, lobbyLine, finalLine, renderPanel, chip, fmt, tier, next, titleName };
+  // ---------- 国旗クイズのレート（2026-10-12、ユーザーが選んだ案C「ランキングは2つ（国旗とバトル）」）。サーバーは rating.py の apply_quiz。
+  // ひとりでクイズの国旗モード・国名モード（同じ一つのレート）を10問解き終えるたびに、結果を送る（「同じ問題でもう一度」は送らない。quiz.js）。送れないとき（通信がない）は端末にため、
+  // apply_quiz と同じ式で仮のレートを出し、次につながったとき（クイズやホームを開いた・通信が戻った）に送る
+  const QUIZ_D = { normal: 1000, hard: 1200 }, QUIZ_K = { normal: 16, hard: 32 };   // rating.py の QUIZ_D・QUIZ_K と同じ
+  const QQ = 'geoking_quiz_games', QP = 'geoking_quiz_rate';   // 送るもの（まだ送っていない回）と、その分を入れた仮のレート
+  const jget = (k) => { try { return JSON.parse(store.get(k) || 'null'); } catch { return null; } };
+  const jset = (k, v) => (v == null ? store.del(k) : store.set(k, JSON.stringify(v)));
+  const quizPending = () => (jget(QQ) || []).length > 0;
+  let qme = null, qBusy = Promise.resolve();   // qme: 国旗クイズの自分の記録（サーバーの返事）
+  function quizSync() {   // ためた回を送る（1回に50回まで。同時に2つは送らない）。返り値: サーバーの返事（送るものがなければ null）
+    const run = qBusy.then(async () => {
+      const q = jget(QQ) || [];
+      if (!q.length) return null;
+      const d = await post('/api/rating/quiz', { ...creds(), name: store.get('geoking_name') || '', games: q.slice(0, 50) });
+      saveCopy(d.copy);
+      if (d.me) qme = d.me;
+      const done = new Set(d.done || []), rest = (jget(QQ) || []).filter((g) => !done.has(g.id));
+      jset(QQ, rest.length ? rest : null);
+      if (!rest.length) jset(QP, null);
+      return d;
+    });
+    qBusy = run.catch(() => null);
+    return run;
+  }
+  function quizBase() {   // 仮のレートの元: まだ送っていない回を入れた仮のレート、なければ端末の控え（サーバーの記録の写し）
+    const p = jget(QP); if (p) return p;
+    const c = jget('geoking_rc');
+    return c && +c.qn > 0 ? { r: +c.qr, n: +c.qn } : { r: 1000, n: 0 };
+  }
+  async function quizResult(mode, level, correct, total) {   // 国旗モード・国名モードを10問解き終えた: 結果の画面に出す動き（バトルの rate_me と同じ形）。出さないときは null
+    if (!(level in QUIZ_D)) return null;
+    const b = quizBase(), g = { id: 'q' + uid(), t: Math.round(Date.now() / 1000), mode, level, correct, total };
+    jset(QQ, (jget(QQ) || []).concat([g]).slice(-500));
+    try {
+      const d = await quizSync();
+      if (d && d.res && d.res.id === g.id) return { ...d.res, kind: 'flag', level };
+      if (d && (d.done || []).includes(g.id)) return null;   // 受け取ったが数えなかった
+    } catch {}
+    const after = b.r + QUIZ_K[level] * (correct / total - 1 / (1 + 10 ** ((QUIZ_D[level] - b.r) / 400)));   // 送れなかった: 仮のレート
+    jset(QP, { r: after, n: b.n + 1 });
+    return { id: g.id, before: Math.round(b.r), after: Math.round(after), rank_before: null, rank_after: null, total: null, need: 0, first: !b.n, offline: true, kind: 'flag', level };
+  }
+  function quizPanel(box, m, alive) {   // クイズの結果: 点数の下に、国旗クイズのレートの動き（バトルの結果発表と同じ演出）。m がなければ消す
+    if (!box) return;
+    if (!m) { box.classList.add('hidden'); box.innerHTML = ''; delete box.dataset.key; return; }
+    showPanel(box, m, `quiz:${m.id}|${m.before}>${m.after}|${LANG}`, alive);
+  }
+  // クイズの国旗モードのカード: 「あなたのレート」（称号・全国の順位）と「ランキング」ボタン。まだ遊んでいなければ「遊ぶとレートがつきます」
+  function drawQuizCard(box) {
+    if (!box) return;
+    const p = quizPending() && jget(QP), me = qme && qme.n ? qme : null, c = jget('geoking_rc');
+    const rate = p ? Math.round(p.r) : me ? me.rate : c && +c.qn > 0 ? Math.round(+c.qr) : null;
+    const sub = p ? t('r_offline') : me ? (me.rank ? t('r_rank', { rank: fmt(me.rank), total: fmt(me.total) }) : t('rq_need', { n: me.need })) : '';
+    box.innerHTML = (rate == null ? `<span class="qr-none">${t('rq_none')}</span>`
+      : `<span class="qr-label">${t('r_my_short')}</span><span class="qr-main"><b class="qr-num">${fmt(rate)}</b>${chip(rate)}</span>${sub ? `<span class="qr-sub">${escapeHtml(sub)}</span>` : ''}`)
+      + `<button type="button" class="mini qr-see">${ico('trophy', 'sm')} ${t('rq_ranking')}</button>`;
+    box.querySelector('.qr-see').onclick = () => showRanking('flag');
+  }
+  async function quizCard(box) {   // クイズを開いたとき・モードを選ぶに戻ったとき: ためた回を送り、自分の記録を読んで出す
+    drawQuizCard(box);
+    try {
+      if (quizPending()) await quizSync();
+      else if (hasRating()) { const d = await post('/api/rating', { ...creds(), kind: 'flag' }); saveCopy(d.copy); qme = d.me; }
+    } catch {}
+    drawQuizCard(box);
+  }
+  window.addEventListener('online', () => { if (quizPending()) quizSync().then(() => { drawQuizCard($('#qRate')); if ($('#rankCard')) refreshHome(); }).catch(() => {}); });
+
+  return { creds, saveCopy, hasRating, refreshHome, drawHome, showRanking, kind: () => homeKind, lobbyLine, finalLine, renderPanel, chip, fmt, tier, next, titleName,
+    quizResult, quizPanel, quizCard, quizSync };
 })();
