@@ -8,17 +8,28 @@ const fs = require('fs'), path = require('path'), vm = require('vm'), assert = r
 const CODE = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sheet-log', 'Code.gs'), 'utf8');
 
 function makeSheet(name) {
-  const sh = { name, cells: [], single: {}, maxRows: 1000, maxCols: 26, frozen: 0 };
+  const sh = { name, cells: [], single: {}, maxRows: 1000, maxCols: 26, frozen: 0, formats: {} };   // formats: 列 → 数字の形（本物は列ごと・セルごと。ここでは列ごと）
   const range = (r, c, nr = 1, nc = 1) => {
     if (r + nr - 1 > sh.maxRows) throw new Error(`range outside the sheet (row ${r + nr - 1} > ${sh.maxRows})`);
     if (c + nc - 1 > sh.maxCols) throw new Error(`range outside the sheet (column ${c + nc - 1} > ${sh.maxCols})`);
     return {
       setValues(v) { assert.strictEqual(v.length, nr); v.forEach((row, i) => { assert.strictEqual(row.length, nc); sh.cells[r - 1 + i] = sh.cells[r - 1 + i] || []; row.forEach((x, j) => { sh.cells[r - 1 + i][c - 1 + j] = x; }); }); return this; },
-      getValues() { const out = []; for (let i = 0; i < nr; i++) { const row = []; for (let j = 0; j < nc; j++) row.push((sh.cells[r - 1 + i] || [])[c - 1 + j] ?? ''); out.push(row); } return out; },
+      getValues() {   // 本物と同じく、日付の形の列に入った数字は日付（1899-12-30 から数えた日）で返す
+        const out = [];
+        for (let i = 0; i < nr; i++) {
+          const row = [];
+          for (let j = 0; j < nc; j++) {
+            const v = (sh.cells[r - 1 + i] || [])[c - 1 + j] ?? '';
+            row.push(typeof v === 'number' && /yy/.test(sh.formats[c + j] || '') ? new Date(Date.UTC(1899, 11, 30) + v * 86400000) : v);
+          }
+          out.push(row);
+        }
+        return out;
+      },
       setValue(v) { const s = String(v); sh.single[`${r},${c}`] = s.startsWith("'") ? { value: s.slice(1), formula: '' } : s.startsWith('=') ? { value: 2, formula: s } : { value: s, formula: '' }; return this; },
       getValue() { return (sh.single[`${r},${c}`] || { value: '' }).value; },
       getFormula() { return (sh.single[`${r},${c}`] || { formula: '' }).formula; },
-      setNumberFormat() { return this; }, setFontWeight() { return this; },
+      setNumberFormat(f) { for (let j = 0; j < nc; j++) sh.formats[c + j] = f; return this; }, setFontWeight() { return this; },
     };
   };
   Object.assign(sh, {
@@ -26,7 +37,7 @@ function makeSheet(name) {
     getLastRow: () => sh.cells.length, getMaxRows: () => sh.maxRows, getMaxColumns: () => sh.maxCols, getRange: range,
     insertRowsAfter(after, n) { assert.strictEqual(after, sh.maxRows); sh.maxRows += n; },
     deleteColumns(start, n) { assert.ok(start + n - 1 <= sh.maxCols); sh.maxCols -= n; },
-    insertColumnsAfter(after, n) { assert.strictEqual(after, sh.maxCols); sh.maxCols += n; },
+    insertColumnsAfter(after, n) { assert.strictEqual(after, sh.maxCols); for (let j = 1; j <= n; j++) sh.formats[after + j] = sh.formats[after]; sh.maxCols += n; },   // 本物と同じく、左の列の形を引き継ぐ
     setFrozenRows(n) { sh.frozen = n; }, setColumnWidth() {},
     deleteRows(start, n) {
       assert.ok(start > sh.frozen && start + n - 1 <= sh.maxRows, `deleteRows(${start}, ${n}) outside`);
@@ -220,6 +231,7 @@ const ok = (m) => { results.push('OK: ' + m); };
   const rate = () => sheets.find((s) => s.name === 'レート');
   rate().maxCols = 8;
   rate().cells[0] = rate().cells[0].slice(0, 8);
+  rate().formats = { 8: 'yyyy/mm/dd hh:mm:ss' };   // 前のシート: 8列目（更新日時）は日付の形（足した列がこれを引き継ぐ）
   const A = 'a'.repeat(20), t0 = Math.round(now());
   rate().cells[1] = ["'" + A, "'はなこ", 1024, 1, 1, 1024, false, new Date(t0 * 1000)];
   let got = post(env, { key: props.LOG_KEY, action: 'ratings_get' });
@@ -229,7 +241,9 @@ const ok = (m) => { results.push('OK: ' + m); };
   const r = post(env, { key: props.LOG_KEY, action: 'ratings_put', rows: [{ rid: A, name: 'はなこ', r: 1024, n: 1, h: 1, best: 1024, t: t0 + 60, qr: 1008, qn: 1, qbest: 1008 }] });
   assert.deepStrictEqual(r, { ok: true, updated: 1, added: 0, stale: 0 });
   assert.deepStrictEqual(rate().cells[1].slice(8), [1008, 1, 1008]);
-  ok('前に作った8列のシート: 国旗クイズの3列（見出しつき）を右に足す。前の行は国旗クイズ 1,000・0回として読み、上書きもできる');
+  got = post(env, { key: props.LOG_KEY, action: 'ratings_get' });
+  assert.deepStrictEqual([got.rows[0].qr, got.rows[0].qn, got.rows[0].qbest], [1008, 1, 1008], '足した列が日付の形のまま（数字が日付で返る）');
+  ok('前に作った8列のシート: 国旗クイズの3列（見出しつき・数字の形）を右に足す。前の行は国旗クイズ 1,000・0回として読み、上書きした数字はそのまま読める');
 }
 
 console.log(results.join('\n') + '\nALL OK');

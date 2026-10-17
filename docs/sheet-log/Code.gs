@@ -101,6 +101,10 @@ function rateSheet() {
   } else if (sh.getMaxColumns() < RATE_HEADER.length) {   // 2026-10-12 より前に作ったシート（8列）: 国旗クイズの列を右に足す
     sh.insertColumnsAfter(sh.getMaxColumns(), RATE_HEADER.length - sh.getMaxColumns());
     sh.getRange(1, 1, 1, RATE_HEADER.length).setValues([RATE_HEADER]).setFontWeight('bold');
+    // 足した列は左の「更新日時」の日付の形を引き継ぐので、数字の形にする（2026-10-17: 国旗クイズのレートが日付で入り、読むと日付が返っていた）
+    sh.getRange(1, 9, sh.getMaxRows(), 1).setNumberFormat('0.00');
+    sh.getRange(1, 10, sh.getMaxRows(), 1).setNumberFormat('0');
+    sh.getRange(1, 11, sh.getMaxRows(), 1).setNumberFormat('0.00');
   }
   return sh;
 }

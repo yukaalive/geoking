@@ -280,7 +280,8 @@ def mark_unsaved(rows):
     saved = {}
     for d in rows or []:
         try:
-            saved[str(d['rid'])] = (int(d['n']) + int(d.get('qn') or 0), float(d.get('t') or 0))
+            qn = int(d.get('qn') or 0)
+            saved[str(d['rid'])] = (int(d['n']) + (qn if qn >= 0 else 0), float(d.get('t') or 0))   # 国旗クイズの欄がおかしい行は 0 回として比べる（送り直して直す）
         except (ValueError, KeyError, TypeError):
             continue
     got = 0
@@ -293,20 +294,27 @@ def mark_unsaved(rows):
 
 def merge(rows, mark_dirty=False):
     """スプレッドシート・引っ越しから受け取る。遊んだ回数（バトル＋国旗クイズ）が多い方（同じなら新しい方）を残す。受け取った数を返す。
-    国旗クイズの欄がない行（2026-10-12 より前のサーバー・スプレッドシート）は、国旗クイズをしていない記録として受け取る"""
+    国旗クイズの欄がない行（2026-10-12 より前のサーバー・スプレッドシート）は、国旗クイズをしていない記録として受け取る。
+    国旗クイズの欄がおかしい行も、バトルの分は受け取る（2026-10-17: シートに足した列が日付の形になり、国旗クイズの欄が日付で返ってきて、
+    行ごと捨てていた。そのまま起き直すとバトルのランキングまで空になるところだった）"""
     got = 0
     for d in rows or []:
         try:
             rid = str(d['rid'])
             n, h, r = int(d['n']), int(d['h']), float(d['r'])
             best, t = float(d.get('best') or r), float(d.get('t') or 0)
+        except (ValueError, KeyError, TypeError):
+            continue
+        if not valid_rid(rid) or n < 0 or h < 0 or not (0 < r < 10000):
+            continue
+        try:
             qn = int(d.get('qn') or 0)
             qr = float(d.get('qr') or START) if qn else START
             qbest = float(d.get('qbest') or qr) if qn else START
-        except (ValueError, KeyError, TypeError):
-            continue
-        if not valid_rid(rid) or n < 0 or h < 0 or qn < 0 or not (0 < r < 10000) or not (0 < qr < 10000):
-            continue
+            if qn < 0 or not (0 < qr < 10000) or not (0 < qbest < 10000):
+                raise ValueError
+        except (ValueError, TypeError):
+            qn, qr, qbest = 0, START, START   # 国旗クイズの欄がおかしい: 国旗クイズはしていないものとして受け取る
         rec = RATINGS.get(rid)
         if rec is not None and (n + qn, t) <= (games(rec), rec['t']):
             continue

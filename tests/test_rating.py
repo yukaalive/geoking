@@ -247,7 +247,14 @@ def unit_tests():
     assert RT.mark_unsaved([{**old, 'qn': 1}]) == 1 and RT.DIRTY == {cq}, 'シートの国旗クイズが古ければ送り直す'
     RT.DIRTY.clear()
     assert RT.mark_unsaved([{**old, 'qn': 2, 't': 40}]) == 0
-    print('OK flag quiz: kept by the device copy, the sheet and server moves (old rows without quiz fields still load)')
+    # 2026-10-17: シートに足した列が日付の形になり、国旗クイズの欄が日付（とても大きな負の数）で返ってきた。行ごと捨てるとバトルのランキングまで空になる
+    RT.RATINGS.clear(); RT.DIRTY.clear()
+    dated = {**old, 'n': 40, 'r': 1222.09, 't': 60, 'qr': -2091196656000, 'qn': -2206429200000, 'qbest': -2091196656000}
+    assert RT.merge([dated]) == 1 and RT.RATINGS[cq]['n'] == 40 and RT.RATINGS[cq]['r'] == 1222.09 and RT.RATINGS[cq]['qn'] == 0 and RT.RATINGS[cq]['qr'] == 1000, RT.RATINGS[cq]
+    assert RT.ranking(None)['total'] == 1, 'バトルのランキングに残る'
+    RT.RATINGS[cq].update({'qn': 32, 'qr': 1365.71, 'qbest': 1365.71})
+    assert RT.mark_unsaved([dated]) == 1 and RT.DIRTY == {cq}, '国旗クイズの欄がおかしい行は送り直して直す'
+    print('OK flag quiz: kept by the device copy, the sheet and server moves (old rows without quiz fields still load; rows with broken quiz fields keep their battle data)')
 
 
 # ---------- 5. つないで遊ぶ
